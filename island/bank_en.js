@@ -1,0 +1,165 @@
+/* 五上英語・期末考範圍題庫：翰林 Here We Go 5（U3、U4、Festivals）、何嘉仁 Super 5（L3、L4、Culture）。
+   依據：115 上良品測驗卷（翰版 5）、115 上何嘉仁 Super 5 測驗卷。選擇題正確答案放第一個，畫面會自動打亂。 */
+(function(){
+const B=window.BANK=window.BANK||{};
+const M=(id,q,opts,exp,skill)=>({id,type:'mc',q,opts,a:0,exp,skill});
+const L=(id,say,opts,exp,skill)=>({id,type:'listen',say,opts,a:0,exp,skill});
+const W=(id,word,zh,chunks,extra,exp,skill)=>({id,type:'spell',word,zh,chunks,extra,exp,skill});
+const R=(id,zh,tiles,extra,exp,skill,accept)=>({id,type:'tiles',g:'sent',q:'排出正確的句子：'+zh,tiles,extra,exp,skill,accept});
+
+const HL3=[
+ L('a1','library',['library','bank','park','museum'],'library 圖書館。','地點'),
+ L('a2','post office',['post office','hospital','supermarket','bank'],'post office 郵局。','地點'),
+ L('a3','supermarket',['supermarket','museum','hospital','library'],'supermarket 超市。','地點'),
+ L('a4','boat',['boat','boot','bait','bat'],'oa 唸長音 /o/：boat。','長音 o（oa）'),
+ L('a5','note',['note','not','nut','net'],'o_e 唸長音 /o/：note；not 是短音。','長音 o（o_e）'),
+ L('a6','goat',['goat','gate','got','gut'],'oa 唸長音 /o/：goat 山羊。','長音 o（oa）'),
+ L('a7','row',['row','rye','raw','rue'],'ow 也可以唸長音 /o/：row、low、tow。','長音 o（ow）'),
+ W('a8','bank','銀行',['b','a','nk'],['n','ck'],'b-a-nk，nk 在字尾。','地點拼字'),
+ W('a9','park','公園',['p','ar','k'],['er','c'],'ar 唸 /ar/：park。','地點拼字'),
+ W('a10','museum','博物館',['mu','se','um'],['mi','am'],'mu-se-um 三個音節。','地點拼字'),
+ W('a11','library','圖書館',['li','brar','y'],['bra','ie'],'li-brar-y。','地點拼字'),
+ W('a12','hospital','醫院',['hos','pi','tal'],['pe','tel'],'hos-pi-tal。','地點拼字'),
+ W('a13','boat','船',['b','oa','t'],['ow','o'],'oa 唸長音 /o/。','長音 o（oa）'),
+ R('a14','你要去哪裡？',['Where','are','you','going','?'],['is'],'主詞 you 搭配 are。','Where are you going?'),
+ R('a15','我要去圖書館。',["I'm",'going','to','the','library','.'],['at'],'going to + 地點。','I\'m going to the ___.'),
+ R('a16','公園在哪裡？',['Where','is','the','park','?'],['are'],'問一個地方在哪裡：Where is the ___?','Where is the ___?'),
+ R('a17','它在綠街上。',["It's",'on','Green','Street','.'],['in'],'在某條街上用 on。','It\'s on ___ Street.'),
+ R('a18','我們去超市吧。',["Let's",'go','to','the','supermarket','.'],['going'],"Let's 後面接原形動詞 go。",'Let\'s go to ___.'),
+ R('a19','你要去銀行嗎？',['Are','you','going','to','the','bank','?'],['Do'],'going 的問句用 Are，不用 Do。','Are you going to ___?'),
+ M('a20','A: Where are you going?　B: ______',["I'm going to the museum.","It's on Green Street.",'Yes, I am.','I like museum.'],'問「去哪裡」就回答 I\'m going to + 地點。','Where are you going?'),
+ M('a21',"A: Where's the post office?　B: ______","It's on Blue Street.".split('|').concat(['It is Apple Street.',"I'm going to the post office.",'Yes, it is.']),'問位置：It\'s on ___ Street.，要有 on。','Where is the ___?'),
+ M('a22','A: Is it ______ Red Street?　B: Yes.',['on','in','at','to'],'在某條街上用 on。','介系詞 on'),
+ M('a23','______ are you going?',['Where','What','Which','How'],'問「去哪裡」用 Where。','疑問詞'),
+ M('a24','______ you going to the bank?',['Are','Is','Do','Does'],'you 搭配 are：Are you going ...?','be 動詞'),
+ M('a25',"Let's take a picture. Say ______!",['cheese','pears','lemons','apples'],'拍照時說 Say cheese!','日常用語'),
+ M('a26','A: Where is she going?　B: ______',["She's going to the library.",'Yes, she is.',"No, she isn't.","It's on Red Street."],'問去哪裡，要回答地點，不是 Yes/No。','Where is she going?'),
+ M('a27',"I'm sick. I'm going to the ______.",['hospital','bank','museum','park'],'生病要去 hospital 醫院。','地點'),
+ M('a28','哪一個字的 o 唸長音 /o/？',['note','not','hot','dog'],'o_e 的 o 唸長音：note。其他都是短音。','長音 o')
+];
+const HL4=[
+ L('b1','zebra',['zebra','tiger','koala','turtle'],'zebra 斑馬。','動物'),
+ L('b2','elephant',['elephant','monkey','horse','bear'],'elephant 大象。','動物'),
+ L('b3','turtle',['turtle','tiger','koala','lion'],'turtle 烏龜。','動物'),
+ L('b4','cute',['cute','cut','cat','coat'],'u_e 唸長音 /ju/：cute；cut 是短音。','長音 u（u_e）'),
+ L('b5','blue',['blue','blow','black','bee'],'ue 唸長音 /u/：blue、glue、true。','長音 u（ue）'),
+ L('b6','juice',['juice','jeans','jacket','job'],'ui 唸長音 /u/：juice、fruit、suit。','長音 u（ui）'),
+ W('b7','tiger','老虎',['ti','g','er'],['ar','a'],'ti-ger，er 在字尾。','動物拼字'),
+ W('b8','zebra','斑馬',['ze','br','a'],['zi','er'],'ze-bra。','動物拼字'),
+ W('b9','monkey','猴子',['mon','k','ey'],['man','y'],'mon-key，ey 在字尾。','動物拼字'),
+ W('b10','turtle','烏龜',['tur','t','le'],['ter','el'],'tur-tle，le 在字尾。','動物拼字'),
+ W('b11','cube','立方體',['c','u','b','e'],['oo','k'],'u_e：c-u-b-e。','長音 u（u_e）'),
+ W('b12','fruit','水果',['fr','ui','t'],['oo','ue'],'ui 唸長音 /u/：fr-ui-t。','長音 u（ui）'),
+ R('b13','你看到什麼？',['What','do','you','see','?'],['does'],'you 搭配 do。','What do you see?'),
+ R('b14','我看到三隻熊。',['I','see','three','bears','.'],['bear'],'三隻要用複數 bears。','I see ___.'),
+ R('b15','有幾隻獅子？',['How','many','lions','are','there','?'],['is'],'How many + 複數名詞 + are there?','How many ___ are there?'),
+ R('b16','有一隻無尾熊。',['There','is','one','koala','.'],['are'],'一隻用 There is。','There is / There are'),
+ R('b17','她喜歡大象嗎？',['Does','she','like','elephants','?'],['Do'],'she 搭配 Does，like 用原形。','Does she like ___?'),
+ R('b18','牠們是老虎。',['They','are','tigers','.'],['is'],'They 搭配 are，tigers 用複數。','They are ___.'),
+ M('b19','A: How many zebras are there?　B: ______',['There are two zebras.','I see zebras.','Yes, there are.',"They're zebras."],'問幾隻，要回答數量。','How many ___ are there?'),
+ M('b20',"A: Do you like tigers?　B: No, ______ don't.",['I','you','they','she'],'問 you，回答用 I。','Do you like ___?'),
+ M('b21','A: Does she like elephants?　B: Yes, she ______.',['does','do','is','likes'],'Does 問句，用 does 回答。','Does she like ___?'),
+ M('b22','Look! There ______ four monkeys.',['are','is','am','do'],'四隻是複數，用 are。','There is / There are'),
+ M('b23','Tina ______ dogs.',['likes','like','liking','are'],'Tina 是第三人稱單數，like 要加 s。','動詞加 s'),
+ M('b24',"A: Run! It's a bear.　B: ______",['Calm down.','Here you are.','I like tigers.','Me, too.'],'Calm down. 冷靜一點。','日常用語'),
+ M('b25','They are gray. They are big. They have a long nose and big ears. 牠們是什麼？',['elephants','zebras','turtles','monkeys'],'灰色、很大、長鼻子大耳朵：大象。','閱讀'),
+ M('b26','A: I like horses.　B: Me, too.　Me, too. 是什麼意思？',['我也是','我不喜歡','謝謝你','冷靜一點'],'Me, too. 我也是。','日常用語'),
+ M('b27','下面哪一個字和 blue 的 ue 唸一樣？',['true','cut','bus','sun'],'ue 唸長音 /u/：blue、true、glue。','長音 u')
+];
+const HF=[
+ L('c1','star',['star','store','stay','start'],'star 星星。','聖誕節'),
+ L('c2','bell',['bell','ball','bill','belt'],'bell 鈴鐺。','聖誕節'),
+ L('c3','gift',['gift','give','lift','gate'],'gift 禮物。','聖誕節'),
+ L('c4','stocking',['stocking','stopping','sticking','socks'],'stocking 聖誕襪。','聖誕節'),
+ W('c5','star','星星',['st','ar'],['er','or'],'s-t-ar。','聖誕節拼字'),
+ W('c6','bell','鈴鐺',['b','e','ll'],['a','l'],'bell 字尾有兩個 l。','聖誕節拼字'),
+ W('c7','gift','禮物',['g','i','ft'],['e','ve'],'g-i-ft。','聖誕節拼字'),
+ W('c8','stocking','聖誕襪',['st','o','ck','ing'],['a','k'],'st-o-ck-ing。','聖誕節拼字'),
+ W('c9','candy','糖果',['c','an','dy'],['k','die'],'candy cane 拐杖糖。','聖誕節拼字'),
+ R('c10','聖誕快樂！',['Merry','Christmas','!'],['New'],'Merry Christmas! 聖誕快樂。','節慶用語'),
+ R('c11','把星星放在最上面！',['Put','the','star','on','the','top','!'],['in'],'在最上面：on the top。','節慶用語'),
+ R('c12','我們把鈴鐺掛在這裡吧。',["Let's",'hang','a','bell','here','.'],['bells'],'a 後面用單數 bell。','節慶用語'),
+ R('c13','謝謝你的禮物。',['Thank','you','for','your','gifts','.'],['to'],'Thank you for ___. 謝謝你的 ___。','節慶用語'),
+ R('c14','看我的拐杖糖！',['Look','at','my','candy','cane','!'],['in'],'Look at ___! 看 ___！','節慶用語'),
+ M('c15','Santa ______',['Claus','Clause','Close','Class'],'Santa Claus 聖誕老公公。','聖誕節'),
+ M('c16',"Let's decorate the ______. （我們來裝飾聖誕樹）",['tree','star','gift','bell'],'decorate the tree 裝飾聖誕樹。','聖誕節'),
+ M('c17','聖誕襪的英文是哪一個？',['stocking','star','bell','sleigh'],'stocking 聖誕襪；sleigh 雪橇。','聖誕節'),
+ M('c18','The gifts are ______. （禮物準備好了）',['ready','read','red','reading'],'ready 準備好的。','節慶用語'),
+ M('c19','「Merry Christmas!」是什麼意思？',['聖誕快樂','新年快樂','生日快樂','謝謝你'],'Merry Christmas 聖誕快樂。','節慶用語')
+];
+const JL3=[
+ L('d1','sunny',['sunny','Sunday','Sammy','funny'],'sunny 晴朗的。','天氣'),
+ L('d2','windy',['windy','Wendy','weather','window'],'windy 颳風的。','天氣'),
+ L('d3','cloudy',['cloudy','cold','crowd','could'],'cloudy 多雲的。','天氣'),
+ L('d4','rainy',['rainy','runny','rain','ready'],'rainy 下雨的。','天氣'),
+ L('d5','city',['city','Kitty','pity','kitten'],'c 後面接 i，唸 /s/：city。','c 的發音'),
+ L('d6','cool',['cool','cold','could','cook'],'cool 涼爽的。','天氣'),
+ W('d7','weather','天氣',['w','ea','th','er'],['ee','f'],'w-ea-th-er，ea 唸短音 /ɛ/。','天氣拼字'),
+ W('d8','cloudy','多雲的',['cl','ou','dy'],['ow','di'],'cl-ou-dy。','天氣拼字'),
+ W('d9','windy','颳風的',['w','in','dy'],['en','di'],'wind + y。','天氣拼字'),
+ W('d10','rainy','下雨的',['r','ai','ny'],['ay','ni'],'rain + y，ai 在字中間。','天氣拼字'),
+ W('d11','city','城市',['c','i','ty'],['s','ti'],'c 後面接 i 唸 /s/，但拼字還是用 c。','c 的發音'),
+ W('d12','cold','冷的',['c','o','ld'],['k','oa'],'c-o-ld。','天氣拼字'),
+ R('d13','天氣怎麼樣？',["How's",'the','weather','?'],['What'],"How's = How is。",'How\'s the weather?'),
+ R('d14','天氣晴朗又炎熱。',["It's",'sunny','and','hot','.'],['is'],"It's + 天氣。",'It\'s ___ and ___.'),
+ R('d15','今天下雨嗎？',['Is','it','rainy','today','?'],['Are'],'it 搭配 Is。','Is it ___ today?'),
+ R('d16','這裡又冷又颳風。',["It's",'cold','and','windy','here','.'],['wind'],'windy 是形容詞「颳風的」；wind 是名詞「風」。','It\'s ___ and ___.'),
+ R('d17','我們去海邊吧。',["Let's",'go','to','the','beach','.'],['going'],"Let's + 原形動詞。",'Let\'s go to ___.'),
+ M('d18',"A: How's the weather in Taichung?　B: ______","It's cloudy.|I'm fine.|It's Monday.|Yes, it is.".split('|'),'問天氣要回答天氣。','How\'s the weather?'),
+ M('d19','「涼爽的」英文是哪一個？',['cool','cold','cloudy','hot'],'cool 涼爽的；cold 冷的。','天氣'),
+ M('d20',"35°C，出大太陽。It's sunny and ______.",['hot','cold','cool','rainy'],'35 度很熱：hot。','天氣'),
+ M('d21',"−8°C，在下雪。It's very ______.",['cold','hot','warm','sunny'],'零下 8 度很冷：cold。','天氣'),
+ M('d22','city 的 c 唸什麼音？',['/s/','/k/','/tʃ/','/g/'],'c 後面是 e、i、y 時唸 /s/。','c 的發音'),
+ M('d23','candy 的 c 唸什麼音？',['/k/','/s/','/tʃ/','/dʒ/'],'c 後面是 a、o、u 時唸 /k/。','c 的發音'),
+ M('d24',"「I can't wait.」是什麼意思？",['我等不及了','我不能等你','我不喜歡等','我在等公車'],"I can't wait. 我等不及了（很期待）。",'日常用語')
+];
+const JL4=[
+ L('e1','music',['music','math','mice','mouse'],'music 音樂。','科目'),
+ L('e2','science',['science','social','seesaw','sister'],'science 自然科學。','科目'),
+ L('e3','class',['class','close','grass','glass'],'class 課。','科目'),
+ L('e4','gym',['gym','game','gum','jam'],'g 後面接 y，唸 /dʒ/：gym。','g 的發音'),
+ L('e5','English',['English','Chinese','PE','art'],'English 英文。','科目'),
+ W('e6','music','音樂',['m','u','s','ic'],['oo','k'],'m-u-s-ic，字尾 ic。','科目拼字'),
+ W('e7','science','自然科學',['sc','i','en','ce'],['s','se'],'sc-i-en-ce，開頭 sc。','科目拼字'),
+ W('e8','class','課；班級',['cl','a','ss'],['gl','s'],'class 字尾兩個 s。','科目拼字'),
+ W('e9','English','英文',['En','gl','ish'],['In','sh'],'En-gl-ish，第一個字母大寫。','科目拼字'),
+ W('e10','Chinese','國語',['Ch','i','nese'],['Sh','ee'],'Ch-i-nese，第一個字母大寫。','科目拼字'),
+ R('e11','你喜歡什麼科目？',['What','subject','do','you','like','?'],['does'],'you 搭配 do。','What subject do you like?'),
+ R('e12','我喜歡體育。',['I','like','PE','.'],['likes'],'I 後面 like 不加 s。','I like ___.'),
+ R('e13','你今天有數學課嗎？',['Do','you','have','math','class','today','?'],['Does'],'you 搭配 Do。','Do you have ___ class?'),
+ R('e14','Andy 星期一有音樂課。',['Andy','has','music','class','on','Monday','.'],['have'],'Andy 是第三人稱單數，用 has。','has / have'),
+ R('e15','快點！我們遲到了。',['Hurry','!','We','are','late','.'],['is'],'We 搭配 are。','日常用語'),
+ M('e16','Mary ______ have Chinese class on Monday.',["doesn't","don't","isn't",'not'],"Mary 是單數，否定用 doesn't + 原形 have。",'has / doesn\'t have'),
+ M('e17','Andy ______ music class today.',['has','have','is','are'],'Andy 是第三人稱單數：has。','has / have'),
+ M('e18','gym 的 g 唸什麼音？',['/dʒ/','/g/','/k/','/ʒ/'],'g 後面是 e、i、y 時常唸 /dʒ/。','g 的發音'),
+ M('e19','gum 的 g 唸什麼音？',['/g/','/dʒ/','/k/','/j/'],'g 後面是 a、o、u 時唸 /g/。','g 的發音'),
+ M('e20','「國語」的英文是哪一個？',['Chinese','English','China','chicken'],'Chinese 國語（中文）。','科目'),
+ M('e21','「Let me show you.」是什麼意思？',['我示範給你看','讓我看看你','給我看你的','我們走吧'],'Let me show you. 我示範給你看。','日常用語'),
+ M('e22','A: Do you like art class?　B: No, I don\'t. I like ______.',['music class','yes','do','Monday'],'回答喜歡的科目。','Do you like ___ class?')
+];
+const JC=[
+ L('f1','tangerine',['tangerine','tiger','telephone','tomorrow'],'tangerine 橘子。','中國新年'),
+ L('f2','rice cake',['rice cake','rice','raise','race car'],'rice cake 年糕。','中國新年'),
+ L('f3','lion dance',['lion dance','lion','line dance','light'],'lion dance 舞獅。','中國新年'),
+ L('f4','luck',['luck','lake','lock','look'],'luck 運氣。','中國新年'),
+ W('f5','luck','運氣',['l','u','ck'],['a','k'],'l-u-ck，ck 在字尾。','新年拼字'),
+ W('f6','eat','吃',['ea','t'],['ee','d'],'ea 唸長音 /i/。','新年拼字'),
+ W('f7','red','紅色',['r','e','d'],['a','t'],'r-e-d。','新年拼字'),
+ W('f8','dinner','晚餐',['d','in','n','er'],['ar','en'],'din-ner，中間兩個 n。','新年拼字'),
+ W('f9','tangerine','橘子',['tan','ger','ine'],['gar','een'],'tan-ger-ine。','新年拼字'),
+ R('f10','紅色是好運的顏色。',['Red','is','the','color','of','good','luck','.'],['are'],'Red 是單數，用 is。','閱讀句型'),
+ R('f11','家人一起吃團圓飯。',['Families','have','a','big','dinner','together','.'],['has'],'Families 是複數，用 have。','閱讀句型'),
+ R('f12','他們貼春聯。',['They','put','up','spring','couplets','.'],['on'],'put up 張貼。','閱讀句型'),
+ R('f13','父母給孩子壓歲錢。',['Parents','give','children','lucky','money','.'],['gives'],'Parents 是複數，give 不加 s。','閱讀句型'),
+ M('f14','「年糕」的英文是哪一個？',['rice cake','rice','cake','dumplings'],'rice cake 年糕。','中國新年'),
+ M('f15','「舞獅」的英文是哪一個？',['lion dance','lion','dance party','dragon boat'],'lion dance 舞獅。','中國新年'),
+ M('f16','「紅包」的英文是哪一個？',['red envelope','red money','red paper','red bag'],'red envelope 紅包。','中國新年'),
+ M('f17',"「Chinese New Year's Eve」是什麼？",['除夕','大年初一','元宵節','端午節'],"New Year's Eve 除夕。",'中國新年'),
+ M('f18','You can see red decorations everywhere ______ Chinese New Year.',['during','on','up','color'],'during 在……期間。','閱讀'),
+ M('f19','「春聯」的英文是哪一個？',['spring couplets','spring rolls','spring days','spring flowers'],'spring couplets 春聯；spring rolls 是春捲。','中國新年')
+];
+const U=(id,name,badge,items)=>({id,name,badge,items});
+B.英語=B.英語||{};
+B.英語.翰林={units:[U('U3','第3課 Unit 3 去哪裡（地點）',null,HL3),U('U4','第4課 Unit 4 看動物',null,HL4),U('F1','Festivals 聖誕節','🎄',HF)]};
+B.英語.何嘉仁={units:[U('L3','第3課 Lesson 3 Weather',null,JL3),U('L4','第4課 Lesson 4 I Like Science',null,JL4),U('C1','Culture 中國新年','🧧',JC)]};
+})();

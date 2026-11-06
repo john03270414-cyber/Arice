@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="學習島">
+<meta name="theme-color" content="#1B8FD0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script src="../lib/firebase-app-compat.js"></script>
+<script src="../lib/firebase-auth-compat.js"></script>
+<script src="../lib/firebase-firestore-compat.js"></script>
+<script src="../lib/config.js?v=1793978686"></script>
+<script src="../lib/shim.js?v=1793978686" data-app="island" data-prefix="isl_"></script>
+<style>html{background:#1B8FD0}body{margin:0}</style>
+</head><body>
+<title>Arice 學習島</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&display=swap">
+<style>
+/* Layout: one-column app shell, big tappable cards for iPad; each subject owns a color, the island teal ties them together. */
+:root{
+  --bg:#EAF2F1; --surface:#FFFFFF; --sunk:#F3F7F6; --ink:#15302E; --muted:#5A7270; --line:#D2E0DD;
+  --accent:#0E7C77; --accent-ink:#FFFFFF; --good:#1D9A57; --good-bg:#E2F5EA; --warn:#C77D00; --warn-bg:#FFF2D9; --bad:#D2443F; --bad-bg:#FCE6E4;
+  --zh:#D2503F; --ma:#2C79C9; --so:#B98000; --sc:#2A9550; --en:#7656BE; --lock:#9AABA9;
+  --font:"Huninn","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r:16px; --shadow:0 1px 0 rgba(21,48,46,.06),0 6px 18px rgba(21,48,46,.07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1D1C; --surface:#172928; --sunk:#132322; --ink:#E4EFEE; --muted:#9BB1AF; --line:#28403E;
+  --accent:#3CB7AF; --accent-ink:#06201E; --good:#4CC983; --good-bg:#14352A; --warn:#F0B341; --warn-bg:#3A2E12; --bad:#F27771; --bad-bg:#3E1C1A;
+  --zh:#F07B6B; --ma:#62A6F0; --so:#E2B23F; --sc:#5BC783; --en:#A58BEA; --lock:#5E7472; --shadow:0 1px 0 rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1D1C; --surface:#172928; --sunk:#132322; --ink:#E4EFEE; --muted:#9BB1AF; --line:#28403E;
+  --accent:#3CB7AF; --accent-ink:#06201E; --good:#4CC983; --good-bg:#14352A; --warn:#F0B341; --warn-bg:#3A2E12; --bad:#F27771; --bad-bg:#3E1C1A;
+  --zh:#F07B6B; --ma:#62A6F0; --so:#E2B23F; --sc:#5BC783; --en:#A58BEA; --lock:#5E7472; --shadow:0 1px 0 rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--font);font-size:17px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 90px;-webkit-tap-highlight-color:transparent}
+#app{max-width:980px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:28px} h2{font-size:22px} h3{font-size:18px}
+.muted{color:var(--muted)} .small{font-size:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.stack{display:grid;gap:14px}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 18px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{background:var(--sunk);color:var(--ink);border:1.5px solid var(--line)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:15px;border-radius:10px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-bg);color:var(--good)} .p-warn{background:var(--warn-bg);color:var(--warn)} .p-bad{background:var(--bad-bg);color:var(--bad)} .p-none{background:var(--sunk);color:var(--muted)}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.topbar .grow{flex:1 1 160px;min-width:0}
+.back{min-height:42px;padding:0 14px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.brand{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+.brand .mark{width:46px;height:46px;border-radius:14px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:24px;font-weight:700}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{min-height:42px;padding:0 16px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-weight:600}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.name{min-height:76px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);font-size:22px;font-weight:700;letter-spacing:.06em}
+.name:active{transform:scale(.98)}
+.subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.subj{position:relative;text-align:left;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px;display:grid;gap:10px;min-height:150px;border-top:6px solid var(--sc-c,var(--accent))}
+.subj .glyph{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:700;color:#fff;background:var(--sc-c)}
+.subj.locked{border-top-color:var(--lock);opacity:.8}
+.subj.locked .glyph{background:var(--lock)}
+.bar{height:10px;border-radius:99px;background:var(--sunk);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+.unit{display:grid;gap:10px;padding:16px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.games{display:flex;gap:8px;flex-wrap:wrap}
+.gbtn{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--sc-c,var(--line));color:var(--sc-c,var(--ink));font-weight:600;background:var(--surface)}
+.gbtn[disabled]{border-color:var(--line);color:var(--lock)}
+.review{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--r);background:var(--warn-bg);color:var(--ink);border:1.5px solid var(--warn)}
+.review .num{font-size:32px;font-weight:700;color:var(--warn);font-variant-numeric:tabular-nums}
+/* play */
+.playhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.prog{flex:1;min-width:120px;height:12px;border-radius:99px;background:var(--surface);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--sc-c,var(--accent));transition:width .3s}
+.hearts{font-size:20px;letter-spacing:2px}
+.qcard{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:22px;display:grid;gap:16px}
+.qtext{font-size:22px;font-weight:600}
+.model{padding:10px 14px;border-radius:12px;background:var(--sunk);font-size:17px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.opt{min-height:58px;padding:10px 14px;border-radius:14px;background:var(--sunk);border:2px solid var(--line);font-size:20px;text-align:left}
+.opt.big{font-size:30px;text-align:center}
+.opt.sel{border-color:var(--sc-c,var(--accent));background:var(--surface)}
+.opt.right{border-color:var(--good);background:var(--good-bg)} .opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.lane{min-height:64px;padding:10px;border-radius:14px;border:2px dashed var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lane.col{flex-direction:column;align-items:stretch}
+.pool{display:flex;flex-wrap:wrap;gap:8px}
+.pool.col{flex-direction:column}
+.chip{min-height:48px;padding:6px 14px;border-radius:12px;background:var(--surface);border:2px solid var(--line);font-size:19px;text-align:left;box-shadow:0 2px 0 var(--line)}
+.chip.used{visibility:hidden}
+.chip .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--sc-c,var(--accent));color:#fff;font-size:14px;margin-right:6px}
+.hint{font-size:14px;color:var(--muted)}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.match .col{display:grid;gap:8px;align-content:start;min-width:0}
+.mitem{min-height:52px;padding:8px 12px;border-radius:12px;background:var(--sunk);border:2px solid var(--line);text-align:left;font-size:17px;display:flex;gap:8px;align-items:center}
+.mitem.sel{border-color:var(--sc-c,var(--accent));background:var(--surface)}
+.tag{flex:none;min-width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700;padding:0 4px}
+.figure{display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:16px;align-items:start}
+.fig{position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--line);max-width:100%}
+.fig svg{display:block;width:100%;height:auto}
+.spot{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:15px;border:2px solid var(--surface)}
+.cls{display:grid;gap:10px}
+.clsrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--sunk)}
+.clsrow .cbtns{display:flex;gap:6px;flex-wrap:wrap}
+.cbtn{min-height:42px;padding:0 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-size:15px}
+.cbtn.on{border-color:var(--sc-c,var(--accent));background:var(--sc-c,var(--accent));color:#fff}
+.passage{display:grid;gap:6px;padding:14px;border-radius:14px;background:var(--sunk)}
+.sent{text-align:left;padding:6px 10px;border-radius:10px;font-size:19px;border:2px solid transparent}
+.sent.on{border-color:var(--sc-c,var(--accent));background:var(--surface)}
+.sent.ev{background:var(--good-bg)}
+.steps{display:grid;gap:8px}
+.step{text-align:left;min-height:52px;padding:10px 14px;border-radius:12px;background:var(--sunk);border:2px solid var(--line);font-size:18px}
+.speak{width:96px;height:96px;border-radius:50%;background:var(--sc-c,var(--accent));color:#fff;font-size:40px;justify-self:center}
+.fb{border-radius:16px;padding:16px;display:grid;gap:8px}
+.fb.ok{background:var(--good-bg)} .fb.no{background:var(--bad-bg)}
+.fb h3{font-size:22px}
+.fb.ok h3{color:var(--good)} .fb.no h3{color:var(--bad)}
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));gap:6px;width:min(400px,100%);aspect-ratio:1;justify-self:center}
+.cell{min-width:0;min-height:0;border-radius:10px;background:var(--sunk);border:1.5px solid var(--line);display:grid;place-items:center;font-size:18px;position:relative;max-width:100%}
+.cell.me{outline:3px solid var(--sc-c);outline-offset:-3px;background:var(--surface)}
+.cell.mid{visibility:hidden}
+.die{font-size:34px;font-weight:700;color:var(--sc-c)}
+.stars{font-size:42px;letter-spacing:6px;color:var(--warn)}
+/* teacher */
+.tlock{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;min-height:40px;padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-size:15px;color:var(--muted)}
+.pinpad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;justify-content:center}
+.pinpad button{height:60px;border-radius:14px;background:var(--sunk);font-size:24px;font-weight:600}
+.dots{display:flex;gap:10px;justify-content:center;font-size:26px;letter-spacing:4px;min-height:36px}
+.tbl{overflow-x:auto;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em;white-space:nowrap}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+.live{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.lcard{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;display:grid;gap:6px;border-left:6px solid var(--good)}
+.lcard.stuck{border-left-color:var(--warn)} .lcard.idle{border-left-color:var(--bad)} .lcard.done{border-left-color:var(--lock)}
+.dotrow{display:flex;gap:3px}
+.dotrow i{width:12px;height:12px;border-radius:50%;background:var(--good)} .dotrow i.x{background:var(--bad)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:var(--sunk)}
+.sw{width:52px;height:30px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.sw.on{background:var(--good)} .sw.on::after{left:25px}
+.note{padding:12px 14px;border-radius:12px;background:var(--sunk);font-size:15px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;z-index:20;font-size:15px}
+.trybar{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 24px)}
+/* home & student hub */
+body{background:radial-gradient(1200px 500px at 50% -120px,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%),var(--bg)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.hero{position:relative;border-radius:30px;overflow:hidden;min-height:340px;margin:4px 0 26px;box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 18px 40px -18px rgba(8,70,95,.55);isolation:isolate}
+.scene-svg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:-1}
+.hero-card{position:absolute;left:22px;top:22px;max-width:380px;padding:20px 22px;border-radius:22px;background:rgba(255,255,255,.72);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);color:#14343A;box-shadow:0 10px 30px -12px rgba(10,60,80,.45);border:1px solid rgba(255,255,255,.8)}
+.hero-card .eyebrow{color:#0E7C77}
+.hero-title{font-size:44px;letter-spacing:.04em;margin:6px 0 4px;background:linear-gradient(92deg,#0B6F8C,#13A08F 60%,#4FA845);-webkit-background-clip:text;background-clip:text;color:transparent;animation:popin .7s cubic-bezier(.2,1.6,.4,1) both}
+.hero-sub{margin:0;font-size:15px;color:#3C5A60}
+.hero-stats{display:flex;gap:6px;margin-top:14px}
+.hero-stats div{flex:1;background:#fff;border-radius:14px;padding:8px 10px;text-align:center;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+.hero-stats b{display:block;font-size:24px;color:#0E7C77;font-variant-numeric:tabular-nums;line-height:1.2}
+.hero-stats span{font-size:12px;color:#5A7270}
+.scene-mute{position:absolute;right:14px;bottom:14px;min-height:42px;padding:0 14px;border-radius:99px;font-weight:700;font-size:15px;color:#0B6F8C;background:rgba(255,255,255,.85);font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.cloud{animation:cloud 40s linear infinite}.cloud.c2{animation-duration:52s;animation-delay:-20s}.cloud.c3{animation-duration:30s;animation-delay:-8s}
+.bird{animation:bird 22s linear infinite}
+.pin{animation:pinb 2.6s ease-in-out infinite}
+.sailboat{animation:sail 18s ease-in-out infinite}
+.wave{animation:wave 5s linear infinite}.wave.w2{animation-duration:7s}.wave.w3{animation-duration:9s;animation-direction:reverse}
+.spark{animation:spark 2.4s ease-in-out infinite}
+.palm{animation:palm 5s ease-in-out infinite}
+.pennant{transform-origin:551px 88px;animation:flag 1.6s ease-in-out infinite}
+.trail{animation:trail 6s linear infinite}
+@keyframes cloud{from{transform:translateX(-300px)}to{transform:translateX(1200px)}}
+@keyframes bird{0%{transform:translate(-80px,170px)}100%{transform:translate(1080px,120px)}}
+@keyframes pinb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes sail{0%,100%{transform:translate(70px,338px) rotate(-2deg)}50%{transform:translate(150px,340px) rotate(2deg)}}
+@keyframes wave{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+@keyframes spark{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.95;transform:scale(1)}}
+@keyframes palm{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+@keyframes flag{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.75)}}
+@keyframes trail{to{stroke-dashoffset:-130}}
+.home-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.sec-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.sec-h h2{font-size:24px}
+.segs{display:flex;gap:6px;padding:6px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:16px;overflow-x:auto}
+.seg{flex:1 0 auto;min-height:48px;padding:0 16px;border-radius:13px;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted)}
+.seg i{font-style:normal;font-size:12px;min-width:22px;height:22px;border-radius:99px;display:grid;place-items:center;background:var(--sunk);color:var(--muted);padding:0 6px}
+.seg.on{background:linear-gradient(135deg,#13A08F,#0B6F8C);color:#fff;box-shadow:0 6px 14px -6px rgba(11,111,140,.7)}
+.seg.on i{background:rgba(255,255,255,.25);color:#fff}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.name{display:flex;align-items:center;gap:14px;min-height:84px;padding:12px 14px;border-radius:20px;background:var(--surface);text-align:left;box-shadow:var(--shadow);border:1px solid var(--line);transition:transform .15s,box-shadow .15s;animation:rise .4s both}
+.name:hover{transform:translateY(-2px);box-shadow:0 12px 24px -12px rgba(21,48,46,.35)}
+.name:active{transform:scale(.98)}
+.name.picked{animation:popin .35s}
+.av{position:relative;flex:none;width:58px;height:58px;border-radius:18px;background:var(--av);display:grid;place-items:center;font-size:32px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.07)}
+.av.sm{width:38px;height:38px;border-radius:12px;font-size:21px}
+.av em{position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;background:var(--good);color:#fff;font-style:normal;font-size:13px;display:grid;place-items:center;border:2px solid var(--surface)}
+.name:hover .av{animation:bob 1s ease-in-out infinite}
+.nm{flex:1;min-width:0;display:grid}
+.nm b{font-size:21px;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm small{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{font-size:28px;color:var(--lock);line-height:1}
+.side{display:grid;gap:14px}
+.panel{background:var(--surface);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rank li{display:flex;align-items:center;gap:10px}
+.rank .md{width:26px;text-align:center;font-size:20px;color:var(--muted);font-weight:700}
+.rank .rn{flex:1;min-width:0;font-weight:600}
+.rank b{font-variant-numeric:tabular-nums;color:var(--accent)}
+.today{display:flex;flex-wrap:wrap;gap:6px}
+.empty{margin:0}
+.tip{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface))}
+.tip ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--muted);display:grid;gap:4px}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* student hub */
+.me{position:relative;overflow:hidden;border-radius:28px;padding:24px;color:#fff;background:linear-gradient(135deg,#0B6F8C 0%,#13A08F 55%,#4FA845 100%);box-shadow:0 18px 40px -20px rgba(8,70,95,.7);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;margin:4px 0 16px}
+.me::before{content:"";position:absolute;right:-80px;top:-120px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.08)}
+.me::after{content:"";position:absolute;left:30%;bottom:-160px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06)}
+.me-l{display:flex;align-items:center;gap:16px;min-width:0;position:relative}
+.me-av{flex:none;width:84px;height:84px;border-radius:26px;background:var(--av);display:grid;place-items:center;font-size:48px;box-shadow:0 0 0 5px rgba(255,255,255,.35);animation:bob 3s ease-in-out infinite}
+.me-t{min-width:0}.me-t h1{font-size:32px;margin:4px 0 2px}.me-t p{margin:0;opacity:.9}
+.me-stats{display:flex;gap:8px;position:relative}
+.me-stats div{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:10px 14px;text-align:center;min-width:92px}
+.me-stats b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.me-stats span{font-size:12px;opacity:.85}
+.me-act{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;position:relative}
+.btn.light{background:#fff;color:#0B6F8C}
+.btn.ghostw{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.quest{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:22px;background:linear-gradient(135deg,#FFF3D6,#FFE2B8);border:1.5px solid #F2B84B;color:#4A3410;margin-bottom:26px;box-shadow:0 10px 24px -16px rgba(199,125,0,.7)}
+.quest.calm{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow)}
+.chest{font-size:40px;animation:bob 2.4s ease-in-out infinite}
+.q-t{flex:1;min-width:0;display:grid;gap:2px}.q-t b{font-size:19px}.q-t span{font-size:14px;opacity:.8}
+.quest .btn{background:#E08A00;color:#fff}
+.isles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.isle{position:relative;overflow:hidden;border-radius:24px;padding:18px;min-height:200px;color:#fff;text-align:left;display:grid;grid-template-rows:auto 1fr auto;gap:10px;background:linear-gradient(150deg,color-mix(in srgb,var(--sc-c) 72%,#fff) 0%,var(--sc-c) 55%,color-mix(in srgb,var(--sc-c) 78%,#000) 100%);box-shadow:0 14px 28px -16px color-mix(in srgb,var(--sc-c) 80%,#000);transition:transform .18s;animation:rise .45s both}
+.isle:nth-child(2){animation-delay:.05s}.isle:nth-child(3){animation-delay:.1s}.isle:nth-child(4){animation-delay:.15s}.isle:nth-child(5){animation-delay:.2s}
+.isle:hover{transform:translateY(-3px) rotate(-.5deg)}
+.isle:active{transform:scale(.98)}
+.isle .wm{position:absolute;right:-14px;bottom:-34px;font-size:150px;font-weight:700;line-height:1;color:rgba(255,255,255,.14);pointer-events:none}
+.isle-top{display:flex;justify-content:space-between;align-items:flex-start}
+.isle .glyph{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;font-weight:700;background:rgba(255,255,255,.95);color:var(--sc-c);box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.isle-name h3{font-size:24px}.isle-name small{opacity:.9;font-size:14px}
+.isle-foot{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
+.isle-foot span{padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.2)}
+.isle-foot .warnb{background:#FFE07A;color:#5A3D00;font-weight:700}
+.isle-foot .go{margin-left:auto;background:#fff;color:var(--sc-c);font-weight:700}
+.ring{position:relative;display:grid;place-items:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring b{font-size:13px;font-variant-numeric:tabular-nums}
+.isle.locked{background:linear-gradient(150deg,color-mix(in srgb,var(--sc-c) 30%,#C9D4D3),color-mix(in srgb,var(--sc-c) 18%,#93A5A3));box-shadow:none}
+.isle.locked .glyph{color:#8A9C9A}
+.isle.locked .isle-foot{font-weight:700}
+.lockb{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.35);display:grid;place-items:center;font-size:20px}
+.sbanner{position:relative;overflow:hidden;border-radius:26px;padding:20px 22px;color:#fff;background:linear-gradient(140deg,color-mix(in srgb,var(--sc-c) 70%,#fff),var(--sc-c) 60%,color-mix(in srgb,var(--sc-c) 75%,#000));display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:4px 0 16px;box-shadow:0 14px 30px -18px color-mix(in srgb,var(--sc-c) 80%,#000)}
+.sbanner .wm{position:absolute;right:90px;bottom:-40px;font-size:170px;font-weight:700;color:rgba(255,255,255,.13);line-height:1;pointer-events:none}
+.sbanner h1{font-size:34px}
+.sbanner .grow{flex:1;min-width:140px;position:relative}
+.back.light{background:rgba(255,255,255,.2);color:#fff;box-shadow:none;border:1px solid rgba(255,255,255,.35)}
+@media (max-width:820px){.home-grid{grid-template-columns:1fr}.side{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+@media (max-width:620px){.hero{min-height:0;display:grid}.hero .scene-svg{position:relative;height:210px;z-index:0}.hero-card{position:relative;left:auto;top:auto;max-width:none;margin:-34px 12px 12px;background:var(--surface);color:var(--ink);backdrop-filter:none}.hero-sub{color:var(--muted)}.hero-title{font-size:36px}.scene-mute{top:12px;bottom:auto}
+.me{grid-template-columns:1fr;padding:20px}.me-stats div{flex:1;min-width:0;padding:8px}.me-av{width:66px;height:66px;font-size:38px}.me-t h1{font-size:26px}.names{grid-template-columns:1fr}.isles{grid-template-columns:1fr 1fr;gap:10px}.isle{min-height:170px;padding:14px}.isle-name h3{font-size:20px}}
+/* fullscreen */
+.fsbtn{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:16;min-height:38px;padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-size:14px;color:var(--muted)}
+/* scratchpad & writing */
+[hidden]{display:none!important}
+.scratch-btn{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:15;min-height:50px;padding:0 18px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:700;box-shadow:0 8px 20px -8px rgba(0,0,0,.5)}
+.scratch{position:fixed;left:0;right:0;bottom:0;height:min(46vh,440px);z-index:14;background:#FFFEF7;border-top:3px solid var(--ink);box-shadow:0 -10px 30px -10px rgba(0,0,0,.35);display:grid;grid-template-rows:auto 1fr;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px);background-image:linear-gradient(#E8EEF2 1px,transparent 1px),linear-gradient(90deg,#E8EEF2 1px,transparent 1px);background-size:28px 28px}
+.scratch .sbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#fff;border-bottom:1px solid #dde;color:#1b2a2a}
+.scratch canvas{width:100%;height:100%;display:block;touch-action:none}
+.pen{width:40px;height:40px;border-radius:12px;border:2px solid #dde;background:#fff;display:grid;place-items:center;font-size:18px}
+.pen i{width:16px;height:16px;border-radius:50%;display:block}
+.pen.on{border-color:#1b2a2a;box-shadow:0 0 0 2px #fff inset}
+body.scr-open{padding-bottom:calc(min(46vh,440px) + 20px)}
+body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
+.wsent{font-size:26px;line-height:1.8;font-family:"DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",var(--font)}
+.zyb{color:var(--sc-c,var(--accent));font-weight:700;padding:0 2px}
+.wrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.tzg{width:min(260px,70vw);aspect-ratio:1;border:3px solid #D2503F;border-radius:6px;background:#FFFEF7;background-image:linear-gradient(90deg,transparent calc(50% - .75px),rgba(210,80,63,.35) calc(50% - .75px),rgba(210,80,63,.35) calc(50% + .75px),transparent calc(50% + .75px)),linear-gradient(transparent calc(50% - .75px),rgba(210,80,63,.35) calc(50% - .75px),rgba(210,80,63,.35) calc(50% + .75px),transparent calc(50% + .75px))}
+.tzg canvas{width:100%;height:100%;display:block}
+.wans{display:grid;justify-items:center;gap:4px;padding:10px 18px;border-radius:16px;background:var(--good-bg);animation:popin .35s}
+.wch{font-size:120px;line-height:1;font-family:"DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",serif;color:var(--ink)}
+.wself{display:grid;gap:8px;padding:12px;border-radius:14px;background:var(--sunk)}
+.charbox{display:grid;gap:10px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.chars{display:flex;flex-wrap:wrap;gap:6px}
+.cg{position:relative;width:46px;height:46px;border-radius:10px;display:grid;place-items:center;font-size:28px;font-family:"DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",serif;border:2px solid var(--line);background:var(--sunk);color:var(--muted)}
+.cg.st-done{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.cg.st-learn{border-color:var(--warn);background:var(--warn-bg);color:var(--ink)}
+.cg.st-weak{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.cg i{position:absolute;right:-5px;top:-6px;font-style:normal;font-family:var(--font);font-size:11px;font-weight:700;background:var(--bad);color:#fff;border-radius:99px;padding:0 5px;line-height:16px}
+/* num & multi */
+.numwrap{display:grid;gap:12px;justify-items:start}
+.nbox{min-width:120px;min-height:56px;padding:6px 14px;border-radius:12px;border:2.5px solid var(--line);background:var(--surface);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;display:grid;place-items:center}
+.nbox.on{border-color:var(--sc-c,var(--accent))}
+.nbox.wide{min-width:200px;justify-items:start}
+.fracbox{display:grid;justify-items:center;gap:6px}
+.fracbox i{display:block;width:140px;height:3px;background:var(--ink);border-radius:2px}
+.keypad{display:grid;grid-template-columns:repeat(3,74px);gap:8px}
+.keypad button{height:58px;border-radius:14px;background:var(--sunk);border:1.5px solid var(--line);font-size:24px;font-weight:700;box-shadow:0 3px 0 var(--line)}
+.keypad button:active{transform:translateY(2px);box-shadow:none}
+.multi{display:flex;flex-wrap:wrap;gap:10px}
+.mchip{min-width:70px;min-height:56px;padding:6px 16px;border-radius:14px;border:2.5px solid var(--line);background:var(--sunk);font-size:22px;font-weight:700}
+.mchip.on{border-color:var(--sc-c,var(--accent));background:var(--surface);box-shadow:inset 0 0 0 2px var(--sc-c,var(--accent))}
+.mchip.right{border-color:var(--good);background:var(--good-bg)}.mchip.wrong{border-color:var(--bad);background:var(--bad-bg)}.mchip.miss{border-style:dashed;border-color:var(--good)}
+/* unit buttons */
+.ubtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.ubtn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:left;min-height:92px;transition:transform .15s;animation:rise .4s both}
+.ubtn:hover{transform:translateY(-2px)}
+.ubtn .un{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:22px;font-weight:700;color:#fff;background:linear-gradient(150deg,color-mix(in srgb,var(--sc-c) 70%,#fff),var(--sc-c));box-shadow:0 4px 0 color-mix(in srgb,var(--sc-c) 60%,#000)}
+.ubtn .ut{flex:1;min-width:0;display:grid;gap:6px}
+.ubtn .ut b{font-size:19px}
+.ubtn .ut small{display:flex;gap:6px;flex-wrap:wrap;color:var(--muted)}
+.ubtn.locked{opacity:.6;box-shadow:none;background:var(--sunk)}
+.ubtn.locked .un{background:var(--lock);box-shadow:none}
+.ubtn.final{grid-column:1/-1;background:linear-gradient(120deg,#FFF6DA,#FFE9B8);border-color:#F2C45A}
+.ubtn.final .un{background:linear-gradient(150deg,#FFD447,#E08A00);box-shadow:0 4px 0 #A86400}
+.ubtn.final.locked{background:var(--sunk);border-color:var(--line)}
+.ubtn.final.locked .un{background:var(--lock);box-shadow:none}
+.ucard{background:var(--surface);border-radius:22px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--line);display:grid;gap:12px}
+.btn.big{min-height:58px;font-size:20px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--sc-c) 80%,#fff),var(--sc-c));color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--sc-c) 60%,#000)}
+.btn.big:active{transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--sc-c) 60%,#000)}
+/* avatar picker & student pin */
+.av .jsy,.me-av .jsy{width:88%;height:88%}
+.me-av{position:relative;cursor:pointer;border:0}
+.me-av em{position:absolute;right:-6px;bottom:-6px;font-style:normal;font-size:12px;font-weight:700;background:#fff;color:#0B6F8C;border-radius:99px;padding:2px 8px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(10,30,35,.45);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:fadein .2s}
+.sheet{background:var(--surface);border-radius:26px;padding:20px;width:min(720px,100%);max-height:88vh;overflow:auto;display:grid;gap:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:popin .3s cubic-bezier(.2,1.4,.4,1)}
+.sheet h3{font-size:16px;color:var(--muted)}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.avc{display:grid;place-items:center;padding:6px;border-radius:18px;border:2.5px solid transparent}
+.avc.on{border-color:var(--accent);background:var(--sunk)}
+.avc .jn{font-size:12px;color:var(--muted);margin-top:2px}
+.avc:active{transform:scale(.92)}
+.pinbox{max-width:400px;margin:10px auto;background:var(--surface);border-radius:28px;padding:26px 22px;text-align:center;display:grid;gap:8px;justify-items:center;box-shadow:var(--shadow);border:1px solid var(--line)}
+.pinbox.fx-no{animation:shake .42s}
+.av.big{width:96px;height:96px;border-radius:30px;font-size:56px}
+.pinbox .pt{font-size:19px;font-weight:700;margin:0}
+.pinbox p{margin:0}
+.pdots{display:flex;gap:14px;margin:8px 0 6px}
+.pdots i{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--accent);transition:background .15s}
+.pdots i.on{background:var(--accent);animation:popin .2s}
+.pinbox .pinpad{grid-template-columns:repeat(3,76px)}
+.pinbox .pinpad button{height:64px;font-size:26px}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+/* game covers & effects */
+.cover{position:relative;overflow:hidden;border-radius:28px;padding:34px 20px;min-height:460px;display:grid;place-items:center;text-align:center;color:#fff;background:radial-gradient(120% 90% at 25% 15%,color-mix(in srgb,var(--sc-c) 55%,#fff) 0%,var(--sc-c) 55%,color-mix(in srgb,var(--sc-c) 70%,#000) 100%);box-shadow:0 10px 0 color-mix(in srgb,var(--sc-c) 60%,#000),var(--shadow);margin-bottom:10px}
+.cover .deco{position:absolute;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 3px 0 rgba(0,0,0,.15);animation:drift 7s ease-in-out infinite;pointer-events:none;white-space:nowrap}
+.cin{position:relative;z-index:1;display:grid;gap:12px;justify-items:center;max-width:520px}
+.chero{font-size:112px;line-height:1;animation:bob 2.4s ease-in-out infinite;filter:drop-shadow(0 10px 0 rgba(0,0,0,.18))}
+.csub{font-size:15px;padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.22)}
+.ctitle{font-size:52px;letter-spacing:.06em;text-shadow:0 5px 0 rgba(0,0,0,.2);animation:popin .6s cubic-bezier(.2,1.6,.4,1) both}
+.ctag{font-size:19px;margin:0;line-height:1.6}
+.rules{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rules span{padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.2);font-size:15px;font-weight:600}
+.startbtn{min-height:64px;padding:0 44px;border-radius:20px;background:#fff;color:var(--sc-c);font-size:26px;font-weight:700;box-shadow:0 6px 0 rgba(0,0,0,.2);animation:pulse 1.6s ease-in-out infinite}
+.startbtn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.cstars{font-size:28px;letter-spacing:4px;color:#FFE27A;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.gtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gtile{position:relative;overflow:hidden;border-radius:16px;padding:14px 12px 12px;color:#fff;text-align:left;background:linear-gradient(150deg,color-mix(in srgb,var(--sc-c) 70%,#fff),var(--sc-c));box-shadow:0 4px 0 color-mix(in srgb,var(--sc-c) 60%,#000);display:grid;gap:2px;min-height:104px}
+.gtile .gi{font-size:38px;line-height:1}
+.gtile b{font-size:18px}
+.gtile .gs{font-size:14px;color:#FFE27A;min-height:18px}
+.gtile:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--sc-c) 60%,#000)}
+.gtile[disabled]{filter:grayscale(1);opacity:.55;box-shadow:none}
+.gtile[disabled]::after{content:"🔒";position:absolute;right:10px;top:8px;font-size:20px}
+.mute{min-width:46px}
+.qcard.fx-no{animation:shake .42s}
+.fb.ok{animation:popin .45s cubic-bezier(.2,1.6,.4,1)}
+.plus{position:absolute;right:18px;top:10px;font-size:30px;font-weight:700;color:var(--good);animation:floatUp 1.2s ease-out forwards;pointer-events:none}
+.qcard{position:relative}
+.die.roll{display:inline-block;animation:roll .7s cubic-bezier(.2,1.4,.4,1)}
+.cell.me{animation:popin .5s cubic-bezier(.2,1.6,.4,1)}
+.combo{display:inline-block;animation:popin .4s}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+.stars span{display:inline-block;animation:popin .5s cubic-bezier(.2,1.8,.4,1) both}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+@keyframes drift{0%,100%{transform:translate(0,0) rotate(var(--r,0deg))}50%{transform:translate(8px,-16px) rotate(calc(var(--r,0deg) + 10deg))}}
+@keyframes popin{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+@keyframes floatUp{0%{transform:translateY(10px);opacity:0}20%{opacity:1}100%{transform:translateY(-50px);opacity:0}}
+@keyframes roll{0%{transform:rotate(-540deg) scale(.3)}100%{transform:rotate(0) scale(1)}}
+@media (max-width:560px){.ctitle{font-size:40px}.chero{font-size:88px}.cover{min-height:420px}.cover .deco{opacity:.4}}
+.z-zh{--sc-c:var(--zh)} .z-ma{--sc-c:var(--ma)} .z-so{--sc-c:var(--so)} .z-sc{--sc-c:var(--sc)} .z-en{--sc-c:var(--en)}
+@media (max-width:560px){.figure{grid-template-columns:1fr}.match{grid-template-columns:1fr}h1{font-size:24px}.qtext{font-size:20px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app"></div>
+<button id="scratchBtn" class="scratch-btn" type="button" hidden>✏️ 計算紙</button>
+<div id="scratch" class="scratch" hidden><div class="sbar"><b id="scratchTitle">計算紙</b><div class="row" style="gap:6px"><button type="button" data-pen="#1b2a2a" class="pen on" aria-label="黑筆"><i style="background:#1b2a2a"></i></button><button type="button" data-pen="#2C79C9" class="pen" aria-label="藍筆"><i style="background:#2C79C9"></i></button><button type="button" data-pen="#D2443F" class="pen" aria-label="紅筆"><i style="background:#D2443F"></i></button><button type="button" data-pen="erase" class="pen" aria-label="橡皮擦">🧽</button><button type="button" id="scratchClear" class="btn ghost sm">全部擦掉</button><button type="button" id="scratchClose" class="btn sm">收起</button></div></div><canvas id="scratchCv"></canvas></div>
+<button class="tlock" id="tlock" data-act="teacher">🔒 老師</button>
+<button class="fsbtn" id="fsbtn" type="button" aria-label="全螢幕">⛶ 全螢幕</button>
+
+<script src="bank.js"></script>
+<script src="bank_math.js"></script>
+<script src="bank_en.js"></script>
+<script src="bank_zh.js"></script>
+<script src="demo.js"></script>
+<script>
+(function(){
+'use strict';
+const DAY=864e5;
+const SUBJS=['國語','數學','社會','自然','英語'];
+const SM={國語:{z:'zh',g:'語'},數學:{z:'ma',g:'數'},社會:{z:'so',g:'社'},自然:{z:'sc',g:'自'},英語:{z:'en',g:'英'}};
+const PUBS=['翰林','康軒','南一','何嘉仁'];
+const GAMES={
+  國語:[{k:'write',n:'生字挑戰',ic:'✍️',d:'看注音寫出國字',types:['write']},{k:'char',n:'形近字救援',ic:'🔍',d:'選出句子裡正確的字',types:['mc']},{k:'tiles',n:'句子拼拼樂',ic:'🧩',d:'把詞卡排成通順的句子',types:['tiles']},{k:'evid',n:'閱讀偵探',ic:'🕵️',d:'選答案，還要點出證據句',types:['evidence']}],
+  數學:[{k:'calc',n:'計算魔王',ic:'🧮',d:'算出答案打進去',types:['num']},{k:'pick',n:'全部勾出來',ic:'☑️',d:'符合的全部勾起來',types:['multi']},{k:'mono',n:'大富翁',ic:'🎲',d:'答對才能擲骰前進',types:['mc'],board:true},{k:'order',n:'步驟排隊',ic:'🪜',d:'把解題步驟排好',types:['order']},{k:'err',n:'找錯偵探',ic:'🔎',d:'找出算錯的那一步',types:['errstep']}],
+  社會:[{k:'time',n:'時間軸排序',ic:'⏳',d:'把事件排出先後',types:['order']},{k:'cause',n:'因果配對',ic:'🔗',d:'原因連到結果',types:['match']},{k:'map',n:'地圖放置',ic:'🗺️',d:'把名稱放到地圖上',types:['label']}],
+  自然:[{k:'exp',n:'實驗步驟排序',ic:'🧪',d:'把實驗步驟排好',types:['order']},{k:'var',n:'變因判斷',ic:'⚖️',d:'分出三種變因',types:['classify']},{k:'lab',n:'圖片標記',ic:'🏷️',d:'把名稱標到圖上',types:['label']}],
+  英語:[{k:'listen',n:'聽音選字',ic:'👂',d:'聽發音選出單字',types:['listen']},{k:'spell',n:'拼字積木',ic:'🔤',d:'用字母組合拼出單字',types:['spell']},{k:'sent',n:'句型重組',ic:'💬',d:'把單字排成句子',types:['tiles']}]
+};
+const COVER={
+  calc:{h:'🧮',d:['＋','－','×','÷','＝','0.5','3/4'],t:'魔王出了計算題！用計算紙算好，再把答案打進去打敗牠！'},
+  pick:{h:'☑️',d:['✔','✔','2','3','6','12'],t:'把符合條件的全部勾出來，漏掉一個或多勾一個都不算！'},
+  write:{h:'✍️',d:['ㄓ','ㄨ','ㄢ','字','寫','筆'],t:'看注音，在田字格裡寫出國字，寫完自己對答案！'},
+  char:{h:'🦸',d:['專','傳','轉','磚','摺','折','茁','拙'],t:'怪盜把句子裡的字換成長得很像的假字！快把正確的字救回來！'},
+  tiles:{h:'🧩',d:['雖然','但是','一邊','而且','，','。'],t:'句子被拆成一塊一塊，把它拼回通順的句子！'},
+  evid:{h:'🕵️',d:['🔍','📜','❓','👣','💡'],t:'答案要有證據！在文章裡找出線索才能破案。'},
+  mono:{h:'🎲',d:['⭐','🎁','🔁','💰','🏁','🎲'],t:'答對才能擲骰子前進！走到 🔁 會遇到以前錯過的題目。'},
+  order:{h:'🪜',d:['1','2','3','➜','✔️'],t:'解題步驟被打亂了，一步一步排回正確順序！'},
+  err:{h:'🔎',d:['❌','✏️','➗','✖️','➕','＝'],t:'有人算錯了！找出是哪一步出了問題。'},
+  time:{h:'⏳',d:['1624','1661','1683','1895','📜','🏯'],t:'時光機故障了！把歷史事件排回正確的年代。'},
+  cause:{h:'🔗',d:['因為','所以','➜','💡','❓'],t:'每件事都有原因，把原因和結果連起來！'},
+  map:{h:'🗺️',d:['📍','🧭','⛰️','🌊','🏝️'],t:'地圖上的名字全掉光了，把它們放回正確位置！'},
+  exp:{h:'🧪',d:['🫧','⚗️','🔥','💧','🧫'],t:'步驟弄亂的話實驗會失敗！排出正確的順序。'},
+  var:{h:'⚖️',d:['操縱','控制','應變','🌡️','📏'],t:'公平的實驗只改變一件事，把三種變因分清楚！'},
+  lab:{h:'🏷️',d:['🌸','🌿','🧪','📐','🔬'],t:'標籤都掉了，把名字貼回圖上正確的地方！'},
+  listen:{h:'👂',d:['🔊','🎵','a','e','i','o','u'],t:'耳朵打開！聽聽看，選出你聽到的單字。'},
+  spell:{h:'🔤',d:['ai','ea','ch','th','sh','ay'],t:'用字母積木拼出單字，唸得出來就拼得出來！'},
+  sent:{h:'💬',d:['I','you','like','?','.','is'],t:'單字跑亂了，把它們排回正確的英文句子！'}
+};
+/* ---------- sound (synthesized, no files) ---------- */
+const SFX=(()=>{
+  const PACKS=[['marimba','🎵 木琴'],['bell','🔔 魔法鈴'],['arcade','👾 電玩'],['off','🔇 靜音']];
+  let ctx=null,pack='marimba';try{const v=localStorage.getItem('island-sound');if(v&&PACKS.some(p=>p[0]===v))pack=v}catch(e){}
+  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}catch(e){return null}}
+  const N=n=>440*Math.pow(2,(n-69)/12); /* midi -> Hz */
+  function env(c,g,n,a,d,v){g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+a);g.gain.exponentialRampToValueAtTime(.0001,n+a+d)}
+  function out(c){if(!c._bus){const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);c._bus=comp}return c._bus}
+  function note(m,t0,len,v){if(pack==='off')return;const c=ac();if(!c)return;const n=c.currentTime+t0,f=N(m),bus=out(c);v=v||.2;
+    if(pack==='marimba'){[[1,1],[4,.18],[9.2,.05]].forEach(([h,a])=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f*h;env(c,g,n,.004,(len||.35)/h**.35,v*a);o.connect(g);g.connect(bus);o.start(n);o.stop(n+1.2)})}
+    else if(pack==='bell'){const car=c.createOscillator(),mod=c.createOscillator(),mg=c.createGain(),g=c.createGain();car.frequency.value=f;mod.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,n);mg.gain.exponentialRampToValueAtTime(f*.1,n+1);mod.connect(mg);mg.connect(car.frequency);env(c,g,n,.006,(len||.7)*1.6,v*.75);car.connect(g);g.connect(bus);car.start(n);mod.start(n);car.stop(n+2);mod.stop(n+2)}
+    else{const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(f,n);env(c,g,n,.003,len||.12,v*.35);o.connect(g);g.connect(bus);o.start(n);o.stop(n+(len||.12)+.1)}}
+  function glide(m1,m2,t0,len,v){if(pack==='off')return;const c=ac();if(!c)return;const n=c.currentTime+t0;const o=c.createOscillator(),g=c.createGain();o.type=pack==='arcade'?'square':'triangle';o.frequency.setValueAtTime(N(m1),n);o.frequency.exponentialRampToValueAtTime(N(m2),n+len);env(c,g,n,.01,len,(v||.15)*(pack==='arcade'?.4:1));o.connect(g);g.connect(out(c));o.start(n);o.stop(n+len+.1)}
+  function noise(t0,len,fq,v){if(pack==='off')return;const c=ac();if(!c)return;const n=c.currentTime+t0;const b=c.createBuffer(1,c.sampleRate*len,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=b;f.type='bandpass';f.frequency.value=fq;f.Q.value=3;g.gain.value=v||.5;s.connect(f);f.connect(g);g.connect(out(c));s.start(n)}
+  const seq=(ms,step,len,v)=>ms.forEach((m,i)=>note(m,i*step,len,v));
+  return {
+    get muted(){return pack==='off'},get label(){return PACKS.find(p=>p[0]===pack)[1]},
+    cycle(){const i=PACKS.findIndex(p=>p[0]===pack);pack=PACKS[(i+1)%PACKS.length][0];try{localStorage.setItem('island-sound',pack)}catch(e){}this.ok(1)},
+    tap(){note(84,0,.08,.08)},
+    ok(c){const k=Math.min((c||1)-1,7);seq([72+k,76+k,79+k],.075,.3,.2);if(c>=3)note(84+k,.24,.5,.14)},
+    no(){note(64,0,.25,.16);note(60,.14,.4,.16)},
+    heart(){glide(67,52,0,.35,.16);noise(.02,.12,900,.15)},
+    dice(){for(let i=0;i<6;i++)noise(i*.07,.05,1800+Math.random()*1500,.45);note(79,.46,.25,.14)},
+    start(){seq([60,64,67,72,76],.07,.35,.18)},
+    win(){seq([72,76,79,84],.1,.35,.2);[79,84,88].forEach((m,i)=>note(m,.42+i*.08,.6,.12));note(91,.75,.9,.12)},
+    lose(){seq([67,66,65,64],.17,.4,.13)},
+    unlock(){seq([67,72,76,79,84],.08,.55,.17)},
+    sticker(){note(88,0,.25,.12);note(93,.08,.4,.12)},
+    hello(){seq([72,79],.1,.4,.16)}
+  };
+})();
+function confetti(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}const c=document.createElement('canvas');c.className='confetti';document.body.appendChild(c);const dpr=window.devicePixelRatio||1;const W=c.width=innerWidth*dpr,H=c.height=innerHeight*dpr;const x=c.getContext('2d');const cols=['#D2503F','#2C79C9','#E2B23F','#2A9550','#7656BE','#3CB7AF','#FF8FB1'];
+  const P=Array.from({length:150},()=>({x:Math.random()*W,y:-Math.random()*H*.6,vx:(Math.random()-.5)*3*dpr,vy:(2+Math.random()*3)*dpr,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,s:(7+Math.random()*8)*dpr,c:cols[Math.random()*cols.length|0]}));
+  const t0=performance.now();(function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.04*dpr;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});if(t-t0<3200)requestAnimationFrame(f);else c.remove()})(t0)}
+const TYPE_NAME={num:'計算',multi:'勾選',write:'寫國字',mc:'選擇',order:'排序',match:'配對',tiles:'詞卡造句',evidence:'閱讀證據',classify:'分類',errstep:'找錯',listen:'聽音',spell:'拼字',label:'圖片標記'};
+const TAGC=['#2C79C9','#D2503F','#2A9550','#B98000','#7656BE','#0E7C77','#C2417A','#5B6B7A'];
+const S={db:null,dbState:'wait',cfg:null,cfgState:'wait',stu:{},live:{},logs:{},view:{n:'home'},tOK:false,sess:null,school:null,draft:null,tTab:'live',pinBuf:'',pinMode:null,pin1:'',tryPick:{}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=(t=Date.now())=>{const d=new Date(t);return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
+const nextDay=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()+DAY};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const ago=t=>{if(!t)return '—';const s=(Date.now()-t)/1000;if(s<60)return '剛剛';if(s<3600)return Math.floor(s/60)+' 分鐘前';if(s<86400)return Math.floor(s/3600)+' 小時前';return Math.floor(s/86400)+' 天前'};
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+
+/* ---------- bank ---------- */
+const bank=demo=>demo?(window.DEMO||{}):(window.BANK||{});
+const unitsOf=(subj,pub)=>bank(pub==='示範')?.[subj]?.[pub]?.units||[];
+const ukey=(subj,pub,uid)=>subj+'|'+pub+'|'+uid;
+function findQ(q){const [s,p,u,i]=q.split('|');const un=unitsOf(s,p).find(x=>x.id===u);const it=un&&un.items.find(x=>x.id===i);return it?{subj:s,pub:p,unit:un,it}:null}
+function wrap(subj,pub,un,it,m){const q=ukey(subj,pub,un.id)+'|'+it.id;let item=it;if(it.alt&&m&&m[q]&&m[q].w)item=Object.assign({},it,it.alt);return {subj,pub,uid:un.id,uname:un.name,qid:q,it:item}}
+const gameItems=(un,g)=>un.items.filter(it=>it.g?it.g===g.k:g.types.includes(it.type)&&!it.g);
+function gameItemsLoose(un,g){const a=gameItems(un,g);if(a.length)return a;return un.items.filter(it=>g.types.includes(it.type))}
+
+/* ---------- config / students ---------- */
+const students=()=>(S.cfg&&S.cfg.students)||[];
+const stuById=id=>students().find(s=>s.id===id);
+const schoolsList=()=>{const c=S.cfg||{};const o=c.schoolOrder||Object.keys(c.schools||{});students().forEach(s=>{if(s.school&&!o.includes(s.school))o.push(s.school)});return o};
+const pubOf=(sid,subj)=>{const s=stuById(sid);return s&&S.cfg.schools&&S.cfg.schools[s.school]?S.cfg.schools[s.school][subj]||'':''};
+const isOpen=(subj,pub,uid)=>!!(S.cfg&&S.cfg.open&&S.cfg.open[ukey(subj,pub,uid)]);
+function subjState(sid,subj){const pub=pubOf(sid,subj);if(!pub)return {lock:'版本還沒設定'};const us=unitsOf(subj,pub);if(!us.length)return {pub,lock:'題目準備中'};const open=us.filter(u=>isOpen(subj,pub,u.id));if(!open.length)return {pub,lock:'老師還沒開放'};return {pub,units:open}}
+const stuDoc=sid=>S.stu[sid]||{m:{},pass:{},best:{},days:{}};
+
+/* mastery: ok = consecutive correct; mastered when ok>=2 */
+function qStatus(r){if(!r||!r.n)return 'new';if((r.ok||0)>=2)return 'done';if((r.w||0)>=2)return 'weak';return 'learn'}
+function unitSummary(sid,subj,pub,un){const m=stuDoc(sid).m||{};let c={new:0,learn:0,weak:0,done:0},n=0,ok=0;un.items.forEach(it=>{const r=m[ukey(subj,pub,un.id)+'|'+it.id];c[qStatus(r)]++;if(r){n+=r.n||0;ok+=(r.n||0)-(r.w||0)}});const tot=un.items.length;const tried=tot-c.new;let st='new';if(tried){if(c.done/tot>=.8)st='done';else if(c.weak>=Math.max(2,tried*.3)||(n>=6&&ok/n<.6))st='weak';else st='learn'}return {c,tot,st,acc:n?ok/n:null,n}}
+const ST={new:['尚未開始','p-none'],learn:['還在練','p-warn'],weak:['錯很多','p-bad'],done:['已學會','p-good']};
+const pill=st=>`<span class="pill ${ST[st][1]}">${ST[st][0]}</span>`;
+function barHTML(c,tot){if(!tot)return '<div class="bar"></div>';const w=k=>(c[k]/tot*100).toFixed(1)+'%';return `<div class="bar"><i style="width:${w('done')};background:var(--good)"></i><i style="width:${w('learn')};background:var(--warn)"></i><i style="width:${w('weak')};background:var(--bad)"></i></div>`}
+function dueList(sid){const m=stuDoc(sid).m||{};const now=Date.now();const out=[];for(const q in m){const r=m[q];if(r.w&&(r.ok||0)<2&&(r.due||0)<=now){const f=findQ(q);if(f&&f.pub!=='示範'&&isOpen(f.subj,f.pub,f.unit.id)&&pubOf(sid,f.subj)===f.pub)out.push({q,f,r})}}return out}
+
+/* ---------- db ---------- */
+const savers={};
+function save(path,data){if(!S.db)return;let sv=savers[path];if(!sv){sv=savers[path]={pending:null,busy:false};}sv.pending=data;if(!sv.busy)flush(path)}
+async function flush(path){const sv=savers[path];sv.busy=true;while(sv.pending){const d=sv.pending;sv.pending=null;try{await S.db.doc(path).set(d)}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,800+Math.random()*800));if(!sv.pending)sv.pending=d}else{console.warn('save fail',path,e);if(e&&e.code==='quota_exceeded')toast('雲端空間滿了，請老師清理舊紀錄');break}}}sv.busy=false}
+async function initDB(){
+  let db=null;try{db=await window.claude?.use?.('db')}catch(e){db=null}
+  if(!db){S.dbState='none';S.cfgState='none';render();return}
+  S.db=db;S.dbState='ok';
+  const timer=setTimeout(()=>{if(S.cfgState==='wait'){S.cfgState='slow';render()}},10000);
+  db.doc('cfg/main').onSnapshot(snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);S.cfg=snap.exists?JSON.parse(JSON.stringify(snap.data())):null;S.cfgState=snap.exists?'ok':(snap.metadata.fromCache?S.cfgState:'empty');if(S.view.n!=='play')render()},e=>{clearTimeout(timer);S.cfgState='err';render()});
+  db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>{S.stu[d.id]=JSON.parse(JSON.stringify(d.data()))});if(S.view.n!=='play')render()},()=>{});
+  db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{});
+}
+function saveStu(sid){const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
+async function loadLog(sid){const id=sid+'_'+ymd();if(S.logs[id])return S.logs[id];let d={sid,d:ymd(),a:[]};if(S.db){try{const s=await S.db.doc('log/'+id).get();if(s.exists)d=JSON.parse(JSON.stringify(s.data()))}catch(e){}}S.logs[id]=d;return d}
+
+/* ---------- navigation ---------- */
+function go(n,o={}){S.view=Object.assign({n},o);window.scrollTo(0,0);render()}
+/* ---------- handwriting pads ---------- */
+function Pad(cv,o){o=o||{};const P={cv,color:'#1b2a2a',erase:false,strokes:0,penSeen:false,w:0,h:0};const ctx=cv.getContext('2d');
+  P.fit=()=>{const r=cv.getBoundingClientRect();if(!r.width||(Math.round(r.width)===P.w&&Math.round(r.height)===P.h))return;const old=P.strokes?cv.toDataURL():null;const dpr=window.devicePixelRatio||1;P.w=Math.round(r.width);P.h=Math.round(r.height);cv.width=P.w*dpr;cv.height=P.h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineCap='round';ctx.lineJoin='round';if(old){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,P.w,P.h);im.src=old}};
+  P.clear=()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);ctx.restore();P.strokes=0};
+  let down=false,last=null;const pt=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  const W=e=>P.erase?(o.eraser||26):(o.width||3)*(e.pointerType==='pen'&&e.pressure?0.55+e.pressure*0.9:1);
+  cv.style.touchAction='none';
+  cv.addEventListener('pointerdown',e=>{if(e.pointerType==='pen')P.penSeen=true;if(P.penSeen&&e.pointerType==='touch')return;P.fit();down=true;last=pt(e);try{cv.setPointerCapture(e.pointerId)}catch(_){}ctx.globalCompositeOperation=P.erase?'destination-out':'source-over';ctx.fillStyle=P.color;ctx.beginPath();ctx.arc(last[0],last[1],W(e)/2,0,7);ctx.fill();P.strokes++;e.preventDefault()});
+  cv.addEventListener('pointermove',e=>{if(!down)return;if(P.penSeen&&e.pointerType==='touch')return;const pts=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const ev of pts){const q=pt(ev);ctx.globalCompositeOperation=P.erase?'destination-out':'source-over';ctx.strokeStyle=P.color;ctx.lineWidth=W(ev);ctx.beginPath();ctx.moveTo(last[0],last[1]);ctx.lineTo(q[0],q[1]);ctx.stroke();last=q}e.preventDefault()});
+  const up=()=>{down=false};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('pointerleave',up);
+  return P}
+let SCR=null,WP=null;
+function scratch(){if(!SCR){SCR=Pad($('#scratchCv'),{width:3});document.querySelectorAll('#scratch .pen').forEach(b=>b.onclick=()=>{document.querySelectorAll('#scratch .pen').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.pen==='erase'){SCR.erase=true}else{SCR.erase=false;SCR.color=b.dataset.pen}});$('#scratchClear').onclick=()=>SCR.clear();$('#scratchClose').onclick=()=>{$('#scratch').hidden=true;document.body.classList.remove('scr-open')};
+  $('#scratchBtn').onclick=()=>{const sc=$('#scratch');sc.hidden=!sc.hidden;document.body.classList.toggle('scr-open',!sc.hidden);if(!sc.hidden)requestAnimationFrame(()=>SCR.fit());SFX.tap()}}return SCR}
+function wpad(){if(!WP){const el=document.createElement('div');el.className='tzg';el.innerHTML='<canvas aria-label="寫字格"></canvas>';WP=Pad(el.firstChild,{width:7,eraser:30});WP.el=el}return WP}
+function resetPads(){if(SCR)SCR.clear();if(WP)WP.clear()}
+function render(){
+  {const M=window.ARICE&&ARICE.me;if(M&&M.role==='student'&&S.cfg&&M.sid){if(['home','spin','teacher','pin'].includes(S.view.n)||(S.view.sid&&S.view.sid!==M.sid)){S.view={n:'stu',sid:M.sid}}}}
+  const v=S.view,el=$('#app');
+  $('#tlock').hidden=(v.n==='play'||v.n==='cover'||v.n==='teacher'||v.n==='pin');{const fb=$('#fsbtn');if(fb&&!FS_APP&&(FS_IOS||document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))fb.hidden=(v.n==='play'||v.n==='cover');}
+  const f={home:vHome,spin:vSPin,stu:vStu,unit:vUnit,subj:vSubj,play:vPlay,cover:vCover,result:vResult,profile:vProfile,teacher:vTeacher,pin:vPin}[v.n]||vHome;
+  el.innerHTML=f(v);
+  const inPlay=v.n==='play'&&!!S.sess;scratch();$('#scratchBtn').hidden=!inPlay;if(!inPlay){$('#scratch').hidden=true;document.body.classList.remove('scr-open')}else{const m=S.sess.subj==='數學';$('#scratchBtn').textContent=m?'✏️ 計算紙':'✏️ 草稿紙';$('#scratchTitle').textContent=m?'計算紙：在這裡算，算完再作答':'草稿紙'}
+  const slot=$('#wpadSlot');if(slot){slot.appendChild(wpad().el);requestAnimationFrame(()=>WP.fit())}
+  if(v.n==='play'&&S.sess&&S.sess.autoSay){S.sess.autoSay=false;say(S.sess.items[S.sess.i].it.say)}
+}
+
+/* ---------- home ---------- */
+const AVS=['🐶','🐱','🐰','🦊','🐼','🐨','🐯','🦁','🐸','🐵','🐧','🐤','🦉','🐳','🐙','🦄','🐹','🐢','🦖','🐬'];
+const AVC=['#FFD9D2','#D6E8FF','#FFF0C2','#D5F2DF','#E7DEFF','#CFF1EE','#FFE0EE','#E9F5C8'];
+const FUN=['🤪','😜','🤡','👽','🤖','💩','👻','🥸','😎','🤠','🧟','🥷','🧙','🦸','🐲','🦈','🍕','🍩','🌮','🥑'];
+const JERSEY=[['梅西',10,'#75AADB','#FFFFFF','#1B2A5C',1],['C羅',7,'#C8102E','#0B6E3B','#FFD447',0],['姆巴佩',10,'#1B2A5C','#C8102E','#FFFFFF',0],['哈蘭德',9,'#6CABDD','#FFFFFF','#FFFFFF',0],['內馬爾',10,'#FFDC02','#1E8C45','#1E5AA8',0],['孫興慜',7,'#E30613','#1B2A5C','#FFFFFF',0],['亞馬爾',19,'#A50044','#004D98','#FFD447',1],['貝林漢',5,'#FFFFFF','#C9A227','#1B2A5C',0],['凱恩',9,'#C8102E','#FFFFFF','#FFFFFF',0],['薩拉赫',11,'#B5121B','#E8C547','#FFFFFF',0]];
+function jerseySVG(k){const [n,no,c1,c2,c3,st]=JERSEY[k%JERSEY.length];return `<svg class="jsy" viewBox="0 0 60 60" aria-label="${n} ${no} 號球衣"><path d="M18 8 L24 5 Q30 11 36 5 L42 8 L54 18 L47 27 L42 23 L42 55 L18 55 L18 23 L13 27 L6 18Z" fill="${c1}" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-linejoin="round"/>${st?`<path d="M25 7 V55 M35 7 V55" stroke="${c2}" stroke-width="5"/>`:''}<path d="M24 5 Q30 12 36 5" fill="none" stroke="${c2}" stroke-width="2.4"/><path d="M6 18 L13 27 M54 18 L47 27" stroke="${c2}" stroke-width="2.4"/><text x="30" y="24.5" text-anchor="middle" font-size="7" font-weight="700" fill="${c3}" stroke="${c1}" stroke-width="1.6" paint-order="stroke" font-family="Huninn,PingFang TC,sans-serif">${n}</text><text x="30" y="47" text-anchor="middle" font-size="20" font-weight="800" fill="${c3}" stroke="${c1}" stroke-width="2.4" paint-order="stroke" font-family="Arial Black,Arial,sans-serif">${no}</text></svg>`}
+function avById(v){const [t,i]=String(v).split(':');const k=+i||0;if(t==='f')return {e:FUN[k%FUN.length],c:AVC[(k+3)%AVC.length]};if(t==='j')return {e:jerseySVG(k),c:'#E9F2F5'};return {e:AVS[k%AVS.length],c:AVC[k%AVC.length]}}
+function defaultAv(id){let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;const i=students().findIndex(s=>s.id===id);return 'a:'+(i>=0?i:h)%AVS.length}
+function avatar(id){const v=(S.stu[id]||{}).av;return avById(v||defaultAv(id))}
+function avPicker(sid){const cur=(S.stu[sid]||{}).av||defaultAv(sid);const cell=v=>{const a=avById(v);const j=v[0]==='j'?JERSEY[+v.slice(2)]:null;return `<button class="avc ${cur===v?'on':''}" data-act="avSet" data-v="${v}"><span class="av" style="--av:${a.c}">${a.e}</span>${j?`<small class="jn">${j[0]}</small>`:''}</button>`};
+  return `<div class="modal" data-act="avClose"><div class="sheet" data-act="noop" role="dialog" aria-label="選頭像"><div class="spread"><h2>選一個你喜歡的頭像</h2><button class="btn ghost sm" data-act="avClose">關閉</button></div>
+  <h3>⚽ 足球明星</h3><div class="avgrid">${JERSEY.map((_,i)=>cell('j:'+i)).join('')}</div>
+  <h3>🤪 搞怪</h3><div class="avgrid">${FUN.map((_,i)=>cell('f:'+i)).join('')}</div>
+  <h3>🐾 動物</h3><div class="avgrid">${AVS.map((_,i)=>cell('a:'+i)).join('')}</div></div></div>`}
+function vSPin(v){const st=stuById(v.sid);if(!st)return vHome();const a=avatar(v.sid);const m=S.spMode;
+  const t=m==='set'?'第一次上島，先設定你自己的密碼':m==='set2'?'再按一次剛剛的密碼確認':'輸入你的密碼';
+  return `<div class="topbar"><button class="back" data-act="home">← 換人</button></div><div class="pinbox ${S.spWrong?'fx-no':''}"><span class="av big" style="--av:${a.c}">${a.e}</span><h2>${esc(st.name)}</h2><p class="pt">${t}</p>${m!=='enter'?'<p class="small muted">按 4 個數字，不要告訴別人喔！忘記的話請老師幫你重設。</p>':'<p class="small muted">這是你自己的島，密碼保護你的成績不被別人亂動。</p>'}
+  <div class="pdots">${[0,1,2,3].map(i=>`<i class="${i<S.spBuf.length?'on':''}"></i>`).join('')}</div>
+  <div class="pinpad">${['1','2','3','4','5','6','7','8','9','清除','0','⌫'].map(k=>`<button data-act="spKey" data-k="${k}">${k}</button>`).join('')}</div></div>`}
+function weekCount(sid){const d=stuDoc(sid).days||{};let n=0;for(let i=0;i<7;i++)n+=d[ymd(Date.now()-i*DAY)]||0;return n}
+function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
+function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
+function greet(){const h=new Date().getHours();return h<11?'早安':h<14?'午安':h<18?'下午好':'晚安'}
+function dateLabel(){const d=new Date();return `${d.getMonth()+1} 月 ${d.getDate()} 日・星期${'日一二三四五六'[d.getDay()]}`}
+function sceneSVG(){
+  const pins=[['語','var(--zh)',318,300],['數','var(--ma)',392,246],['社','var(--so)',478,200],['自','var(--sc)',612,204],['英','var(--en)',690,262]];
+  const spark=[[120,350],[260,380],[840,360],[930,392],[660,398],[420,404],[60,396]];
+  return `<svg class="scene-svg" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#47B3E6"/><stop offset=".55" stop-color="#A6E0F5"/><stop offset="1" stop-color="#FFF0CF"/></linearGradient>
+    <radialGradient id="gGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF8D6" stop-opacity=".95"/><stop offset="1" stop-color="#FFF8D6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#40C6DB"/><stop offset=".5" stop-color="#1A98BC"/><stop offset="1" stop-color="#0B5F86"/></linearGradient>
+    <linearGradient id="gGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A6E585"/><stop offset=".6" stop-color="#5DBB5A"/><stop offset="1" stop-color="#2F8A4A"/></linearGradient>
+    <linearGradient id="gSand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFEDBA"/><stop offset="1" stop-color="#E2B66A"/></linearGradient>
+    <linearGradient id="gFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EC4CF"/><stop offset="1" stop-color="#B6E3E8"/></linearGradient>
+    <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A06A35"/><stop offset="1" stop-color="#6E4520"/></linearGradient>
+    <filter id="fBlur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="fSoft" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#0b3b4a" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1000" height="420" fill="url(#gSky)"/>
+  <circle cx="830" cy="110" r="170" fill="url(#gGlow)"/>
+  <circle class="sun" cx="830" cy="110" r="44" fill="#FFE07A"/><circle cx="830" cy="110" r="44" fill="none" stroke="#FFF4C2" stroke-width="6" opacity=".7"/>
+  <g class="cloud c1"><g fill="#fff" opacity=".95"><ellipse cx="160" cy="92" rx="70" ry="24"/><circle cx="135" cy="80" r="26"/><circle cx="178" cy="70" r="32"/><circle cx="210" cy="86" r="20"/></g><ellipse cx="165" cy="108" rx="64" ry="8" fill="#9CD3EA" opacity=".5"/></g>
+  <g class="cloud c2"><g fill="#fff" opacity=".85"><ellipse cx="560" cy="64" rx="52" ry="16"/><circle cx="545" cy="54" r="18"/><circle cx="576" cy="48" r="22"/></g></g>
+  <g class="cloud c3"><g fill="#fff" opacity=".7"><ellipse cx="380" cy="140" rx="40" ry="11"/><circle cx="392" cy="130" r="14"/></g></g>
+  <g class="bird"><path d="M0 0 q9 -9 18 0 q9 -9 18 0" stroke="#2C5866" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M40 16 q6 -6 12 0 q6 -6 12 0" stroke="#2C5866" stroke-width="2.2" fill="none" stroke-linecap="round"/></g>
+  <path d="M40 304 Q110 252 190 274 Q240 262 290 304 Z" fill="url(#gFar)" opacity=".85"/>
+  <path d="M770 304 Q830 262 900 280 Q950 270 990 304 Z" fill="url(#gFar)" opacity=".75"/>
+  <rect y="300" width="1000" height="120" fill="url(#gSea)"/>
+  <rect y="300" width="1000" height="6" fill="#CFF4FA" opacity=".55"/>
+  <ellipse cx="510" cy="352" rx="330" ry="24" fill="#064E6C" opacity=".45" filter="url(#fBlur)"/>
+  <path d="M205 344 Q510 296 815 344 Q510 380 205 344Z" fill="#E9FAFC" opacity=".7"/>
+  <path d="M220 340 Q510 300 800 340 Q510 370 220 340Z" fill="url(#gSand)"/>
+  <path d="M262 334 Q300 268 372 250 Q420 196 488 168 Q556 146 612 170 Q672 196 700 252 Q752 282 768 334 Q510 312 262 334Z" fill="url(#gGrass)"/>
+  <path d="M392 246 Q440 196 500 176 Q560 160 600 178 Q540 182 500 206 Q452 232 430 262 Z" fill="#CFF5A8" opacity=".55"/>
+  <path d="M300 330 Q360 312 420 318" stroke="#2F8A4A" stroke-width="3" fill="none" opacity=".25"/>
+  <path class="trail" d="M318 318 C350 290 370 262 392 262 S450 236 478 216 S560 180 612 220 S670 262 690 278" stroke="#FFF7DC" stroke-width="5" fill="none" stroke-dasharray="2 11" stroke-linecap="round" opacity=".95"/>
+  <g filter="url(#fSoft)"><rect x="520" y="130" width="62" height="40" rx="4" fill="#FFF8EC"/><path d="M512 134 L551 104 L590 134Z" fill="#E7684C"/><rect x="543" y="148" width="16" height="22" rx="3" fill="#B65A3C"/><rect x="527" y="142" width="11" height="10" rx="2" fill="#8FD3EE"/><rect x="565" y="142" width="11" height="10" rx="2" fill="#8FD3EE"/><line x1="551" y1="104" x2="551" y2="82" stroke="#6b4a2c" stroke-width="2.5"/><path class="pennant" d="M551 82 L574 88 L551 95Z" fill="#FFD447"/></g>
+  ${palm(272,334,1)}${palm(752,334,-1)}${palm(726,338,-.75)}
+  ${pins.map(([t,c,x,y],i)=>`<g class="pin" style="animation-delay:${i*.3}s"><g filter="url(#fSoft)" transform="translate(${x} ${y})"><path d="M0 0 C-17 -16 -20 -26 -20 -34 A20 20 0 1 1 20 -34 C20 -26 17 -16 0 0Z" style="fill:${c}"/><circle cx="0" cy="-34" r="14" fill="#fff"/><text x="0" y="-28.5" text-anchor="middle" font-size="16" font-weight="700" style="fill:${c}" font-family="Huninn,PingFang TC,sans-serif">${t}</text></g></g>`).join('')}
+  <g class="sailboat"><path d="M0 0 L74 0 Q66 18 54 20 L18 20 Q8 18 0 0Z" fill="#E7684C"/><rect x="2" y="-2" width="70" height="5" rx="2" fill="#FFF8EC"/><line x1="36" y1="0" x2="36" y2="-60" stroke="#5a4630" stroke-width="3"/><path d="M39 -58 Q66 -30 64 -6 L39 -6Z" fill="#fff"/><path d="M33 -52 Q14 -30 12 -8 L33 -8Z" fill="#FFE07A"/></g>
+  <path class="wave w1" d="M0 318 q30 -9 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="#BFF2F8" stroke-width="2.5" fill="none" opacity=".6"/>
+  <path class="wave w2" d="M0 376 q30 -9 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="#BFF2F8" stroke-width="3" fill="none" opacity=".45"/>
+  <path class="wave w3" d="M0 404 q30 -9 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="#BFF2F8" stroke-width="3" fill="none" opacity=".3"/>
+  ${spark.map(([x,y],i)=>`<path class="spark" style="animation-delay:${i*.45}s;transform-origin:${x}px ${y}px" d="M${x} ${y-6} L${x+1.6} ${y-1.6} L${x+6} ${y} L${x+1.6} ${y+1.6} L${x} ${y+6} L${x-1.6} ${y+1.6} L${x-6} ${y} L${x-1.6} ${y-1.6}Z" fill="#fff"/>`).join('')}
+  </svg>`;
+  function palm(x,y,dir){const s=dir;const k=Math.abs(dir);return `<g class="palm" style="transform-origin:${x}px ${y}px"><g transform="translate(${x} ${y}) scale(${s>0?k:-k} ${k})"><path d="M0 0 C-4 -30 2 -62 16 -88" stroke="url(#gTrunk)" stroke-width="9" fill="none" stroke-linecap="round"/><g fill="#2F9A4C"><path d="M16 -88 C-8 -104 -36 -96 -48 -78 C-28 -90 -6 -88 16 -86Z"/><path d="M16 -88 C34 -110 62 -108 76 -92 C56 -98 36 -94 18 -86Z"/></g><g fill="#49B85A"><path d="M16 -88 C2 -116 -20 -124 -34 -118 C-14 -112 2 -100 14 -86Z"/><path d="M16 -88 C30 -120 52 -128 66 -120 C48 -114 30 -102 18 -86Z"/><path d="M16 -88 C10 -60 -6 -48 -22 -46 C-6 -56 6 -70 14 -88Z"/></g><circle cx="12" cy="-82" r="5" fill="#7A4A1F"/><circle cx="20" cy="-80" r="5" fill="#6A3E18"/></g></g>`}
+}
+function vHome(){
+  const ready=S.cfgState==='ok'&&S.dbState==='ok'&&students().length;
+  const today=ready?students().filter(s=>(stuDoc(s.id).days||{})[ymd()]):[];
+  const openN=S.cfg&&S.cfg.open?Object.keys(S.cfg.open).length:0;
+  const hero=`<section class="hero">${sceneSVG()}<div class="hero-card"><div class="eyebrow">${dateLabel()}</div><h1 class="hero-title">Arice 學習島</h1><p class="hero-sub">五年級上學期・期末考衝刺，國語 數學 社會 自然 英語一起闖關！</p>
+    ${ready?`<div class="hero-stats"><div><b>${today.length}</b><span>今天已上島</span></div><div><b>${students().length}</b><span>島民</span></div><div><b>${openN}</b><span>開放單元</span></div></div>`:''}</div>
+    <button class="scene-mute" data-act="mute" aria-label="音效開關">${SFX.label}</button></section>`;
+  let body='';
+  if(S.cfgState==='wait')body='<div class="panel muted">正在讀取學生名單…</div>';
+  else if(S.cfgState==='slow')body='<div class="panel">連不到雲端資料，請確認網路後重新打開這一頁。</div>';
+  else if(S.dbState==='none')body='<div class="panel stack"><h3>這台平板沒有登入老師的帳號</h3><p class="muted">學生名單和成績都存在老師的帳號裡。請用老師登入的平板打開，或請老師幫你登入。</p></div>';
+  else if(!students().length)body='<div class="panel stack"><h3>還沒有學生名單</h3><p class="muted">請老師按左下角「老師」→「設定」新增學生和學校版本。</p></div>';
+  else{
+    const sch=schoolsList();if(!S.school||!sch.includes(S.school))S.school=sch[0];
+    const seg=sch.map(s=>{const n=students().filter(x=>x.school===s).length;return `<button class="seg ${s===S.school?'on':''}" data-act="school" data-s="${esc(s)}"><span>${esc(s)}</span><i>${n}</i></button>`}).join('');
+    const names=students().filter(s=>s.school===S.school).map((s,i)=>{const a=avatar(s.id);const st=streak(s.id),wk=weekCount(s.id);const done=(stuDoc(s.id).days||{})[ymd()];
+      return `<button class="name" data-act="pickStu" data-id="${esc(s.id)}" style="--av:${a.c};animation-delay:${i*40}ms"><span class="av">${a.e}${done?'<em title="今天練習過">✓</em>':''}</span><span class="nm"><b>${esc(s.name)}</b><small>${st?`🔥 連續 ${st} 天`:'今天開始第一天'}${wk?`・本週 ${wk} 題`:''}</small></span><span class="chev">›</span></button>`}).join('')||'<p class="muted">這間學校還沒有學生。</p>';
+    const rank=students().map(s=>({s,n:weekCount(s.id)})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,5);
+    const medals=['🥇','🥈','🥉','4','5'];
+    const aside=`<aside class="side"><div class="panel"><div class="ph"><h3>本週學習之星</h3><span class="muted small">近 7 天題數</span></div>${rank.length?`<ol class="rank">${rank.map((x,i)=>{const a=avatar(x.s.id);return `<li><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}</span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}</div>
+      <div class="panel"><div class="ph"><h3>今天上島的同學</h3><span class="muted small">${today.length} 人</span></div>${today.length?`<div class="today">${today.map(s=>{const a=avatar(s.id);return `<span class="av sm" style="--av:${a.c}" title="${esc(s.name)}">${a.e}</span>`}).join('')}</div>`:'<p class="muted small empty">還沒有人，快來當第一個！</p>'}</div>
+      <div class="panel tip"><b>島上規則</b><ul><li>每一課先練習，答對 85% 才能玩遊戲</li><li>同一題連續答對兩次才算學會</li><li>答錯的題目隔天會回來複習</li></ul></div></aside>`;
+    body=`<div class="home-grid"><section class="main"><div class="sec-h"><h2>你是誰？</h2><span class="muted">先選學校，再點你的名字</span></div><div class="segs">${seg}</div><div class="names">${names}</div></section>${aside}</div>`;
+  }
+  return hero+body;
+}
+function ring(p,c,size){const r=20,C=2*Math.PI*r;const pct=Math.round(p*100);return `<span class="ring" style="width:${size||54}px;height:${size||54}px"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="${r}" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="6"/><circle cx="25" cy="25" r="${r}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" transform="rotate(-90 25 25)"/></svg><b>${pct}%</b></span>`}
+
+/* ---------- student home ---------- */
+function vStu(v){
+  const sid=v.sid,st=stuById(sid);if(!st)return vHome();
+  const due=dueList(sid);const a=avatar(sid);const sk=streak(sid),mc=masteredCount(sid),wk=weekCount(sid);
+  const tiles=SUBJS.map(subj=>{const ss=subjState(sid,subj);const z=SM[subj].z;
+    if(ss.lock)return `<button class="isle locked z-${z}" data-act="lockedSubj" data-m="${esc(ss.lock)}"><span class="wm">${SM[subj].g}</span><div class="isle-top"><span class="glyph">${SM[subj].g}</span><span class="lockb">🔒</span></div><div class="isle-name"><h3>${subj}</h3><small>${ss.pub?esc(ss.pub)+'版':'版本未設定'}</small></div><div class="isle-foot">${esc(ss.lock)}</div></button>`;
+    let c={new:0,learn:0,weak:0,done:0},tot=0;ss.units.forEach(u=>{const s=unitSummary(sid,subj,ss.pub,u);tot+=s.tot;for(const k in c)c[k]+=s.c[k]});
+    const nd=due.filter(d=>d.f.subj===subj).length;
+    return `<button class="isle z-${z}" data-act="openSubj" data-s="${subj}"><span class="wm">${SM[subj].g}</span><div class="isle-top"><span class="glyph">${SM[subj].g}</span>${ring(tot?c.done/tot:0)}</div><div class="isle-name"><h3>${subj}</h3><small>${esc(ss.pub)}版・開放 ${ss.units.length} 課</small></div><div class="isle-foot"><span>已學會 ${c.done}/${tot}</span>${c.weak?`<span class="warnb">要加油 ${c.weak}</span>`:''}${nd?`<span class="warnb">複習 ${nd}</span>`:''}<span class="go">出發 ›</span></div></button>`}).join('');
+  return `<section class="me">
+    <div class="me-l"><button class="me-av" style="--av:${a.c}" data-act="avOpen" aria-label="換頭像">${a.e}<em>換</em></button><div class="me-t"><div class="eyebrow">${dateLabel()}・${esc(st.school)}</div><h1>${greet()}，${esc(st.name)}！</h1><p>今天想先去哪一座島？</p></div></div>
+    <div class="me-stats"><div><b>🔥 ${sk}</b><span>連續天數</span></div><div><b>✅ ${mc}</b><span>已學會題數</span></div><div><b>📝 ${wk}</b><span>本週做題</span></div></div>
+    <div class="me-act"><button class="btn light" data-act="profile" data-id="${esc(sid)}">📒 我的學習檔案</button><button class="btn ghostw" data-act="home">換人</button></div>
+  </section>
+  ${due.length?`<section class="quest"><span class="chest">🧰</span><div class="q-t"><b>今日任務：救回 ${due.length} 題錯題</b><span>之前答錯的題目換個方式再出現，連續答對兩次就學會了。</span></div><button class="btn" data-act="startReview" data-id="${esc(sid)}">開始任務</button></section>`:`<section class="quest calm"><span class="chest">🌤️</span><div class="q-t"><b>今天沒有待複習的錯題</b><span>選一座島，從練習開始吧！</span></div></section>`}
+  <div class="sec-h"><h2>我的島嶼地圖</h2><span class="muted">還沒開放的島會先鎖起來</span></div>
+  <div class="isles">${tiles}</div>${S.avPick?avPicker(sid):''}`;
+}
+/* ---------- subject page ---------- */
+const shortName=n=>String(n).replace(/^第\s*\d+\s*(單元|課)\s*/,'');
+function vSubj(v){
+  const {sid,subj}=v;const ss=subjState(sid,subj);const z=SM[subj].z;
+  if(ss.lock)return vStu({sid});
+  const all=unitsOf(subj,ss.pub);
+  let tc={new:0,learn:0,weak:0,done:0},tt=0;ss.units.forEach(u=>{const s=unitSummary(sid,subj,ss.pub,u);tt+=s.tot;for(const k in tc)tc[k]+=s.c[k]});
+  const btns=all.map((u,i)=>{const n=u.badge||(String(u.name).match(/第\s*(\d+)/)||[])[1]||i+1;
+    if(!isOpen(subj,ss.pub,u.id))return `<button class="ubtn locked" data-act="lockedUnit"><span class="un">${n}</span><span class="ut"><b>${esc(shortName(u.name))}</b><small>🔒 老師還沒開放</small></span></button>`;
+    const s=unitSummary(sid,subj,ss.pub,u);const passed=!!(stuDoc(sid).pass||{})[ukey(subj,ss.pub,u.id)];
+    return `<button class="ubtn" data-act="openUnit" data-u="${esc(u.id)}"><span class="un">${n}</span><span class="ut"><b>${esc(shortName(u.name))}</b><small>${pill(s.st)}${passed?'<span class="pill p-good">🎮 遊戲已開</span>':''}</small>${barHTML(s.c,s.tot)}</span><span class="chev">›</span></button>`}).join('');
+  const fo=isOpen(subj,ss.pub,'__final');
+  const fin=`<button class="ubtn final ${fo?'':'locked'}" data-act="${fo?'startFinal':'lockedFinal'}"><span class="un">🏆</span><span class="ut"><b>總複習</b><small>${fo?'所有開放單元混合出題・20 題':'🔒 老師還沒開放'}</small></span>${fo?'<span class="chev">›</span>':''}</button>`;
+  return `<div class="z-${z}"><section class="sbanner"><span class="wm">${SM[subj].g}</span><button class="back light" data-act="backStu">← 島嶼地圖</button><div class="grow"><div class="eyebrow">${esc(ss.pub)}版・開放 ${ss.units.length} / ${all.length} 單元</div><h1>${subj}島</h1></div>${ring(tt?tc.done/tt:0,null,72)}</section>
+  <div class="sec-h"><h2>選一個單元</h2><span class="muted">每個單元先練習，答對 85% 就能玩遊戲</span></div>
+  <div class="ubtns">${btns}${fin}</div></div>`;
+}
+function charStats(sid,subj,pub,units){const m=stuDoc(sid).m||{};const map=new Map();
+  units.forEach(u=>u.items.forEach(it=>{if(!it.char)return;const r=m[ukey(subj,pub,u.id)+'|'+it.id];if(!map.has(it.char))map.set(it.char,{ch:it.char,zy:it.zy||'',rs:[],n:0});const c=map.get(it.char);c.rs.push(r);c.n++}));
+  return [...map.values()].map(c=>{const tried=c.rs.filter(r=>r&&r.n);let st='new';if(tried.length){if(tried.some(r=>(r.w||0)>=2&&(r.ok||0)<2)||tried.some(r=>r.w&&!r.ok))st='weak';else if(c.rs.every(r=>r&&(r.ok||0)>=2))st='done';else st='learn'}const w=tried.reduce((a,r)=>a+(r.w||0),0);return {ch:c.ch,zy:c.zy,st,w}})}
+function charBlock(sid,subj,pub,units,title){const L=charStats(sid,subj,pub,units);if(!L.length)return '';const n=k=>L.filter(c=>c.st===k).length;
+  return `<div class="charbox"><div class="spread"><b>${title||'生字學習狀況'}</b><span class="small muted">已學會 ${n('done')}・還在練 ${n('learn')}・要加強 ${n('weak')}・沒練過 ${n('new')}</span></div><div class="chars">${L.map(c=>`<span class="cg st-${c.st}" title="${esc(c.zy)}${c.w?'・錯 '+c.w+' 次':''}">${esc(c.ch)}${c.w?`<i>${c.w}</i>`:''}</span>`).join('')}</div></div>`}
+function vUnit(v){
+  const {sid,subj,uid}=v;const pub=pubOf(sid,subj);const un=unitsOf(subj,pub).find(u=>u.id===uid);const z=SM[subj].z;
+  if(!un||!isOpen(subj,pub,uid))return vSubj(v);
+  const s=unitSummary(sid,subj,pub,un);const k=ukey(subj,pub,uid);const passed=!!(stuDoc(sid).pass||{})[k];
+  const gb=GAMES[subj].map(g=>{const n=gameItemsLoose(un,g).length;const best=(stuDoc(sid).best||{})[k+'|'+g.k];if(n<3)return '';
+    return `<button class="gtile" ${passed?'':'disabled'} data-act="startGame" data-u="${esc(uid)}" data-g="${g.k}"><span class="gi">${(COVER[g.k]||{}).h||g.ic}</span><b>${g.n}</b><span class="small" style="opacity:.9">${g.d}</span><span class="gs">${best?'★'.repeat(best)+'☆'.repeat(3-best):''}</span></button>`}).join('');
+  return `<div class="z-${z}"><section class="sbanner"><span class="wm">${SM[subj].g}</span><button class="back light" data-act="backSubj">← ${subj}島</button><div class="grow"><div class="eyebrow">${esc(pub)}版・${esc(subj)}</div><h1>${esc(un.name)}</h1></div>${ring(s.tot?s.c.done/s.tot:0,null,72)}</section>
+  <div class="ucard"><div class="spread"><div><h2>✏️ 練習</h2><div class="muted small">每次 10 題，還沒學會的題目會優先出現${s.acc!=null?`・目前答對率 ${Math.round(s.acc*100)}%`:''}</div></div>${pill(s.st)}</div>${barHTML(s.c,s.tot)}
+  <div class="legend"><span><b style="background:var(--good)"></b>已學會 ${s.c.done}</span><span><b style="background:var(--warn)"></b>還在練 ${s.c.learn}</span><span><b style="background:var(--bad)"></b>錯很多 ${s.c.weak}</span><span>尚未做 ${s.c.new}</span></div>
+  <button class="btn big" data-act="startPractice" data-u="${esc(uid)}">開始練習</button></div>
+  ${subj==='國語'?charBlock(sid,subj,pub,[un]):''}
+  <div class="sec-h" style="margin-top:22px"><h2>🎮 遊戲</h2><span class="muted">${passed?'遊戲已開放，挑戰 3 顆星！':'練習答對 85%（10 題對 9 題）就會解鎖'}</span></div>
+  <div class="gtiles">${gb||'<p class="muted">這個單元沒有遊戲題。</p>'}</div></div>`;
+}
+
+/* ---------- sessions ---------- */
+function newSession(o){resetPads();const s=Object.assign({i:0,res:[],score:0,combo:0,lives:null,pos:0,stickers:0,phase:'q',qs:null,fb:null},o);s.qts=Date.now();s.qs=initQ(s.items[0].it);S.sess=s;if(s.items[0].it.type==='listen')s.autoSay=true;if(!s.demo&&!s.trial){S.tOK=false;loadLog(s.sid)}if(s.game){s.autoSay=false;go('cover')}else{go('play')}pushLive()}
+function vCover(){
+  const s=S.sess;if(!s)return vHome();const g=s.game,cv=COVER[g.k]||{h:g.ic,d:[],t:g.d};const z=SM[s.subj].z;
+  const best=s.trial?0:((stuDoc(s.sid).best||{})[ukey(s.subj,s.pub,s.uid)+'|'+g.k]||0);
+  const pos=[[6,8],[80,6],[12,70],[84,62],[4,40],[88,34],[22,88],[70,86],[46,4],[60,92]];
+  const deco=cv.d.concat(cv.d).slice(0,10).map((t,i)=>{const p=pos[i];const sz=t.length>2?20:t.length>1?30:40;return `<span class="deco" style="left:${p[0]}%;top:${p[1]}%;font-size:${sz}px;--r:${(i%2?1:-1)*(8+i*3)}deg;animation-delay:${-i*.7}s">${esc(t)}</span>`}).join('');
+  const rules=g.board?['答對才能擲骰','❤️ 3 顆愛心','🔥 連對加分']:['答錯扣 1 顆 ❤️','🔥 連對加分','⭐ 挑戰 3 顆星'];
+  return `<div class="z-${z}"><div class="topbar"><button class="back" data-act="quit">← 回去</button><div class="grow"></div><button class="back mute" data-act="mute" aria-label="音效開關">${SFX.label.split(' ')[0]}</button></div>
+  <div class="cover">${deco}<div class="cin"><div class="chero">${cv.h}</div><div class="csub">${esc(s.subj)}・${esc(s.items[0].uname)}</div><h1 class="ctitle">${esc(g.n)}</h1><p class="ctag">${esc(cv.t)}</p><div class="rules">${rules.map(r=>`<span>${r}</span>`).join('')}</div>${best?`<div class="cstars">最佳紀錄 ${'★'.repeat(best)}${'☆'.repeat(3-best)}</div>`:''}<button class="startbtn" data-act="goPlay">開始！</button><div class="small" style="opacity:.85">共 ${s.items.length} 題${s.trial?'・老師試玩不記錄':''}</div></div></div></div>`;
+}
+function pickPractice(sid,subj,pub,un){const m=stuDoc(sid).m||{};const sc=w=>{const r=m[w.qid];if(!r)return Math.random();if((r.ok||0)<2)return 1+Math.random();return 3+Math.random()};return shuffle(un.items.map(it=>wrap(subj,pub,un,it,m)).sort((a,b)=>sc(a)-sc(b)).slice(0,10))}
+function pickGame(sid,subj,pub,un,g){const m=stuDoc(sid).m||{};const sc=w=>{const r=m[w.qid];if(!r)return Math.random();if((r.ok||0)<2)return Math.random();return 2+Math.random()};let a=gameItemsLoose(un,g).map(it=>wrap(subj,pub,un,it,m)).sort((x,y)=>sc(x)-sc(y)).slice(0,g.board?12:10);return shuffle(a)}
+
+/* ---------- question state & renderers ---------- */
+function initQ(it){
+  const q={};
+  switch(it.type){
+    case 'mc':case 'listen':q.order=shuffle(it.opts.map((_,i)=>i));break;
+    case 'evidence':q.order=shuffle(it.opts.map((_,i)=>i));q.ev=[];q.opt=null;break;
+    case 'order':q.pool=shuffle(it.steps.map((t,i)=>({t,k:i})));q.lane=[];break;
+    case 'tiles':q.pool=shuffle(it.tiles.map((t,i)=>({t,k:i})).concat((it.extra||[]).map((t,i)=>({t,k:'x'+i}))));q.lane=[];break;
+    case 'spell':q.pool=shuffle(it.chunks.map((t,i)=>({t,k:i})).concat((it.extra||[]).map((t,i)=>({t,k:'x'+i}))));q.lane=[];break;
+    case 'match':q.left=it.pairs.map(p=>p[0]);q.right=shuffle(it.pairs.map(p=>p[1]).concat(it.extra||[]));q.map={};q.sel=null;break;
+    case 'label':q.left=it.spots.map((_,i)=>'圖上的 '+'①②③④⑤⑥⑦⑧'[i]);q.right=shuffle(it.spots.map(p=>p.a).concat(it.extra||[]));q.map={};q.sel=null;break;
+    case 'classify':q.map={};break;
+    case 'write':q.reveal=false;q.self=null;break;
+    case 'num':q.s='';q.n='';q.d='';q.f='n';break;
+    case 'multi':q.sel=[];break;
+    case 'errstep':q.pick=null;break;
+  }
+  return q;
+}
+function tokens(pool,lane,act,col){const byK=k=>pool.find(p=>String(p.k)===String(k));
+  return `<div class="lane ${col?'col':''}">${lane.length?lane.map((k,i)=>`<button class="chip" data-act="${act}Out" data-i="${i}">${col?`<span class="n">${i+1}</span>`:''}${esc(byK(k).t)}</button>`).join(''):'<span class="hint">點下面的卡片放到這裡；點這裡的卡片可以拿回去</span>'}</div>
+  <div class="pool ${col?'col':''}">${pool.map(p=>`<button class="chip ${lane.map(String).includes(String(p.k))?'used':''}" data-act="${act}In" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div>`}
+function qBody(it,q,locked){
+  const dis=locked?'disabled':'';
+  switch(it.type){
+    case 'mc':{const big=it.opts.every(o=>String(o).length<=2);return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig">${it.img}</div>`:''}<div class="opts">${q.order.map(i=>`<button class="opt ${big?'big':''} ${optCls(it,q,i,locked)}" ${dis} data-act="pick" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div>`}
+    case 'listen':return `<div class="qtext">聽聽看，是哪一個字？</div><button class="speak" data-act="say" aria-label="再聽一次">🔊</button><div class="opts">${q.order.map(i=>`<button class="opt big ${optCls(it,q,i,locked)}" ${dis} data-act="pick" data-i="${i}" style="font-size:26px">${esc(it.opts[i])}</button>`).join('')}</div>`;
+    case 'order':return `<div class="qtext">${esc(it.q)}</div><div class="hint">依照順序一張一張點</div>${tokens(q.pool,q.lane,'ord',true)}${locked?'':`<button class="btn" data-act="check" ${q.lane.length===q.pool.length?'':'disabled'}>檢查</button>`}`;
+    case 'tiles':return `<div class="qtext">${esc(it.q)}</div>${it.model?`<div class="model">例句：${esc(it.model)}</div>`:''}${tokens(q.pool,q.lane,'ord')}${locked?'':`<button class="btn" data-act="check" ${q.lane.length?'':'disabled'}>檢查</button>`}`;
+    case 'spell':return `<div class="qtext">拼出「${esc(it.zh)}」</div><button class="btn ghost sm" data-act="sayWord" style="justify-self:start">🔊 聽發音</button>${tokens(q.pool,q.lane,'ord')}<div class="qtext" style="font-size:30px;letter-spacing:.06em;min-height:40px">${esc(q.lane.map(k=>q.pool.find(p=>String(p.k)===String(k)).t).join(''))}</div>${locked?'':`<button class="btn" data-act="check" ${q.lane.length?'':'disabled'}>檢查</button>`}`;
+    case 'match':case 'label':{
+      const fig=it.type==='label'?`<div class="fig">${it.svg}${it.spots.map((p,i)=>`<span class="spot" style="left:${p.x}%;top:${p.y/1.4}%">${'①②③④⑤⑥⑦⑧'[i]}</span>`).join('')}</div>`:'';
+      const L=q.left.map((t,i)=>{const ri=q.map[i];return `<button class="mitem ${q.sel===i?'sel':''}" ${dis} data-act="mL" data-i="${i}"><span class="tag" style="background:${TAGC[i%8]}">${i+1}</span><span>${esc(t)}${ri!=null?` → <b>${esc(q.right[ri])}</b>`:''}</span></button>`}).join('');
+      const used=Object.values(q.map);
+      const R=q.right.map((t,j)=>{const li=Object.keys(q.map).find(k=>q.map[k]===j);return `<button class="mitem" ${dis} data-act="mR" data-j="${j}">${li!=null?`<span class="tag" style="background:${TAGC[li%8]}">${+li+1}</span>`:'<span class="tag" style="background:var(--line)"></span>'}<span>${esc(t)}</span></button>`}).join('');
+      const all=Object.keys(q.map).length===q.left.length;
+      const pairs=`<div class="match"><div class="col">${L}</div><div class="col">${R}</div></div>`;
+      return `<div class="qtext">${esc(it.q)}</div><div class="hint">先點左邊一個，再點右邊配對的答案</div>${fig?`<div class="figure">${fig}<div>${pairs}</div></div>`:pairs}${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+    case 'classify':{const all=Object.keys(q.map).length===it.items.length;return `<div class="qtext">${esc(it.q)}</div><div class="cls">${it.items.map((x,i)=>`<div class="clsrow"><div style="font-size:18px">${esc(x[0])}</div><div class="cbtns">${it.cats.map((c,ci)=>`<button class="cbtn ${q.map[i]===ci?'on':''}" ${dis} data-act="cls" data-i="${i}" data-c="${ci}">${esc(c)}</button>`).join('')}</div></div>`).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+    case 'evidence':{const ready=q.opt!=null&&q.ev.length;return `<div class="passage">${it.passage.map((t,i)=>`<button class="sent ${q.ev.includes(i)?'on':''} ${locked&&it.ev.includes(i)?'ev':''}" ${dis} data-act="ev" data-i="${i}">${i+1}. ${esc(t)}</button>`).join('')}</div><div class="qtext">${esc(it.q)}</div><div class="opts">${q.order.map(i=>`<button class="opt ${locked?(i===it.a?'right':(q.opt===i?'wrong':'')):(q.opt===i?'sel':'')}" ${dis} data-act="evOpt" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div><div class="hint">① 選答案　② 在文章裡點出能證明的句子（可以點不只一句）</div>${locked?'':`<button class="btn" data-act="check" ${ready?'':'disabled'}>檢查</button>`}`}
+    case 'num':{const fr=it.ans.t==='frac';const pad=['7','8','9','4','5','6','1','2','3',fr?'':'.','0','⌫'];
+      const box=fr?`<div class="fracbox"><button class="nbox ${q.f==='n'?'on':''}" ${dis} data-act="nFocus" data-f="n">${esc(q.n)||'<span class=muted>分子</span>'}</button><i></i><button class="nbox ${q.f==='d'?'on':''}" ${dis} data-act="nFocus" data-f="d">${esc(q.d)||'<span class=muted>分母</span>'}</button></div>`:`<div class="row"><div class="nbox on wide">${esc(q.s)||'<span class=muted>輸入答案</span>'}</div>${it.ans.u?`<b>${esc(it.ans.u)}</b>`:''}</div>`;
+      const ready=fr?(q.n&&q.d):q.s;
+      return `<div class="qtext">${esc(it.q)}</div><div class="hint">可以打開右下角的「計算紙」算一算，再把答案打進來${fr?'（分數：先點分子或分母的格子）':''}</div><div class="numwrap">${box}${locked?'':`<div class="keypad">${pad.map(k=>k?`<button data-act="nKey" data-k="${k}">${k}</button>`:'<span></span>').join('')}</div><button class="btn" data-act="check" ${ready?'':'disabled'}>檢查</button>`}</div>`}
+    case 'multi':{const all=q.sel.length>0;return `<div class="qtext">${esc(it.q)}</div><div class="hint">符合的全部點起來，不能漏也不能多</div><div class="multi">${it.items.map((t,i)=>{const on=q.sel.includes(i);let c=on?'on':'';if(locked){const good=it.ans.includes(i);c=good&&on?'right':good?'miss':on?'wrong':''}return `<button class="mchip ${c}" ${dis} data-act="mTog" data-i="${i}">${esc(t)}</button>`}).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+    case 'write':{const sent=esc(it.q).replace(/（(.+?)）/,'<span class="zyb">（$1）</span>');
+      return `<div class="qtext">看注音，在格子裡寫出國字</div><div class="wsent">${sent}</div><div class="wrow"><div id="wpadSlot"></div>${q.reveal?`<div class="wans"><div class="small muted">正確的字</div><div class="wch">${esc(it.char)}</div><div class="small">${esc(it.word||'')}</div></div>`:''}</div>
+      ${locked?'':(q.reveal?`<div class="wself"><b>跟正確的字比一比，每一筆都一樣嗎？</b><div class="row"><button class="btn" data-act="wSelf" data-v="1">✔ 我寫對了</button><button class="btn ghost" data-act="wSelf" data-v="0">✘ 我寫錯了</button></div></div>`:`<div class="row"><button class="btn ghost sm" data-act="wClear">擦掉重寫</button><button class="btn" data-act="wReveal">寫好了，看答案</button></div>`)}`}
+    case 'errstep':return `<div class="qtext">${esc(it.q)}</div><div class="steps">${it.steps.map((t,i)=>`<button class="step ${locked?(i===it.a?'opt right':(q.pick===i?'opt wrong':'')):''}" ${dis} data-act="errPick" data-i="${i}">第 ${i+1} 步：${esc(t)}</button>`).join('')}</div><div class="hint">點出算錯的那一步</div>`;
+  }
+  return '<p>（這種題型還沒支援）</p>';
+}
+function optCls(it,q,i,locked){if(!locked)return '';if(i===it.a)return 'right';if(q.pick===i)return 'wrong';return ''}
+const laneText=(q,sep)=>q.lane.map(k=>q.pool.find(p=>String(p.k)===String(k)).t).join(sep);
+function judge(it,q){
+  switch(it.type){
+    case 'mc':case 'listen':return {ok:q.pick===it.a,ans:it.opts[q.pick],right:it.opts[it.a]};
+    case 'order':{const ok=q.lane.every((k,i)=>k===i);return {ok,ans:laneText(q,' → '),right:it.steps.join(' → ')}}
+    case 'tiles':{const a=q.lane.map(k=>q.pool.find(p=>String(p.k)===String(k)).t);const goods=[it.tiles].concat(it.accept||[]);const ok=goods.some(g=>g.join('\u0001')===a.join('\u0001'));const sp=/[A-Za-z]/.test(it.tiles.join(''));const j=x=>sp?x.join(' ').replace(/ ([?.!,])/g,'$1'):x.join('');return {ok,ans:j(a),right:j(it.tiles)}}
+    case 'spell':{const a=laneText(q,'');return {ok:a===it.word,ans:a,right:it.word}}
+    case 'match':case 'label':{const goal=it.type==='match'?it.pairs.map(p=>p[1]):it.spots.map(p=>p.a);const ok=goal.every((g,i)=>q.right[q.map[i]]===g);return {ok,ans:q.left.map((l,i)=>l+'→'+q.right[q.map[i]]).join('；'),right:q.left.map((l,i)=>l+'→'+goal[i]).join('；')}}
+    case 'classify':{const ok=it.items.every((x,i)=>q.map[i]===x[1]);return {ok,ans:it.items.map((x,i)=>x[0]+'：'+it.cats[q.map[i]]).join('；'),right:it.items.map(x=>x[0]+'：'+it.cats[x[1]]).join('；')}}
+    case 'evidence':{const okA=q.opt===it.a;const okE=q.ev.length>0&&q.ev.every(i=>it.ev.includes(i));return {ok:okA&&okE,ans:it.opts[q.opt]+'（證據：第 '+q.ev.map(i=>i+1).join('、')+' 句）',right:it.opts[it.a]+'（證據：第 '+it.ev.map(i=>i+1).join('、')+' 句）',note:okA&&!okE?'答案選對了，但證據句不對。要能在文章裡找到證據才算真的讀懂。':''}}
+    case 'num':{if(it.ans.t==='frac'){const n=+q.n,d=+q.d;const g=(a,b)=>b?g(b,a%b):a;const ok=d>0&&n*it.ans.d===d*it.ans.n&&(!it.ans.simp||g(n,d)===1);return {ok,ans:q.n+'/'+q.d,right:it.ans.n+'/'+it.ans.d,note:!ok&&d>0&&n*it.ans.d===d*it.ans.n?'答案一樣大，但題目要最簡分數，要再約分。':''}}const x=parseFloat(q.s);return {ok:isFinite(x)&&Math.abs(x-it.ans.v)<1e-9,ans:q.s+(it.ans.u||''),right:it.ans.v+(it.ans.u||'')}}
+    case 'multi':{const a=[...q.sel].sort((x,y)=>x-y).join(),b=[...it.ans].sort((x,y)=>x-y).join();return {ok:a===b,ans:q.sel.map(i=>it.items[i]).join('、'),right:it.ans.map(i=>it.items[i]).join('、'),note:a!==b?'綠框是要勾的；紅框是不該勾的；虛線框是漏掉的。':''}}
+    case 'write':return {ok:!!q.self,ans:q.self?'自己檢查：寫對':'自己檢查：寫錯',right:it.char+(it.word?'（'+it.word+'）':'')};
+    case 'errstep':return {ok:q.pick===it.a,ans:'第 '+(q.pick+1)+' 步',right:'第 '+(it.a+1)+' 步',note:it.fix?'正確寫法：'+it.fix:''};
+  }
+  return {ok:false,ans:'',right:''};
+}
+
+/* ---------- play view ---------- */
+function vPlay(){
+  const s=S.sess;if(!s)return vHome();const w=s.items[s.i],it=w.it,z=SM[w.subj].z;
+  const locked=s.phase==='fb';
+  const head=`<div class="playhead"><button class="back" data-act="quit">✕ 結束</button><div class="prog"><i style="width:${(s.i+(locked?1:0))/s.items.length*100}%"></i></div><b style="font-variant-numeric:tabular-nums">${s.i+1} / ${s.items.length}</b>${s.lives!=null?`<span class="hearts">${'❤️'.repeat(Math.max(0,s.lives))}${'🤍'.repeat(Math.max(0,3-s.lives))}</span>`:''}${s.game?`<b style="font-variant-numeric:tabular-nums">${s.score} 分</b>`:''}<button class="back mute" data-act="mute" aria-label="音效開關">${SFX.label.split(' ')[0]}</button></div>`;
+  const title=`<div class="spread"><div class="small muted">${s.game?s.game.ic+' '+s.game.n:s.mode==='review'?'🔁 錯題複習':s.mode==='final'?'🏆 總複習':'✏️ 練習'}・${esc(w.uname)}${s.combo>=2?` ・ <span class="combo">🔥 連對 ${s.combo}</span>`:''}</div>${s.trial?'<span class="pill p-warn">老師試玩・不記錄</span>':''}</div>`;
+  let fb='';
+  if(locked){const f=s.fb;const wait=f.ok?0:Math.max(0,Math.ceil((f.until-Date.now())/1000));
+    fb=`<div class="fb ${f.ok?'ok':'no'}"><h3>${f.ok?'答對了！':'再想想看'}</h3>${f.ok?'':`<div><b>正確答案：</b>${esc(f.right)}</div><div class="small">你的答案：${esc(f.ans)}</div>`}${f.note?`<div><b>${esc(f.note)}</b></div>`:''}${it.exp?`<div>${esc(it.exp)}</div>`:''}${it.type==='tiles'&&/[A-Za-z]/.test(it.tiles.join(''))?'<button class="btn ghost sm" data-act="saySent" style="justify-self:start">🔊 再聽一次句子</button>':''}${it.type==='spell'?'<button class="btn ghost sm" data-act="sayWord" style="justify-self:start">🔊 再聽一次</button>':''}${f.move?`<div class="row"><span class="die roll">🎲 ${f.move}</span><span>前進 ${f.move} 格${f.cell?'・'+f.cell:''}</span></div>`:''}
+    <button class="btn" id="nextBtn" data-act="next" ${wait?'disabled':''}>${wait?`先看解析（${wait}）`:(s.i+1>=s.items.length||(s.lives!=null&&s.lives<=0)?'看結果':'下一題 →')}</button></div>`;
+    if(wait)setTimeout(tick,250)}
+  const board=s.game&&s.game.board?boardHTML(s):'';
+  const fx=locked&&!s.fb.ok?'fx-no':'';const plus=locked&&s.fb.ok&&s.fb.gain?`<span class="plus">+${s.fb.gain}</span>`:'';
+  return `<div class="z-${z}">${head}<div class="qcard ${fx}">${plus}${title}${board}${qBody(it,s.qs,locked)}${fb}</div></div>`;
+}
+const RING=[0,1,2,3,4,5,11,17,23,29,35,34,33,32,31,30,24,18,12,6];
+const CELLS=['🏁','⭐','','🔁','','⭐','','🎁','','🔁','⭐','','','🎁','⭐','','🔁','','⭐',''];
+function boardHTML(s){const cells=Array(36).fill(null);RING.forEach((g,i)=>cells[g]=i);
+  return `<div class="board" aria-label="大富翁棋盤">${cells.map(i=>i==null?'<div class="cell mid"></div>':`<div class="cell ${s.pos%20===i?'me':''}">${s.pos%20===i?'🧒':CELLS[i]}</div>`).join('')}</div><div class="small muted">答對才能擲骰子；走到 🔁 會抽一題你之前錯過的題目，⭐🎁 可以收集貼紙（目前 ${s.stickers} 張）。</div>`}
+function tick(){const b=$('#nextBtn');const s=S.sess;if(!b||!s||s.phase!=='fb')return;const wait=Math.max(0,Math.ceil((s.fb.until-Date.now())/1000));if(wait){b.textContent=`先看解析（${wait}）`;setTimeout(tick,250)}else{b.disabled=false;b.textContent=(s.i+1>=s.items.length||(s.lives!=null&&s.lives<=0))?'看結果':'下一題 →'}}
+function answer(){
+  const s=S.sess,w=s.items[s.i],it=w.it;const r=judge(it,s.qs);
+  s.res.push({qid:w.qid,ok:r.ok});
+  s.fb=Object.assign({},r,{until:Date.now()+3000});s.phase='fb';
+  if(s.game){if(r.ok){s.combo++;const gain=10+Math.min(s.combo-1,5)*2;s.score+=gain;s.fb.gain=gain}else{s.combo=0;s.lives--}}else{s.combo=r.ok?s.combo+1:0}
+  if(r.ok)SFX.ok(s.combo);else if(s.game)SFX.heart();else SFX.no();
+  if(s.game&&s.game.board&&r.ok){const mv=1+(Math.random()*6|0);s.pos+=mv;const c=CELLS[s.pos%20];s.fb.move=mv;setTimeout(()=>SFX.dice(),380);
+    if(c==='⭐'||c==='🎁'){s.stickers++;s.fb.cell='拿到一張貼紙';setTimeout(()=>SFX.sticker(),950)}
+    else if(c==='🔁'){const due=s.trial?[]:dueList(s.sid).filter(d=>!s.items.slice(s.i+1).some(x=>x.qid===d.q));if(due.length){const d=due[0];s.items.splice(s.i+1,0,wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,stuDoc(s.sid).m));s.fb.cell='下一題是你之前錯過的題目'}else s.fb.cell='錯題都清光了，好棒'}}
+  if(!r.ok)s.lw={q:qLabel(it),ans:r.ans,right:r.right};
+  record(s,w,r);render();pushLive();
+  if(it.type==='tiles'&&/[A-Za-z]/.test(it.tiles.join('')))setTimeout(()=>say(sentText(it)),r.ok?250:400);
+}
+function record(s,w,r){
+  if(s.demo||s.trial)return;
+  const d=stuDoc(s.sid);d.m=d.m||{};const m=d.m[w.qid]||{n:0,w:0,ok:0};const now=Date.now();
+  m.n++;m.last=now;
+  if(r.ok){m.ok=(m.ok||0)+1;m.due=m.ok>=2?0:(m.w?now+3*DAY:0)}else{m.w++;m.ok=0;m.due=nextDay(now);m.lw=now;m.la=String(r.ans).slice(0,120)}
+  d.m[w.qid]=m;d.days=d.days||{};d.days[ymd()]=(d.days[ymd()]||0)+1;S.stu[s.sid]=d;saveStu(s.sid);
+  const id=s.sid+'_'+ymd();const lg=S.logs[id]||(S.logs[id]={sid:s.sid,d:ymd(),a:[]});
+  lg.a.push({t:now,q:w.qid,ok:r.ok?1:0,ans:String(r.ans).slice(0,120),md:s.game?s.game.k:s.mode});if(lg.a.length>600)lg.a=lg.a.slice(-600);save('log/'+id,lg);
+}
+function qLabel(it){return it.q||it.zh&&('拼出「'+it.zh+'」')||(it.say?'聽音：'+it.say:'')||''}
+function pushLive(){
+  const s=S.sess;if(!s||s.demo||s.trial||!S.db)return;const st=stuById(s.sid)||{};const w=s.items[Math.min(s.i,s.items.length-1)];
+  save('live/'+s.sid,{sid:s.sid,name:st.name||'',school:st.school||'',subj:w.subj,pub:w.pub,unit:w.uname,mode:s.mode,game:s.game?s.game.n:'',type:TYPE_NAME[w.it.type]||'',qi:s.i+1,qn:s.items.length,answered:s.res.length,correct:s.res.filter(r=>r.ok).length,recent:s.res.slice(-12).map(r=>r.ok?1:0),qtext:qLabel(w.it).slice(0,40),qts:s.qts,ts:Date.now(),done:!!s.done,lw:s.lw||null,score:s.game?s.score:null,lives:s.lives});
+}
+function nextQ(){const s=S.sess;if(s.i+1>=s.items.length||(s.lives!=null&&s.lives<=0))return finish();resetPads();s.i++;s.phase='q';s.fb=null;s.qs=initQ(s.items[s.i].it);s.qts=Date.now();if(s.items[s.i].it.type==='listen')s.autoSay=true;render();pushLive()}
+function finish(){
+  const s=S.sess;s.done=true;const ok=s.res.filter(r=>r.ok).length,n=s.res.length;const acc=n?ok/n:0;
+  s.stars=acc>=.9?3:acc>=.7?2:acc>=.5?1:0;
+  if(!s.demo&&!s.trial){const d=stuDoc(s.sid);const k=ukey(s.subj,s.pub,s.uid);
+    if(s.mode==='practice'&&acc>=.85){d.pass=d.pass||{};if(!d.pass[k]){d.pass[k]=Date.now();s.newPass=true}}
+    if(s.game){d.best=d.best||{};const bk=k+'|'+s.game.k;if((d.best[bk]||0)<s.stars)d.best[bk]=s.stars}
+    S.stu[s.sid]=d;saveStu(s.sid)}
+  pushLive();go('result');
+  if(s.game&&s.lives<=0)SFX.lose();else if(s.newPass){SFX.unlock();confetti()}else if(s.stars>=2){SFX.win();confetti()}else if(s.stars===1)SFX.ok(1);else SFX.lose();
+}
+function vResult(){
+  const s=S.sess;if(!s)return vHome();const ok=s.res.filter(r=>r.ok).length,n=s.res.length;const z=SM[s.subj||s.items[0].subj].z;
+  const wrong=s.res.map((r,i)=>({r,w:s.items[i]})).filter(x=>!x.r.ok);
+  let msg='';
+  if(s.mode==='practice')msg=s.newPass?'🎉 過關了！這一課的遊戲打開了。':(ok/n>=.85?'這一課已經過關，可以去玩遊戲。':'答對 85% 才能打開遊戲（10 題要對 9 題），再練一次吧！');
+  if(s.mode==='review')msg='錯題會照答對次數排下一次複習，答對兩次就學會了。';
+  if(s.mode==='final')msg=ok/n>=.85?'🎉 總複習 '+Math.round(ok/n*100)+' 分，準備好考試了！':'總複習 '+Math.round(ok/n*100)+' 分，看完下面的錯題再挑戰一次！';
+  if(s.game&&s.lives<=0)msg='愛心用完了，看一下錯的題目再挑戰一次！';
+  return `<div class="z-${z}"><div class="qcard" style="text-align:center;justify-items:center">
+  <div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${.15+i*.22}s">${i<s.stars?'★':'☆'}</span>`).join('')}</div><h1>${ok} / ${n} 題答對</h1>${s.game?`<div class="muted">${s.score} 分${s.game.board?'・貼紙 '+s.stickers+' 張':''}</div>`:''}<p>${msg}</p>
+  ${s.trial?'<span class="pill p-warn">老師試玩，不記錄成績</span>':''}</div>
+  ${wrong.length?`<h2 style="margin:20px 0 10px">這次錯的題目</h2><div class="stack">${wrong.map(x=>{const it=x.w.it;return `<div class="card stack" style="gap:6px"><b>${esc(qLabel(it)||TYPE_NAME[it.type])}</b><div class="small" style="color:var(--good)">正確答案：${esc(rightText(it))}</div>${it.exp?`<div class="small">${esc(it.exp)}</div>`:''}</div>`}).join('')}</div>`:''}
+  <div class="row" style="margin-top:18px;justify-content:center">${s.trial?'<button class="btn" data-act="backTeacher">回老師後台</button>':`<button class="btn" data-act="again">再一次</button><button class="btn ghost" data-act="afterResult">回科目</button>`}</div></div>`;
+}
+
+/* ---------- profile ---------- */
+function vProfile(v){
+  const sid=v.sid,st=stuById(sid);if(!st)return vHome();const d=stuDoc(sid);
+  const days=Object.keys(d.days||{}).length;const total=Object.values(d.days||{}).reduce((a,b)=>a+b,0);
+  const blocks=SUBJS.map(subj=>{const ss=subjState(sid,subj);const z=SM[subj].z;
+    if(ss.lock)return `<div class="card z-${z}"><div class="spread"><h3>${subj}</h3><span class="pill p-none">🔒 ${esc(ss.lock)}</span></div></div>`;
+    const rows=ss.units.map(u=>{const s=unitSummary(sid,subj,ss.pub,u);return `<div class="spread" style="padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:0;flex:1"><div>${esc(u.name)}</div>${barHTML(s.c,s.tot)}</div>${pill(s.st)}</div>`}).join('');
+    const weak=Object.entries(d.m||{}).filter(([q,r])=>q.startsWith(subj+'|'+ss.pub+'|')&&r.w&&(r.ok||0)<2).sort((a,b)=>b[1].w-a[1].w).slice(0,3).map(([q,r])=>{const f=findQ(q);return f?`<li>${esc(qLabel(f.it)||TYPE_NAME[f.it.type])} <span class="small muted">錯 ${r.w} 次</span></li>`:''}).join('');
+    return `<div class="card stack z-${z}" style="gap:8px;border-top:6px solid var(--sc-c)"><div class="spread"><h3>${subj}</h3><span class="small muted">${esc(ss.pub)}版</span></div>${rows}${subj==='國語'?charBlock(sid,subj,ss.pub,ss.units,'我的生字'):''}${weak?`<div><b class="small">我最常錯的</b><ul style="margin:6px 0 0;padding-left:20px">${weak}</ul></div>`:''}</div>`}).join('');
+  return `<div class="topbar"><button class="back" data-act="backStu">← 回去</button><div class="grow"><h1>${esc(st.name)} 的學習檔案</h1></div></div>
+  <div class="stack"><div class="card row" style="justify-content:space-around;text-align:center"><div><div style="font-size:30px;font-weight:700">${days}</div><div class="small muted">練習天數</div></div><div><div style="font-size:30px;font-weight:700">${total}</div><div class="small muted">做過的題數</div></div><div><div style="font-size:30px;font-weight:700;color:var(--warn)">${dueList(sid).length}</div><div class="small muted">待複習錯題</div></div></div>
+  <div class="legend"><span><b style="background:var(--good)"></b>已學會：同一題連續答對兩次</span><span><b style="background:var(--warn)"></b>還在練</span><span><b style="background:var(--bad)"></b>錯很多：要多複習</span></div>
+  <div class="grid2">${blocks}</div></div>`;
+}
+
+/* ---------- teacher ---------- */
+async function hash(p){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('arice-island:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=0;for(const c of 'arice:'+p)h=(h*31+c.charCodeAt(0))|0;return 'h'+h}}
+function vPin(){
+  const setting=S.pinMode==='set'||S.pinMode==='set2';
+  const t=S.pinMode==='set'?'設定老師密碼（4～6 位數字）':S.pinMode==='set2'?'再輸入一次確認':'輸入老師密碼';
+  return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
+  <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
+}
+const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['set','設定'],['try','試玩']];
+function vTeacher(){
+  const tabs=`<div class="tabs">${TT.map(([k,n])=>`<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}</button>`).join('')}</div>`;
+  const f={live:tLive,prog:tProg,weak:tWeak,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
+  return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
+}
+function tLive(){
+  const now=Date.now();const L=Object.values(S.live).filter(x=>now-(x.ts||0)<6*3600e3).sort((a,b)=>(a.done-b.done)||(b.ts-a.ts));
+  if(!L.length)return '<div class="card muted">目前沒有學生在做題。學生每答一題，這裡就會更新（每 5 秒刷新）。</div>';
+  const cards=L.map(x=>{const idle=now-x.ts>300e3,stuck=!x.done&&now-x.qts>60e3;const cls=x.done?'done':idle?'idle':stuck?'stuck':'';
+    const state=x.done?'已結束':idle?'沒有回應':stuck?`這題卡了 ${Math.round((now-x.qts)/1000)} 秒`:'作答中';
+    return `<div class="lcard ${cls}"><div class="spread"><b style="font-size:18px">${esc(x.name)}</b><span class="pill ${x.done?'p-none':idle?'p-bad':stuck?'p-warn':'p-good'}">${state}</span></div>
+    <div class="small">${esc(x.subj)}・${esc(x.pub)}・${esc(x.unit)}</div><div class="small muted">${x.game?esc(x.game):x.mode==='review'?'錯題複習':x.mode==='final'?'總複習':'練習'}・${esc(x.type)}・第 ${x.qi}/${x.qn} 題${x.score!=null?'・'+x.score+' 分':''}</div>
+    <div class="small">答對 ${x.correct} / ${x.answered}</div><div class="dotrow">${(x.recent||[]).map(o=>`<i class="${o?'':'x'}"></i>`).join('')}</div>
+    ${!x.done&&x.qtext?`<div class="small muted">現在：${esc(x.qtext)}…</div>`:''}${x.lw?`<div class="small" style="color:var(--bad)">剛剛錯：${esc(String(x.lw.q).slice(0,30))}<br>他答 ${esc(String(x.lw.ans).slice(0,40))}／正解 ${esc(String(x.lw.right).slice(0,40))}</div>`:''}<div class="small muted">${ago(x.ts)}</div></div>`}).join('');
+  return `<div class="spread" style="margin-bottom:10px"><span class="small muted">超過 1 分鐘停在同一題會變橘色，5 分鐘沒動靜變紅色。</span><button class="btn ghost sm" data-act="clearLive">清空即時資料</button></div><div class="live">${cards}</div>`;
+}
+function subjTotals(sid,subj){const ss=subjState(sid,subj);if(ss.lock)return null;let c={new:0,learn:0,weak:0,done:0},tot=0,n=0,w=0;const m=stuDoc(sid).m||{};ss.units.forEach(u=>{const s=unitSummary(sid,subj,ss.pub,u);tot+=s.tot;for(const k in c)c[k]+=s.c[k];u.items.forEach(it=>{const r=m[ukey(subj,ss.pub,u.id)+'|'+it.id];if(r){n+=r.n;w+=r.w}})});return {c,tot,acc:n?(n-w)/n:null,pub:ss.pub}}
+function tProg(){
+  if(!students().length)return '<div class="card muted">還沒有學生，請到「設定」新增。</div>';
+  const rows=students().map(st=>{const d=stuDoc(st.id);const cells=SUBJS.map(subj=>{const t=subjTotals(st.id,subj);if(!t)return '<td class="muted">🔒</td>';return `<td><div style="min-width:90px">${barHTML(t.c,t.tot)}</div><div class="small">${t.c.done}/${t.tot}${t.acc!=null?' ・ '+Math.round(t.acc*100)+'%':''}${t.c.weak?` <span style="color:var(--bad)">弱 ${t.c.weak}</span>`:''}</div></td>`}).join('');
+    return `<tr class="click" data-act="openStuT" data-id="${esc(st.id)}"><td><b>${esc(st.name)}</b><div class="small muted">${esc(st.school)}</div></td>${cells}<td class="small">${dueList(st.id).length}</td><td class="small">${ago(d.t)}</td></tr>`}).join('');
+  return `<p class="small muted">每格：已學會題數／開放題數・答對率；「弱」是錯 2 次以上還沒學會的題數。點學生看詳細。</p><div class="tbl"><table><thead><tr><th>學生</th>${SUBJS.map(s=>`<th>${s}</th>`).join('')}<th>待複習</th><th>最後練習</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function tStu(){
+  const sid=S.tStu,st=stuById(sid);if(!st)return tProg();const d=stuDoc(sid);const m=d.m||{};
+  const per=SUBJS.map(subj=>{const ss=subjState(sid,subj);if(ss.lock)return `<div class="card"><div class="spread"><h3>${subj}</h3><span class="pill p-none">${esc(ss.lock)}</span></div></div>`;
+    const us=ss.units.map(u=>{const s=unitSummary(sid,subj,ss.pub,u);const k=ukey(subj,ss.pub,u.id);return `<tr><td>${esc(u.name)}</td><td>${pill(s.st)}</td><td>${s.c.done}/${s.tot}</td><td>${s.acc!=null?Math.round(s.acc*100)+'%':'—'}</td><td>${(d.pass||{})[k]?'✅':'—'}</td></tr>`}).join('');
+    const wr=Object.entries(m).filter(([q,r])=>q.startsWith(subj+'|'+ss.pub+'|')&&r.w).sort((a,b)=>(b[1].w-a[1].w)||((b[1].lw||0)-(a[1].lw||0))).map(([q,r])=>{const f=findQ(q);if(!f)return '';const it=f.it;return `<tr><td>${esc(qLabel(it)||TYPE_NAME[it.type])}<div class="small muted">${esc(f.unit.name)}・${TYPE_NAME[it.type]}${it.skill?'・'+esc(it.skill):''}</div></td><td class="small" style="color:var(--bad)">${esc(r.la||'')}</td><td class="small">${esc(rightText(it))}</td><td>${r.w}/${r.n}</td><td>${qStatus(r)==='done'?pill('done'):(r.ok?'對 1 次':'—')}</td></tr>`}).join('');
+    return `<div class="card stack" style="gap:10px"><div class="spread"><h3>${subj}</h3><span class="small muted">${esc(ss.pub)}版</span></div>${subj==='國語'?charBlock(sid,subj,ss.pub,ss.units,'生字學習狀況（數字＝錯幾次）'):''}<div class="tbl" style="box-shadow:none"><table><thead><tr><th>單元</th><th>狀態</th><th>已學會</th><th>答對率</th><th>練習過關</th></tr></thead><tbody>${us}</tbody></table></div>
+    ${wr?`<b>錯過的題目</b><div class="tbl" style="box-shadow:none"><table><thead><tr><th>題目</th><th>他最近答錯的答案</th><th>正確答案</th><th>錯/做</th><th>現在</th></tr></thead><tbody>${wr}</tbody></table></div>`:'<div class="small muted">還沒有錯題。</div>'}</div>`}).join('');
+  const days=Object.entries(d.days||{}).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,10).map(([k,v])=>`<span class="pill p-none">${k.slice(4,6)}/${k.slice(6)}：${v} 題</span>`).join(' ');
+  return `<div class="topbar"><button class="back" data-act="tTab" data-k="prog">← 學生進度</button><div class="grow"><h2>${esc(st.name)}</h2><div class="small muted">${esc(st.school)}・最後練習 ${ago(d.t)}・待複習 ${dueList(sid).length} 題・密碼${d.pin?'已設定':'未設定'}</div></div>${d.pin?`<button class="btn ghost sm" data-act="resetSPin" data-id="${esc(sid)}">重設學生密碼</button>`:''}</div><div class="stack">${days?`<div class="row">${days}</div>`:''}${per}</div>`;
+}
+function rightText(it){switch(it.type){case 'num':return it.ans.t==='frac'?it.ans.n+'/'+it.ans.d:it.ans.v+(it.ans.u||'');case 'multi':return it.ans.map(i=>it.items[i]).join('、');case 'write':return it.char+(it.word?'（'+it.word+'）':'');case 'mc':case 'listen':return it.opts[it.a];case 'order':return it.steps.join(' → ');case 'tiles':return /[A-Za-z]/.test(it.tiles.join(''))?it.tiles.join(' '):it.tiles.join('');case 'spell':return it.word;case 'match':return it.pairs.map(p=>p[0]+'→'+p[1]).join('；');case 'label':return it.spots.map(p=>p.a).join('、');case 'classify':return it.items.map(x=>x[0]+'：'+it.cats[x[1]]).join('；');case 'evidence':return it.opts[it.a]+'（第 '+it.ev.map(i=>i+1).join('、')+' 句）';case 'errstep':return '第 '+(it.a+1)+' 步';}return ''}
+function tWeak(){
+  const combos={};students().forEach(st=>SUBJS.forEach(subj=>{const p=pubOf(st.id,subj);if(p&&unitsOf(subj,p).length)(combos[subj+'|'+p]=combos[subj+'|'+p]||[]).push(st)}));
+  const keys=Object.keys(combos);if(!keys.length)return '<div class="card muted">還沒有開放的科目。題庫放進來、在「設定」開放單元後，這裡會列出全班最常錯的題目和技能。</div>';
+  return '<div class="stack">'+keys.map(k=>{const [subj,pub]=k.split('|');const sts=combos[k];const us=unitsOf(subj,pub).filter(u=>isOpen(subj,pub,u.id));
+    const items={},skills={};us.forEach(u=>u.items.forEach(it=>{const q=ukey(subj,pub,u.id)+'|'+it.id;let wn=0,n=0,who=[];sts.forEach(st=>{const r=(stuDoc(st.id).m||{})[q];if(r){n+=r.n;wn+=r.w;if(r.w&&(r.ok||0)<2)who.push(st.name)}});if(n){items[q]={it,u,wn,n,who};const sk=it.skill||TYPE_NAME[it.type];skills[sk]=skills[sk]||{n:0,w:0};skills[sk].n+=n;skills[sk].w+=wn}}));
+    const top=Object.values(items).filter(x=>x.wn).sort((a,b)=>(b.who.length-a.who.length)||(b.wn-a.wn)).slice(0,8);
+    const sk=Object.entries(skills).sort((a,b)=>(b[1].w/b[1].n)-(a[1].w/a[1].n)).slice(0,6);
+    const ua=us.map(u=>{let n=0,w=0;sts.forEach(st=>{const m=stuDoc(st.id).m||{};u.items.forEach(it=>{const r=m[ukey(subj,pub,u.id)+'|'+it.id];if(r){n+=r.n;w+=r.w}})});return `<span class="pill ${n?((n-w)/n<.6?'p-bad':(n-w)/n<.8?'p-warn':'p-good'):'p-none'}">${esc(u.name)}：${n?Math.round((n-w)/n*100)+'%':'未做'}</span>`}).join(' ');
+    return `<div class="card stack z-${SM[subj].z}" style="gap:10px;border-top:6px solid var(--sc-c)"><div class="spread"><h3>${subj}・${esc(pub)}版</h3><span class="small muted">${sts.map(s=>esc(s.name)).join('、')}</span></div><div class="row">${ua||'<span class="muted small">沒有開放的單元</span>'}</div>
+    ${sk.length?`<div><b class="small">答錯率最高的技能</b><div class="row" style="margin-top:6px">${sk.map(([n,v])=>`<span class="pill ${v.w/v.n>.4?'p-bad':v.w/v.n>.2?'p-warn':'p-good'}">${esc(n)} 錯 ${Math.round(v.w/v.n*100)}%</span>`).join('')}</div></div>`:''}
+    ${top.length?`<div class="tbl" style="box-shadow:none"><table><thead><tr><th>最常錯的題目</th><th>正確答案</th><th>還沒學會的人</th><th>錯/做</th></tr></thead><tbody>${top.map(x=>`<tr><td>${esc(qLabel(x.it)||TYPE_NAME[x.it.type])}<div class="small muted">${esc(x.u.name)}${x.it.skill?'・'+esc(x.it.skill):''}</div></td><td class="small">${esc(rightText(x.it))}</td><td class="small">${esc(x.who.join('、'))||'—'}</td><td>${x.wn}/${x.n}</td></tr>`).join('')}</tbody></table></div>`:'<div class="small muted">還沒有人答錯，或還沒有人做題。</div>'}</div>`}).join('')+'</div>';
+}
+function ensureDraft(){if(!S.draft)S.draft=JSON.parse(JSON.stringify(S.cfg||{schools:{},schoolOrder:[],students:[],open:{}}));const d=S.draft;d.schools=d.schools||{};d.students=d.students||[];d.open=d.open||{};d.schoolOrder=d.schoolOrder||Object.keys(d.schools);return d}
+function tSet(){
+  if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法修改設定。</div>';
+  const d=ensureDraft();const sch=d.schoolOrder;
+  const ver=`<div class="tbl"><table><thead><tr><th>國小</th>${SUBJS.map(s=>`<th>${s}</th>`).join('')}<th></th></tr></thead><tbody>${sch.map((s,si)=>`<tr><td><input id="sch-${si}" value="${esc(s)}" data-f="schName" data-i="${si}" style="width:120px"></td>${SUBJS.map(subj=>`<td><select id="pub-${si}-${subj}" data-f="pub" data-s="${esc(s)}" data-subj="${subj}"><option value="">未設定</option>${PUBS.map(p=>`<option ${d.schools[s]&&d.schools[s][subj]===p?'selected':''}>${p}</option>`).join('')}</select></td>`).join('')}<td><button class="btn ghost sm" data-act="delSchool" data-i="${si}">刪除</button></td></tr>`).join('')}</tbody></table></div><button class="btn ghost sm" data-act="addSchool" style="margin-top:8px">＋ 新增學校</button>`;
+  const ros=`<div class="tbl"><table><thead><tr><th>姓名</th><th>學校</th><th></th></tr></thead><tbody>${d.students.map((st,i)=>`<tr><td><input id="stn-${st.id}" value="${esc(st.name)}" data-f="stuName" data-i="${i}" style="width:120px"></td><td><select id="sts-${st.id}" data-f="stuSchool" data-i="${i}">${sch.map(s=>`<option ${st.school===s?'selected':''}>${esc(s)}</option>`).join('')}</select></td><td><button class="btn ghost sm" data-act="delStu" data-i="${i}">刪除</button></td></tr>`).join('')}</tbody></table></div><button class="btn ghost sm" data-act="addStu" style="margin-top:8px">＋ 新增學生</button>`;
+  const used={};sch.forEach(s=>SUBJS.forEach(subj=>{const p=d.schools[s]&&d.schools[s][subj];if(p)(used[subj+'|'+p]=used[subj+'|'+p]||[]).push(s)}));
+  const opens=SUBJS.map(subj=>{const pubs=[...new Set(Object.keys(used).filter(k=>k.startsWith(subj+'|')).map(k=>k.split('|')[1]))];if(!pubs.length)return `<div class="card"><h3>${subj}</h3><div class="small muted">還沒有學校設定這科的版本。</div></div>`;
+    return `<div class="card stack z-${SM[subj].z}" style="gap:8px;border-top:6px solid var(--sc-c)"><h3>${subj}</h3>${pubs.map(p=>{const us=unitsOf(subj,p);return `<div class="stack" style="gap:6px"><div class="spread"><b>${esc(p)}版</b><span class="small muted">${used[subj+'|'+p].map(esc).join('、')}</span></div>${us.length?us.map(u=>{const k=ukey(subj,p,u.id);return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>${esc(u.name)} <span class="small muted">${u.items.length} 題</span></span><span class="sw ${d.open[k]?'on':''}"></span></button>`}).join('')+(()=>{const k=ukey(subj,p,'__final');return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>🏆 總複習 <span class="small muted">開放單元混合 20 題</span></span><span class="sw ${d.open[k]?'on':''}"></span></button>`})():'<div class="pill p-none" style="justify-self:start">🔒 題目準備中，學生端已上鎖</div>'}</div>`}).join('')}</div>`}).join('');
+  const dirty=JSON.stringify(d)!==JSON.stringify(Object.assign({schools:{},schoolOrder:[],students:[],open:{}},S.cfg||{}));
+  return `<div class="stack"><div class="spread"><span class="small muted">改完按「儲存設定」才會生效。</span><div class="row"><button class="btn ghost sm" data-act="resetDraft">放棄修改</button><button class="btn" data-act="saveCfg" ${dirty?'':'disabled'}>儲存設定</button></div></div>
+  <h2>各校版本</h2>${ver}<h2>學生名單</h2>${ros}<h2>開放單元</h2><p class="small muted">題庫放進來後，這裡會出現單元。打開開關，學生才看得到那一課；沒有題目的科目一律鎖著。</p><div class="grid2">${opens}</div>
+  <h2>老師密碼</h2><button class="btn ghost sm" data-act="changePin" style="justify-self:start">更改密碼</button></div>`;
+}
+function tTry(){
+  const P=S.tryPick;P.subj=P.subj||'國語';const pubs=PUBS.filter(p=>unitsOf(P.subj,p).length).concat(['示範']);if(!pubs.includes(P.pub))P.pub=pubs[0];const us=unitsOf(P.subj,P.pub);if(!us.find(u=>u.id===P.uid))P.uid=us[0]&&us[0].id;const un=us.find(u=>u.id===P.uid);
+  return `<div class="card stack"><p class="muted small">用學生的畫面試做，不會存成績，也不會出現在即時狀況。「示範」版本是範例題，示範每一種遊戲；正式題庫放進來後，這裡就能選各版本的單元。</p>
+  <div class="tabs">${SUBJS.map(s=>`<button class="tab ${P.subj===s?'on':''}" data-act="tryPick" data-f="subj" data-v="${s}">${s}</button>`).join('')}</div>
+  <div class="tabs">${pubs.map(p=>`<button class="tab ${P.pub===p?'on':''}" data-act="tryPick" data-f="pub" data-v="${p}">${p}</button>`).join('')}</div>
+  ${us.length>1?`<div class="tabs">${us.map(u=>`<button class="tab ${P.uid===u.id?'on':''}" data-act="tryPick" data-f="uid" data-v="${esc(u.id)}">${esc(u.name)}</button>`).join('')}</div>`:''}
+  ${un?`<div class="row z-${SM[P.subj].z}"><button class="btn" data-act="tryStart" data-g="">✏️ 練習</button>${GAMES[P.subj].map(g=>{const n=gameItemsLoose(un,g).length;return `<button class="gbtn" ${n<3?'disabled':''} data-act="tryStart" data-g="${g.k}">${g.ic} ${g.n}<span class="small muted">（${n} 題）</span></button>`}).join('')}</div><div class="small muted">${GAMES[P.subj].map(g=>`${g.ic} ${g.n}：${g.d}`).join('　')}</div>`:''}</div>`;
+}
+
+/* ---------- speech ---------- */
+let curAudio=null;
+function ttsFallback(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function say(t){if(!t)return;try{if(curAudio){curAudio.pause();curAudio=null}const a=new Audio('audio/en-'+String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3');curAudio=a;a.onerror=()=>{if(curAudio===a)ttsFallback(t)};const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){ttsFallback(t)}}
+function sentText(it){return it.tiles.join(' ').replace(/ ([?.!,])/g,'$1')}
+
+/* ---------- actions ---------- */
+const A={
+  home:()=>{S.sess=null;go('home')},
+  pickStu:e=>{S.tOK=false;S.sess=null;SFX.tap();e.classList.add('picked');const id=e.dataset.id;S.spBuf='';S.spMode=stuDoc(id).pin?'enter':'set';setTimeout(()=>go('spin',{sid:id}),200)},
+  spKey:async e=>{const k=e.dataset.k;if(k==='清除'){S.spBuf='';return render()}if(k==='⌫'){S.spBuf=S.spBuf.slice(0,-1);return render()}if(S.spBuf.length>=4)return;SFX.tap();S.spBuf+=k;render();if(S.spBuf.length<4)return;
+    const sid=S.view.sid;const h=await hash('stu:'+sid+':'+S.spBuf);S.spBuf='';const st=stuById(sid);
+    if(S.spMode==='set'){S.sp1=h;S.spMode='set2';return setTimeout(render,150)}
+    if(S.spMode==='set2'){if(h!==S.sp1){S.spMode='set';SFX.no();toast('兩次不一樣，請重新設定');return render()}const d=stuDoc(sid);d.pin=h;S.stu[sid]=d;saveStu(sid);SFX.unlock();go('stu',{sid});toast('密碼設定好了，要記住喔！');return}
+    if(h===stuDoc(sid).pin){SFX.hello();go('stu',{sid});if(st)toast('嗨，'+st.name+'！歡迎上島 🏝️');return}
+    SFX.no();S.spWrong=true;render();S.spWrong=false;toast('密碼不對，再試一次（忘記了請找老師）')},
+  avOpen:()=>{S.avPick=true;SFX.tap();render()},
+  avClose:()=>{S.avPick=false;render()},
+  noop:()=>{},
+  avSet:e=>{const sid=S.view.sid;const d=stuDoc(sid);d.av=e.dataset.v;S.stu[sid]=d;saveStu(sid);S.avPick=false;SFX.sticker();render();toast('頭像換好了！')},
+  resetSPin:e=>{const sid=e.dataset.id;if(S.rsArm!==sid){S.rsArm=sid;return toast('再按一次確認重設這位學生的密碼')}S.rsArm=null;const d=stuDoc(sid);delete d.pin;S.stu[sid]=d;saveStu(sid);toast('已重設，學生下次進來會重新設定密碼');render()},
+  school:e=>{SFX.tap();S.school=e.dataset.s;render()},
+  backStu:()=>go('stu',{sid:S.view.sid}),
+  lockedSubj:e=>toast(e.dataset.m==='題目準備中'?'這科的題目還在準備，做好就會打開':e.dataset.m==='老師還沒開放'?'老師還沒開放這一科':'老師還沒設定你學校的版本'),
+  openSubj:e=>{SFX.tap();go('subj',{sid:S.view.sid,subj:e.dataset.s})},
+  openUnit:e=>{SFX.tap();go('unit',{sid:S.view.sid,subj:S.view.subj,uid:e.dataset.u})},
+  backSubj:()=>go('subj',{sid:S.view.sid,subj:S.view.subj}),
+  lockedUnit:()=>toast('老師還沒開放這個單元'),
+  lockedFinal:()=>toast('總複習還沒開放，等老師打開喔'),
+  startFinal:()=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);const m=stuDoc(sid).m||{};const us=unitsOf(subj,pub).filter(u=>isOpen(subj,pub,u.id));if(!us.length)return;
+    const sc=w=>{const r=m[w.qid];if(!r)return 1+Math.random();if((r.ok||0)<2)return Math.random();return 2+Math.random()};
+    const all=[].concat(...us.map(u=>u.items.map(it=>wrap(subj,pub,u,it,m))));const items=shuffle(all.sort((a,b)=>sc(a)-sc(b)).slice(0,20));
+    newSession({sid,subj,pub,uid:'__final',mode:'final',items,back:{n:'subj',sid,subj}})},
+  profile:e=>go('profile',{sid:e.dataset.id}),
+  startPractice:e=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);const un=unitsOf(subj,pub).find(u=>u.id===e.dataset.u);newSession({sid,subj,pub,uid:un.id,mode:'practice',items:pickPractice(sid,subj,pub,un),back:{n:'unit',sid,subj,uid:un.id}})},
+  startGame:e=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);const un=unitsOf(subj,pub).find(u=>u.id===e.dataset.u);const g=GAMES[subj].find(x=>x.k===e.dataset.g);newSession({sid,subj,pub,uid:un.id,mode:'game',game:g,lives:3,items:pickGame(sid,subj,pub,un,g),back:{n:'unit',sid,subj,uid:un.id}})},
+  startReview:e=>{const sid=e.dataset.id;const due=shuffle(dueList(sid)).slice(0,10);if(!due.length)return toast('沒有要複習的題目');const m=stuDoc(sid).m;const items=due.map(d=>wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,m));newSession({sid,subj:items[0].subj,pub:items[0].pub,uid:items[0].uid,mode:'review',items,back:{n:'stu',sid}})},
+  pick:e=>{const s=S.sess;if(s.phase!=='q')return;s.qs.pick=+e.dataset.i;answer()},
+  errPick:e=>{const s=S.sess;if(s.phase!=='q')return;s.qs.pick=+e.dataset.i;answer()},
+  say:()=>say(S.sess.items[S.sess.i].it.say),
+  sayWord:()=>say(S.sess.items[S.sess.i].it.word),
+  wClear:()=>{wpad().clear()},
+  nFocus:e=>{S.sess.qs.f=e.dataset.f;render()},
+  nKey:e=>{const q=S.sess.qs,it=S.sess.items[S.sess.i].it;SFX.tap();const k=e.dataset.k;const fr=it.ans.t==='frac';const f=fr?q.f:'s';let v=q[f];if(k==='⌫')v=v.slice(0,-1);else if(k==='.'){if(!v.includes('.'))v=(v||'0')+'.'}else if(v.length<10)v=(v==='0'?'':v)+k;q[f]=v;render()},
+  mTog:e=>{const q=S.sess.qs;const i=+e.dataset.i;SFX.tap();q.sel=q.sel.includes(i)?q.sel.filter(x=>x!==i):q.sel.concat(i);render()},
+  wReveal:()=>{if(!wpad().strokes)return toast('先在格子裡寫字喔');SFX.tap();S.sess.qs.reveal=true;render()},
+  wSelf:e=>{const s=S.sess;if(s.phase!=='q')return;s.qs.self=e.dataset.v==='1';answer()},
+  saySent:()=>say(sentText(S.sess.items[S.sess.i].it)),
+  mute:()=>{SFX.cycle();render();toast('音效：'+SFX.label)},
+  goPlay:()=>{SFX.start();const s=S.sess;if(s.items[0].it.type==='listen')s.autoSay=true;go('play')},
+  ordIn:e=>{SFX.tap();const q=S.sess.qs;const k=e.dataset.k;const key=/^\d+$/.test(k)?+k:k;if(!q.lane.map(String).includes(String(key)))q.lane.push(key);render()},
+  ordOut:e=>{SFX.tap();S.sess.qs.lane.splice(+e.dataset.i,1);render()},
+  mL:e=>{SFX.tap();const q=S.sess.qs;q.sel=+e.dataset.i;render()},
+  mR:e=>{SFX.tap();const q=S.sess.qs;const j=+e.dataset.j;let li=q.sel;if(li==null){li=[...q.left.keys()].find(i=>q.map[i]==null);if(li==null)return}for(const k in q.map)if(q.map[k]===j)delete q.map[k];q.map[li]=j;const nx=[...q.left.keys()].find(i=>q.map[i]==null);q.sel=nx==null?null:nx;render()},
+  cls:e=>{SFX.tap();S.sess.qs.map[+e.dataset.i]=+e.dataset.c;render()},
+  ev:e=>{SFX.tap();const q=S.sess.qs;const i=+e.dataset.i;q.ev=q.ev.includes(i)?q.ev.filter(x=>x!==i):q.ev.concat(i);render()},
+  evOpt:e=>{SFX.tap();S.sess.qs.opt=+e.dataset.i;render()},
+  check:()=>{if(S.sess.phase==='q')answer()},
+  next:()=>nextQ(),
+  quit:()=>{const s=S.sess;if(s.res.length&&!s.done)return finish();s.done=true;pushLive();if(s.trial){S.tTab='try';return go('teacher')}go(s.back.n,s.back)},
+  again:()=>{const s=S.sess;const b=s.back;if(s.mode==='review')return A.startReview({dataset:{id:s.sid}});if(s.mode==='final'){S.view={n:'subj',sid:s.sid,subj:s.subj};return A.startFinal()}S.view={n:'unit',sid:s.sid,subj:s.subj,uid:s.uid};const fake={dataset:{u:s.uid,g:s.game?s.game.k:''}};s.game?A.startGame(fake):A.startPractice(fake)},
+  afterResult:()=>{const s=S.sess;go(s.back.n,s.back)},
+  backTeacher:()=>{S.tTab='try';go('teacher')},
+  teacher:()=>{if(S.tOK)return go('teacher');S.pinBuf='';S.pinMode=(S.cfg&&S.cfg.pin)?'enter':(S.dbState==='ok'?'set':'enter');if(S.dbState!=='ok'){S.tOK=true;S.tTab='try';return go('teacher')}go('pin')},
+  pinKey:async e=>{const k=e.dataset.k;if(k==='清除'){S.pinBuf='';return render()}if(k==='確定'){if(S.pinBuf.length<4)return toast('至少 4 位數字');const h=await hash(S.pinBuf);
+      if(S.pinMode==='set'){S.pin1=h;S.pinBuf='';S.pinMode='set2';return render()}
+      if(S.pinMode==='set2'){if(h!==S.pin1){S.pinMode='set';S.pinBuf='';toast('兩次不一樣，請重新設定');return render()}const c=Object.assign({schools:{},schoolOrder:[],students:[],open:{}},S.cfg||{},{pin:h});try{await S.db.doc('cfg/main').set(c);S.cfg=c;S.draft=null}catch(err){toast('存不進去，請再試一次');return}S.tOK=true;toast('密碼設定好了');return go('teacher')}
+      if(S.cfg&&h===S.cfg.pin){S.tOK=true;S.pinBuf='';return go('teacher')}S.pinBuf='';toast('密碼不對');return render()}
+    if(S.pinBuf.length<6)S.pinBuf+=k;render()},
+  lockT:()=>{S.tOK=false;S.draft=null;go('home')},
+  tTab:e=>{S.tTab=e.dataset.k;render()},
+  openStuT:e=>{S.tStu=e.dataset.id;S.tTab='stu';render()},
+  clearLive:async()=>{if(!S.db)return;for(const id of Object.keys(S.live)){try{await S.db.doc('live/'+id).delete()}catch(e){}}toast('已清空')},
+  addSchool:()=>{const d=ensureDraft();let n='新學校',i=1;while(d.schoolOrder.includes(n))n='新學校'+(++i);d.schoolOrder.push(n);d.schools[n]={};render()},
+  delSchool:e=>{const d=ensureDraft();const s=d.schoolOrder[+e.dataset.i];if(d.students.some(x=>x.school===s))return toast('這間學校還有學生，先把學生移走或刪除');d.schoolOrder.splice(+e.dataset.i,1);delete d.schools[s];render()},
+  addStu:()=>{const d=ensureDraft();d.students.push({id:'s'+Date.now().toString(36),name:'',school:d.schoolOrder[0]||''});render();setTimeout(()=>{const ins=document.querySelectorAll('[data-f="stuName"]');ins[ins.length-1]&&ins[ins.length-1].focus()},50)},
+  delStu:e=>{const d=ensureDraft();const i=+e.dataset.i;if(S.delArm!==i){S.delArm=i;return toast('再按一次「刪除」確認（成績紀錄會保留）')}S.delArm=null;d.students.splice(i,1);render()},
+  toggleOpen:e=>{const d=ensureDraft();const k=e.dataset.k;if(d.open[k])delete d.open[k];else d.open[k]=true;render()},
+  resetDraft:()=>{S.draft=null;render()},
+  saveCfg:async()=>{const d=ensureDraft();if(d.students.some(s=>!s.name.trim()))return toast('有學生沒填名字');d.students.forEach(s=>s.name=s.name.trim());const c=Object.assign({},d,{pin:(S.cfg&&S.cfg.pin)||d.pin||null});try{await S.db.doc('cfg/main').set(c);S.cfg=JSON.parse(JSON.stringify(c));S.draft=null;toast('設定已儲存');render()}catch(err){toast('存不進去：'+(err&&err.code||'請再試一次'))}},
+  changePin:()=>{S.pinBuf='';S.pinMode='set';go('pin')},
+  tryPick:e=>{S.tryPick[e.dataset.f]=e.dataset.v;if(e.dataset.f==='subj'){S.tryPick.pub=null;S.tryPick.uid=null}if(e.dataset.f==='pub')S.tryPick.uid=null;render()},
+  tryStart:e=>{const P=S.tryPick;const un=unitsOf(P.subj,P.pub).find(u=>u.id===P.uid);const k=e.dataset.g;const g=k?GAMES[P.subj].find(x=>x.k===k):null;const items=shuffle((g?gameItemsLoose(un,g):un.items).map(it=>wrap(P.subj,P.pub,un,it))).slice(0,g&&g.board?12:10);newSession({sid:null,trial:true,demo:P.pub==='示範',subj:P.subj,pub:P.pub,uid:un.id,mode:g?'game':'practice',game:g,lives:g?3:null,items,back:{n:'teacher'}})}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f){e.preventDefault();f(el)}});
+document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const d=ensureDraft();const f=el.dataset.f;
+  if(f==='stuName'){d.students[+el.dataset.i].name=el.value;return}
+  if(f==='schName'){const i=+el.dataset.i;const old=d.schoolOrder[i];const nv=el.value;if(!nv.trim()||(nv!==old&&d.schoolOrder.includes(nv)))return;d.schoolOrder[i]=nv;d.schools[nv]=d.schools[old]||{};if(nv!==old)delete d.schools[old];d.students.forEach(s=>{if(s.school===old)s.school=nv});return}});
+document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const d=ensureDraft();const f=el.dataset.f;
+  if(f==='pub'){const s=el.dataset.s;d.schools[s]=d.schools[s]||{};if(el.value)d.schools[s][el.dataset.subj]=el.value;else delete d.schools[s][el.dataset.subj];render()}
+  else if(f==='stuSchool'){d.students[+el.dataset.i].school=el.value;render()}
+  else if(f==='schName'||f==='stuName')render()});
+setInterval(()=>{if(S.view.n==='teacher'&&S.tTab==='live'&&!document.activeElement.matches('input,select'))render()},5000);
+/* iPad：網頁沒辦法自己切全螢幕，改成說明怎麼從主畫面圖示打開＋引導使用模式 */
+var FS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var FS_APP=!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+function fsHelp(){let o=document.getElementById('fshelp');if(o){o.remove();return}
+  o=document.createElement('div');o.id='fshelp';o.setAttribute('role','dialog');o.setAttribute('aria-label','iPad 全螢幕');
+  o.style.cssText='position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:16px;background:rgba(5,3,8,.72)';
+  o.innerHTML='<div style="max-width:440px;width:100%;background:#17111B;color:#F0E6DA;border:1px solid #3A2C38;border-radius:20px;padding:22px 22px 18px;font-size:17px;line-height:1.65;box-shadow:0 20px 60px rgba(0,0,0,.5)">'
+   +'<b style="font-size:20px">iPad 要這樣變全螢幕</b>'
+   +'<p style="margin:10px 0 0">iPad 不允許網頁自己切成全螢幕，按鈕在平板上沒有作用。請改用：</p>'
+   +'<p style="margin:12px 0 0"><b>① 從主畫面的圖示打開</b><br>就是之前安裝描述檔後出現的圖示。從那裡打開，上面不會有網址列和分頁。</p>'
+   +'<p style="margin:12px 0 0"><b>② 讓學生跳不出去：引導使用模式</b><br>「設定 → 輔助使用 → 引導使用模式」打開並設密碼。進到遊戲後，連按三下頂端按鈕（有 Home 鍵的按三下 Home 鍵），按「開始」就鎖住了。</p>'
+   +'<button type="button" style="margin-top:16px;width:100%;min-height:48px;border-radius:14px;border:0;background:#E2513F;color:#fff;font-size:17px;font-weight:700">知道了</button></div>';
+  o.addEventListener('click',e=>{if(e.target===o||e.target.tagName==='BUTTON')o.remove()});document.body.appendChild(o)}
+(function(){const b=$('#fsbtn');if(FS_APP){b.hidden=true;b.style.display='none';return}if(FS_IOS){b.onclick=()=>fsHelp();return}const de=document.documentElement;const req=de.requestFullscreen||de.webkitRequestFullscreen;const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const upd=()=>{b.textContent=isFs()?'✕ 離開全螢幕':'⛶ 全螢幕'};
+  if(!req){b.hidden=true;return}
+  b.onclick=async()=>{try{if(isFs()){await (document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=req.call(de);if(r&&r.then)await r}}catch(e){toast('這裡沒辦法全螢幕，請用 iPad 的「引導使用模式」')}setTimeout(upd,200)};
+  document.addEventListener('fullscreenchange',upd);document.addEventListener('webkitfullscreenchange',upd)})();
+render();initDB();
+})();
+</script>
+
+</body></html>

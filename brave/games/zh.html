@@ -1,0 +1,1455 @@
+<!doctype html><html><head><script>window.BR={use:function(n){try{return parent.__brUse?parent.__brUse(n,'zh'):Promise.resolve(null)}catch(e){return Promise.resolve(null)}}};try{window.BR_WHO=parent.__brWho||'';window.BR_PUB=parent.__brPub||''}catch(e){window.BR_WHO='';window.BR_PUB=''}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>國語闖關測驗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* layout concept: a single scrolling "exam card" on a grid-paper backdrop; setup panel on top, one question at a time below, score report replaces the quiz area at the end */
+:root{
+  --bg:#eef0e6;
+  --paper:#fbfaf4;
+  --ink:#2b2d26;
+  --ink-dim:#6b6f61;
+  --rule:#d8dac9;
+  --accent:#b8432c;
+  --accent-soft:#f2ddd4;
+  --good:#3f7a52;
+  --good-soft:#dfeee1;
+  --bad:#b8432c;
+  --bad-soft:#f6ddd5;
+  --gold:#b98b2a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161a14;
+    --paper:#1f241b;
+    --ink:#eceade;
+    --ink-dim:#9a9d8c;
+    --rule:#343a2c;
+    --accent:#e2694f;
+    --accent-soft:#3a2420;
+    --good:#7bc497;
+    --good-soft:#1f2f22;
+    --bad:#e2694f;
+    --bad-soft:#3a2420;
+    --gold:#d9ad55;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161a14;
+  --paper:#1f241b;
+  --ink:#eceade;
+  --ink-dim:#9a9d8c;
+  --rule:#343a2c;
+  --accent:#e2694f;
+  --accent-soft:#3a2420;
+  --good:#7bc497;
+  --good-soft:#1f2f22;
+  --bad:#e2694f;
+  --bad-soft:#3a2420;
+  --gold:#d9ad55;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:28px;
+  min-height:100%;
+}
+.wrap{max-width:720px;margin:0 auto;}
+h1.title{
+  font-family:"Noto Serif TC",serif;
+  font-weight:900;
+  font-size:clamp(26px,5vw,36px);
+  margin:0 0 4px;
+  text-wrap:balance;
+  letter-spacing:.01em;
+}
+.subtitle{color:var(--ink-dim);font-size:14px;margin:0 0 22px;}
+.card{
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-radius:14px;
+  padding:20px 22px;
+  margin-bottom:16px;
+  box-shadow:0 1px 0 var(--rule);
+}
+.sec-label{
+  font-family:"Noto Serif TC",serif;
+  font-weight:700;
+  font-size:15px;
+  color:var(--accent);
+  margin:0 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-label::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px;display:inline-block;}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  border:1.5px solid var(--rule);
+  background:transparent;
+  color:var(--ink);
+  border-radius:999px;
+  padding:7px 16px;
+  font-size:14px;
+  font-family:inherit;
+  cursor:pointer;
+  user-select:none;
+  transition:border-color .15s, background .15s, color .15s;
+}
+.chip.on{
+  border-color:var(--accent);
+  background:var(--accent);
+  color:#fff;
+}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.row-split{display:flex;gap:16px;flex-wrap:wrap;}
+.row-split > div{flex:1;min-width:140px;}
+.count-field{display:flex;align-items:center;gap:10px;margin-top:4px;}
+.count-field input[type=range]{flex:1;}
+.count-val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);min-width:28px;text-align:center;}
+.btn{
+  font-family:"Noto Serif TC",serif;
+  font-weight:700;
+  font-size:16px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:13px 26px;
+  cursor:pointer;
+  width:100%;
+  letter-spacing:.03em;
+}
+.btn:active{transform:translateY(1px);}
+.btn.secondary{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.hint{font-size:12.5px;color:var(--ink-dim);margin-top:10px;line-height:1.6;}
+[hidden]{display:none!important;}
+
+/* quiz view */
+.progress-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.progress-text{font-size:13px;color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+.score-text{font-size:13px;color:var(--gold);font-weight:700;}
+.bar{height:6px;background:var(--rule);border-radius:4px;overflow:hidden;margin-bottom:18px;}
+.bar > i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .25s;}
+.tag-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.tag{
+  font-size:11.5px;
+  padding:3px 10px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+  letter-spacing:.02em;
+}
+.q-char{
+  font-family:"Noto Serif TC",serif;
+  font-weight:900;
+  font-size:56px;
+  text-align:center;
+  margin:4px 0 2px;
+  line-height:1;
+}
+.q-text{font-size:18px;font-weight:500;line-height:1.6;margin:10px 0 18px;min-width:0;}
+.q-passage{
+  font-size:15.5px;line-height:1.95;color:var(--ink);background:var(--bg);
+  border-radius:10px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--rule);
+}
+.opt-list{display:flex;flex-direction:column;gap:10px;}
+.opt{
+  display:flex;align-items:center;gap:12px;
+  text-align:left;
+  border:1.5px solid var(--rule);
+  background:var(--paper);
+  color:var(--ink);
+  border-radius:10px;
+  padding:13px 16px;
+  font-size:15.5px;
+  font-family:inherit;
+  cursor:pointer;
+  min-width:0;
+}
+.opt .letter{
+  flex:0 0 auto;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--rule);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;
+}
+.opt .txt{min-width:0;word-break:break-word;}
+.opt:hover:not(.locked){border-color:var(--accent);}
+.opt.locked{cursor:default;}
+.opt.correct{border-color:var(--good);background:var(--good-soft);}
+.opt.correct .letter{background:var(--good);color:#fff;}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);}
+.opt.wrong .letter{background:var(--bad);color:#fff;}
+.feedback{
+  margin-top:14px;padding:12px 14px;border-radius:10px;font-size:14.5px;line-height:1.6;
+}
+.feedback.good{background:var(--good-soft);color:var(--good);}
+.feedback.bad{background:var(--bad-soft);color:var(--bad);}
+.next-btn{margin-top:16px;}
+
+/* result view */
+.result-score{
+  font-family:"Noto Serif TC",serif;font-weight:900;
+  font-size:56px;text-align:center;color:var(--accent);
+  font-variant-numeric:tabular-nums;line-height:1;margin:6px 0 2px;
+}
+.result-sub{text-align:center;color:var(--ink-dim);font-size:14px;margin-bottom:20px;}
+.breakdown{display:grid;grid-template-columns:1fr auto;gap:8px 14px;font-size:14.5px;}
+.breakdown .label{color:var(--ink-dim);}
+.breakdown .val{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}
+.miss-list{margin-top:4px;display:flex;flex-direction:column;gap:8px;}
+.miss-item{
+  font-size:13.5px;border:1px solid var(--rule);border-radius:8px;padding:8px 12px;
+  display:flex;justify-content:space-between;gap:10px;color:var(--ink-dim);
+}
+.miss-item b{color:var(--ink);}
+.btn-row{display:flex;gap:10px;margin-top:16px;}
+.btn-row .btn{width:auto;flex:1;}
+footer{text-align:center;color:var(--ink-dim);font-size:12px;margin-top:22px;line-height:1.8;}
+footer a{color:var(--accent);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+
+.name-input{
+  width:100%;
+  border:1.5px solid var(--rule);
+  background:var(--bg);
+  color:var(--ink);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:15px;
+  font-family:inherit;
+}
+.name-input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+/* dashboard */
+.dash-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px;}
+.dash-table th{
+  text-align:left;color:var(--ink-dim);font-weight:700;font-size:12px;
+  padding:6px 10px;border-bottom:1.5px solid var(--rule);letter-spacing:.02em;
+}
+.dash-table td{padding:8px 10px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;}
+.dash-table tr:last-child td{border-bottom:none;}
+
+/* 老師試玩模式 */
+.tt-card{border:2px solid var(--gold);}
+.tt-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tt-row .btn{width:auto;font-size:14px;padding:8px 14px;}
+.tt-toast{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--paper);border-radius:10px;padding:8px 16px;font-size:15px;pointer-events:none;}
+.miss-chip{
+  font-size:12.5px;padding:4px 11px;border-radius:999px;
+  background:var(--bad-soft);color:var(--bad);font-weight:700;
+}
+
+/* ---- v2 additions ---- */
+.mode-row{display:flex;gap:10px;flex-wrap:wrap;}
+.mode-btn{flex:1;min-width:140px;text-align:left;border:1.5px solid var(--rule);background:transparent;color:var(--ink);border-radius:12px;padding:12px 14px;font-family:inherit;cursor:pointer;}
+.mode-btn b{display:block;font-size:15.5px;margin-bottom:2px;}
+.mode-btn span{font-size:12.5px;color:var(--ink-dim);}
+.mode-btn.on{border-color:var(--accent);background:var(--accent-soft);}
+.mode-btn.on b{color:var(--accent);}
+.mini-link{background:none;border:none;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;padding:4px 2px;text-decoration:underline;}
+.form-err{color:var(--bad);font-size:13.5px;margin-top:10px;min-height:1em;}
+.q-passage p{margin:0 0 10px;text-indent:2em;}
+.q-passage p:last-child{margin-bottom:0;}
+.q-passage .ptitle{font-family:"Noto Serif TC",serif;font-weight:700;text-align:center;margin-bottom:8px;text-indent:0;}
+mark.hl{background:#ffe866;color:#2b2d26;border-radius:3px;padding:0 2px;box-shadow:0 0 0 2px #ffe866;}
+.ex-box{border:1.5px dashed var(--accent);border-radius:10px;padding:12px 14px;margin:6px 0 4px;font-size:17px;line-height:1.7;}
+.ex-box small{display:block;font-size:12px;color:var(--ink-dim);margin-bottom:2px;}
+.q-text{white-space:pre-line;}
+.why{margin-top:6px;font-size:13.5px;color:var(--ink);opacity:.85;}
+.tt-inline{border:2px solid var(--gold);border-radius:12px;padding:8px 10px;margin-bottom:14px;}
+.tt-inline .tt-head{font-size:12.5px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+.tt-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tt-row .btn{width:auto;font-size:13.5px;padding:8px 12px;}
+.tt-card{border:2px solid var(--gold);}
+.tt-toast{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--paper);border-radius:10px;padding:8px 16px;font-size:15px;pointer-events:none;}
+.btn.sm{width:auto;font-size:13px;padding:6px 12px;border-radius:8px;}
+.btn.danger{background:transparent;color:var(--bad);border:1.5px solid var(--bad);}
+.btn.danger.armed{background:var(--bad);color:#fff;}
+.dash-table td.act{white-space:nowrap;text-align:right;}
+.dash-table td.act .btn{margin-left:4px;}
+.stu-name{background:none;border:none;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;}
+.ov{position:fixed;inset:0;z-index:80;background:rgba(20,22,16,.55);overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) 12px 24px;}
+.ov-box{background:var(--paper);color:var(--ink);border-radius:14px;max-width:820px;margin:0 auto;padding:16px 18px;}
+.ov-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.ov-head h3{font-family:"Noto Serif TC",serif;margin:0;font-size:19px;}
+.ov-box h4{font-family:"Noto Serif TC",serif;font-size:16px;margin:18px 0 8px;}
+.mx{border-collapse:collapse;font-size:13px;width:100%;min-width:520px;}
+.mx th,.mx td{border:1px solid var(--rule);padding:6px 6px;text-align:center;font-variant-numeric:tabular-nums;}
+.mx th{color:var(--ink-dim);font-size:12px;font-weight:700;}
+.mx td.lbl{text-align:left;white-space:nowrap;}
+.mx td.g{background:var(--good-soft);color:var(--good);font-weight:700;}
+.mx td.m{background:#fbefd0;color:#8a6312;font-weight:700;}
+.mx td.b{background:var(--bad-soft);color:var(--bad);font-weight:700;}
+.mx td.n{color:var(--ink-dim);}
+.legend{font-size:12px;color:var(--ink-dim);margin-top:6px;}
+.weak-list{display:flex;flex-direction:column;gap:6px;}
+.weak-item{border:1px solid var(--rule);border-radius:8px;padding:7px 10px;font-size:13.5px;display:flex;gap:10px;justify-content:space-between;}
+.weak-item .wl{min-width:0;}
+.weak-item .wr{white-space:nowrap;color:var(--bad);font-weight:700;}
+.type-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
+.type-sum div{border:1px solid var(--rule);border-radius:10px;padding:8px 10px;}
+.type-sum b{display:block;font-size:20px;font-variant-numeric:tabular-nums;}
+.type-sum span{font-size:12px;color:var(--ink-dim);}
+
+/* ---- 練習卷（標楷體、A4） ---- */
+.sheet{background:#fff;color:#111;font-family:"TW-MOE-Std-Kai","標楷體","BiauKai","DFKai-SB","AR PL UKai TW","Kaiti TC",serif;border:1px solid #ccc;padding:14mm 13mm;max-width:210mm;margin:10px auto 0;font-size:15px;line-height:1.75;}
+.sheet .sh-title{text-align:center;font-size:24px;font-weight:700;letter-spacing:2px;}
+.sheet .sh-sub{text-align:center;font-size:14px;margin-bottom:6px;}
+.sheet .sh-info{display:flex;justify-content:flex-end;gap:28px;font-size:16px;border-bottom:1.5px solid #111;padding-bottom:6px;margin-bottom:10px;}
+.sheet .sh-info u{display:inline-block;min-width:110px;text-decoration:none;border-bottom:1px solid #111;text-align:center;}
+.sheet h5{font-size:17px;margin:14px 0 6px;background:#eee;padding:3px 8px;border-left:4px solid #333;}
+.sheet .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 10px;}
+.sheet .cell{white-space:nowrap;}
+.sheet .blank{display:inline-block;min-width:4.2em;border-bottom:1px solid #111;text-align:center;}
+.sheet .blank.sm{min-width:2.2em;}
+.sheet .ans{color:#c0392b;font-weight:700;}
+.sheet .item{margin:4px 0 8px;break-inside:avoid;}
+.sheet .opts{padding-left:1.6em;}
+.sheet .pbox{border:1px solid #333;padding:6px 10px;margin:6px 0;break-inside:avoid;}
+.sheet .pbox p{margin:0 0 4px;text-indent:2em;}
+.sheet .pbox .pt{text-align:center;font-weight:700;text-indent:0;}
+.sheet .tag2{font-size:12px;color:#666;}
+.sheet .wline{border-bottom:1px solid #111;height:1.7em;margin:2px 0 0 1.6em;}
+.sheet.hide-ans .ans{visibility:hidden;}
+.sheet .nr{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",sans-serif;}
+.sheet .pbox{font-size:14px;line-height:1.6;}
+@media print{
+  body.printing > *:not(#printRoot){display:none!important;}
+  body.printing{background:#fff;padding:0;}
+  body.printing #printRoot{position:static;background:none;padding:0;overflow:visible;}
+  body.printing #printRoot .ov-box{padding:0;max-width:none;background:#fff;}
+  body.printing #printRoot .ov-head, body.printing #printRoot .hint{display:none;}
+  #printRoot .sheet{border:none;margin:0;padding:0;max-width:none;}
+  @page{size:A4;margin:12mm;}
+}
+.qa{font-size:14px;margin:3px 0;line-height:1.6;}
+
+.dash-table td:nth-child(1),.dash-table td:nth-child(2),#stuTable td{white-space:nowrap;}
+
+.assign-box{border:2px solid var(--accent);}
+.part-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px;}
+.part-btn{border:1.5px solid var(--accent);background:var(--paper);color:var(--ink);border-radius:12px;padding:12px;text-align:left;font-family:inherit;cursor:pointer;}
+.part-btn b{display:block;font-size:16px;color:var(--accent);}
+.part-btn span{font-size:13px;color:var(--ink-dim);}
+.part-btn.done{border-color:var(--good);background:var(--good-soft);}
+.part-btn.done b{color:var(--good);}
+.assign-card{border:1.5px solid var(--gold);border-radius:12px;padding:6px 12px 12px;margin:10px 0;}
+.assign-card h4{margin-top:8px;}
+.q-char.long{font-size:40px;}
+.pas{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:14px;line-height:1.8;white-space:pre-line;}
+
+.live-card{border:2px solid var(--good);}
+#liveList{display:flex;flex-direction:column;gap:8px;}
+.live-row{display:block;width:100%;text-align:left;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:12px;padding:10px 12px;font-family:inherit;cursor:pointer;}
+.live-row.doing{border-color:var(--good);}
+.live-row .lr-top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px;}
+.live-row .lr-top b{font-size:16px;}
+.live-row .lr-st{font-size:12.5px;font-weight:700;color:var(--ink-dim);}
+.live-row.doing .lr-st{color:var(--good);}
+.live-row .lr-mode{font-size:12.5px;color:var(--ink-dim);}
+.live-row .bar{margin-bottom:6px;}
+.live-row.doing .bar > i{background:var(--good);}
+.live-row .lr-bot{font-size:13px;color:var(--ink-dim);}
+.ans-tbl td{text-align:left;}
+.ans-tbl td:first-child{text-align:center;color:var(--ink-dim);}
+.ov-box .hint{white-space:pre-line;}
+
+</style>
+
+<div class="wrap">
+  <h1 class="title">國語闖關測驗</h1>
+  <p class="subtitle">南一／翰林　國語五上　第一～六課（本次月考範圍）　線上自我測驗</p>
+
+  <div id="assignBox" class="card assign-box" hidden></div>
+
+  <div id="setup" class="card">
+    <div class="sec-label">你的名字</div>
+    <input type="text" id="nameInput" class="name-input" placeholder="請輸入姓名，方便老師查詢記錄" maxlength="20">
+
+    <div class="sec-label" style="margin-top:18px;">選版本</div>
+    <div class="chip-row" id="verChips"></div>
+
+    <div class="sec-label" style="margin-top:18px;">選課次 <button type="button" class="mini-link" id="allLessonBtn">全選</button></div>
+    <div class="chip-row" id="lessonChips"></div>
+
+    <div class="sec-label" style="margin-top:18px;">選大題</div>
+    <div class="mode-row">
+      <button type="button" class="mode-btn" id="modeMix"><b>全部混合</b><span>六種大題平均混著出</span></button>
+      <button type="button" class="mode-btn" id="modePick"><b>自己選</b><span>點進去選一種或好幾種</span></button>
+    </div>
+    <div id="typePick" hidden style="margin-top:10px;">
+      <div class="chip-row" id="typeChips"></div>
+      <p class="hint" style="margin-top:6px;">只點一個就是單練那一種；點好幾個就是混合練。</p>
+    </div>
+
+    <div class="sec-label" style="margin-top:18px;">題數</div>
+    <div class="count-field">
+      <input type="range" id="countRange" min="5" max="60" step="5" value="30">
+      <span class="count-val" id="countVal">30</span>
+    </div>
+
+    <button class="btn" id="startBtn" style="margin-top:22px;">開始測驗</button>
+    <p class="form-err" id="formErr"></p>
+    <button class="btn secondary" id="dashBtn" style="margin-top:4px;">老師後台：查看全班記錄</button>
+    <p class="hint">老師出的加強練習，輸入名字後就會出現在最上面。閱讀理解答完後，答案在文章裡的位置會用螢光筆標出來。每次測驗的題目和選項順序都會重新抽。</p>
+  </div>
+
+  <div id="ttInline" class="tt-inline" hidden></div>
+
+  <div id="quizArea" class="card" hidden>
+    <div class="progress-row">
+      <span class="progress-text" id="progressText"></span>
+      <span class="score-text" id="scoreText"></span>
+    </div>
+    <div class="bar"><i id="progressBar" style="width:0%"></i></div>
+    <div class="tag-row" id="tagRow"></div>
+    <div id="qBody"></div>
+    <div id="feedback"></div>
+    <button class="btn next-btn" id="nextBtn" hidden>下一題</button>
+  </div>
+
+  <div id="resultArea" class="card" hidden>
+    <div class="sec-label">測驗結果</div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <div id="missWrap" hidden>
+      <div class="sec-label" style="margin-top:18px;">答錯題目</div>
+      <div class="miss-list" id="missList"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="redoBtn">重新設定</button>
+      <button class="btn" id="retryBtn">再測一次</button>
+    </div>
+    <p class="hint" id="saveStatus"></p>
+  </div>
+
+  <div id="dashboard" class="card" hidden>
+    <div class="sec-label">老師後台</div>
+
+    <div class="card live-card" style="margin:0 0 16px;padding:14px 16px;">
+      <div class="sec-label">📡 即時作答（自動更新）</div>
+      <div id="liveList"><p class="hint">讀取中…</p></div>
+      <p class="hint" style="margin-bottom:0">點一位學生，可以看到他每一題選了什麼、對不對，畫面會跟著他作答即時更新。</p>
+    </div>
+
+    <div id="ttCard" class="card tt-card" style="margin:0 0 16px;padding:14px 16px;">
+      <div class="sec-label">🧪 老師試玩</div>
+      <p class="hint" style="margin-top:0">用設定頁目前選的版本、課次、大題和題數自己做一遍。不用填名字，成績不會記錄。做題時上方有試玩工具：直接答對／答錯、跳過、看結果。</p>
+      <div class="tt-row"><button class="btn" id="ttStartBtn" type="button">開始試玩</button><button class="btn secondary" id="ttBankBtn" type="button">📚 看題庫（含答案）</button></div>
+      <p class="hint" id="ttSel" style="margin-bottom:0"></p>
+    </div>
+
+    <div id="aiCard" class="card tt-card" hidden style="margin:0 0 16px;padding:14px 16px;">
+      <div class="sec-label">🤖 用 AI 新增閱讀題庫</div>
+      <p class="hint" id="aiStatus" style="margin-top:0"></p>
+      <div class="tt-row" style="align-items:center"><span class="hint" style="margin:0">每課新增</span>
+        <select id="aiPer" class="name-input" style="width:auto;padding:6px 10px"><option value="1">1 篇</option><option value="2" selected>2 篇</option><option value="3">3 篇</option></select>
+        <button class="btn" id="aiGenBtn" type="button" style="width:auto">開始出題</button></div>
+      <p class="hint" id="aiLog" style="margin-bottom:0">AI 會依課文主題和生字寫新的短文和 3 題選擇題，並自動檢查答案出處是不是真的在文章裡，不合格的會丟掉。題目越多，同一個學生越不容易重複。</p>
+    </div>
+
+    <p class="hint" id="dashStatus">讀取中…</p>
+
+    <div class="sec-label" style="margin-top:14px;">學生總覽（點名字看弱點、出練習卷）</div>
+    <div style="overflow-x:auto;">
+      <table id="stuTable" class="dash-table">
+        <thead><tr><th>姓名</th><th>作答次數</th><th>平均</th><th>最近一次</th><th>加強練習</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="hint" id="manageHint"></p>
+
+    <div class="sec-label" style="margin-top:22px;">全班最常錯</div>
+    <div id="dashMiss" class="chip-row"></div>
+
+    <div class="sec-label" style="margin-top:22px;">每一筆作答記錄</div>
+    <input type="text" id="dashFilter" class="name-input" placeholder="輸入姓名篩選，留空顯示全部" style="margin-bottom:10px;">
+    <div style="overflow-x:auto;">
+      <table id="dashTable" class="dash-table">
+        <thead><tr><th>日期</th><th>姓名</th><th>版本／課次</th><th>大題</th><th>成績</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn secondary" id="closeDashBtn" style="margin-top:20px;">返回測驗</button>
+  </div>
+
+  <footer>供課堂與自我複習使用。南一版的課文理解、照樣寫題目依課本大意、主旨與語文練習出題；翰林版只收錄能從段考卷、學習單核對過的題目。</footer>
+</div>
+
+<script>
+const LESSONS = [{"ver":"南一","no":1,"title":"幸福筆記本","sum":"作者的「幸福筆記本」記錄生活中美好的時刻：感謝年邁的父親依然健康、下班回家獲得孩子的擁抱、停車擦撞別人的車，車主沒有責怪還分享停車技巧。感恩是為生活帶來幸福的魔法。","chars":[{"c":"灘","z":"ㄊㄢ","r":"水","w":"沙灘"},{"c":"灌","z":"ㄍㄨㄢˋ","r":"水","w":"灌溉"},{"c":"邁","z":"ㄇㄞˋ","r":"辵","w":"邁開"},{"c":"遇","z":"ㄩˋ","r":"辵","w":"遇到"},{"c":"拖","z":"ㄊㄨㄛ","r":"手","w":"拖延"},{"c":"擁","z":"ㄩㄥ","r":"手","w":"擁抱"},{"c":"擦","z":"ㄘㄚ","r":"手","w":"擦拭"},{"c":"疲","z":"ㄆㄧˊ","r":"疒","w":"疲倦"},{"c":"痕","z":"ㄏㄣˊ","r":"疒","w":"痕跡"},{"c":"倦","z":"ㄐㄩㄢˋ","r":"人","w":"厭倦"},{"c":"償","z":"ㄔㄤˊ","r":"人","w":"補償"},{"c":"恩","z":"ㄣ","r":"心","w":"感恩"},{"c":"慎","z":"ㄕㄣˋ","r":"心","w":"謹慎"},{"c":"某","z":"ㄇㄡˇ","r":"木","w":"某人"},{"c":"賠","z":"ㄆㄟˊ","r":"貝","w":"賠償"},{"c":"焦","z":"ㄐㄧㄠ","r":"火","w":"焦急"},{"c":"謹","z":"ㄐㄧㄣˇ","r":"言","w":"謹記"},{"c":"較","z":"ㄐㄧㄠˋ","r":"車","w":"比較"}],"reading":[{"t":"沙灘上的腳印","p":["假日，阿公帶我到沙灘散步。他雖然年紀大了，仍然邁開穩健的步伐；我沒走多久就拖著疲倦的腳步，不停喊累。","阿公笑著幫我擦去額頭的汗，說：「走路要謹慎，一步一步踏穩，才走得長久。」回家後，我在筆記本寫下：謝謝阿公陪我散步，這是今天最幸福的事。"],"qs":[{"id":"N1r0q0","q":"阿公帶「我」到哪裡散步？","o":["公園","沙灘","山上","學校"],"a":1,"ev":"阿公帶我到沙灘散步"},{"id":"N1r0q1","q":"「我」走路時的樣子是什麼？","o":["走得比阿公還快","拖著疲倦的腳步，不停喊累","一路都很輕鬆","邊走邊唱歌"],"a":1,"ev":"我沒走多久就拖著疲倦的腳步，不停喊累"},{"id":"N1r0q2","q":"阿公提醒「我」什麼？","o":["走路要越快越好","走路要謹慎，一步一步踏穩","不要再來沙灘","累了就不要走"],"a":1,"ev":"走路要謹慎，一步一步踏穩，才走得長久"}]},{"t":"一句沒關係","p":["放學時，小安不小心撞倒同學的水壺，水灑了一地。他焦急地道歉，說願意賠償。同學卻笑著說：「沒關係，人沒受傷就好。」","小安心裡很感動。那天晚上，他在筆記本寫下這件事，提醒自己：別人的體諒是一份恩情，要懂得感恩，也要學著體諒別人。"],"qs":[{"id":"N1r1q0","q":"小安不小心做了什麼事？","o":["弄丟同學的書","撞倒同學的水壺","打破教室窗戶","忘記帶便當"],"a":1,"ev":"不小心撞倒同學的水壺"},{"id":"N1r1q1","q":"同學對小安的反應是什麼？","o":["要小安馬上賠錢","生氣地告訴老師","笑著說沒關係，人沒受傷就好","不理小安"],"a":2,"ev":"沒關係，人沒受傷就好"},{"id":"N1r1q2","q":"小安從這件事學到什麼？","o":["做錯事不用道歉","要懂得感恩，也要學著體諒別人","以後不要帶水壺","賠償就能解決一切"],"a":1,"ev":"要懂得感恩，也要學著體諒別人"}]}],"text":[{"id":"N1t0","q":"〈幸福筆記本〉作者會在什麼時候，把當天值得感恩的三件事記下來？","o":["晚餐後","每天早上","午餐前","每晚睡前"],"a":3,"why":"作者每晚記錄三件值得感恩的事。"},{"id":"N1t1","q":"〈幸福筆記本〉中，作者看到父親的背影，為什麼感謝上天？","o":["父親中了大獎","年邁的父親依然健康","父親換了新工作","父親買了新車"],"a":1,"why":"作者感謝上天讓年邁的父親依然健康。"},{"id":"N1t2","q":"作者下班回到家，孩子們的擁抱帶給他什麼感受？","o":["覺得很吵","暖流灌注，疲倦消失","覺得很煩","更加疲累"],"a":1,"why":"孩子們的擁抱像暖流灌注，讓作者疲倦消失、滿懷感恩。"},{"id":"N1t3","q":"作者停車時不小心擦撞別人的車子，車主怎麼做？","o":["大聲責罵作者","要求很多賠償","沒有責怪、沒有索賠，還分享停車技巧","直接報警"],"a":2,"why":"車主沒有責怪我，也沒有索取賠償，甚至分享停車技巧。"},{"id":"N1t4","q":"課文說，什麼是為生活帶來幸福的魔法？","o":["金錢","感恩","運氣","聰明"],"a":1,"why":"「感恩」是為生活帶來幸福的魔法。"},{"id":"N1t5","q":"〈幸福筆記本〉的主旨是什麼？","o":["只要記錄好事就會變幸福","無論好壞都正向看待、懂得感恩，就能感受幸福","遇到壞事要趕快忘記","幸福要靠別人給"],"a":1,"why":"主旨：無論好壞，只要正向看待生活中的事件，懂得感恩，就能感受到自己是個幸福的人。"}],"phrase":[{"id":"N1p0","ex":"「生活中各種美好的時刻」","o":["屋頂上各種吵雜的聲響","穿梭在一座古老的建築裡","淚眼婆娑的描述當天在小說看到的情節","值得購買的商品"],"a":0,"why":"課本結構：名詞（地點、範圍）＋中（裡、上……）＋各種＋形容詞＋的＋名詞"},{"id":"N1p1","ex":"「生活中各種美好的時刻」","o":["電影裡各種神奇的魔法","寫一篇有趣的故事","建造得宏偉壯觀","在微風中搖曳纖細的枝條"],"a":0,"why":"課本結構：名詞（地點、範圍）＋中（裡、上……）＋各種＋形容詞＋的＋名詞"},{"id":"N1p2","ex":"「拖著疲累且沉重的腳步」","o":["哼著輕快且逗趣的曲調","寫著歪歪扭扭的字","海面下各種奇怪的生物","值得購買的商品"],"a":0,"why":"課本結構：動詞＋著＋形容詞＋且＋形容詞＋的＋名詞"},{"id":"N1p3","ex":"「拖著疲累且沉重的腳步」","o":["看著可愛且活潑的孩子","漂流在一條清澈的溪流中","沉浸在一部感人的電影中","淚眼婆娑的描述當天在小說看到的情節"],"a":0,"why":"課本結構：動詞＋著＋形容詞＋且＋形容詞＋的＋名詞"},{"id":"N1p4","ex":"「興高采烈的分享當天在學校做的事」","o":["得意洋洋的展示當天在比賽得到的獎牌","寫一篇有趣的故事","攀爬在一面陡峭的山壁上","背著沉重且龐大的行李"],"a":0,"why":"課本結構：四字語詞＋的＋動詞＋當天＋在＋名詞＋動詞＋的＋名詞"},{"id":"N1p5","ex":"「興高采烈的分享當天在學校做的事」","o":["義憤填膺的控訴當天在捷運遇到的麻煩","回答得頭頭是道","蓋著鬆鬆軟軟的棉被","背著沉重且龐大的行李"],"a":0,"why":"課本結構：四字語詞＋的＋動詞＋當天＋在＋名詞＋動詞＋的＋名詞"},{"id":"N1p6","ex":"「值得回味的幸福」","o":["值得觀看的電影","蓋著鬆鬆軟軟的棉被","博物館中各種古老的收藏品","看一部動人的影片"],"a":0,"why":"課本結構：值得＋動詞＋的＋名詞"},{"id":"N1p7","ex":"「值得回味的幸福」","o":["值得造訪的景點","描繪得栩栩如生","朵朵鮮嫩的玫瑰","沉浸在一部感人的電影中"],"a":0,"why":"課本結構：值得＋動詞＋的＋名詞"},{"id":"N1p8","ex":"感恩是為我帶來幸福的魔法。","o":["挫折是為我帶來經驗的禮物。","濃重的霧氣向外瀰漫。","堅韌的植物向下扎根。","翠綠的樹苗向上生長。"],"a":0,"why":"課本結構：名詞Ａ＋是為我帶來＋名詞＋的＋名詞Ｂ。"},{"id":"N1p9","ex":"感恩是為我帶來幸福的魔法。","o":["閱讀是為我帶來快樂的調味料。","金黃的稻穗向下低垂。","濃重的霧氣向外瀰漫。","翠綠的樹苗向上生長。"],"a":0,"why":"課本結構：名詞Ａ＋是為我帶來＋名詞＋的＋名詞Ｂ。"},{"id":"N1p10","ex":"……接著……","exl":"句型","pq":"下面哪一個句子使用了「……接著……」的句型？","o":["這棵樹的枝椏先是冒出綠芽，接著長出了茂密的綠葉。","讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。","妹妹一會兒跑步，一會兒跳舞，真是體力過人。","由於阿虎的努力與堅持，造就他今日的輝煌成就。"],"a":0,"why":"「……接著……」是連貫複句。正確的句子：這棵樹的枝椏先是冒出綠芽，接著長出了茂密的綠葉。"},{"id":"N1p11","ex":"……接著……","exl":"句型","pq":"下面哪一個句子使用了「……接著……」的句型？","o":["大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。","只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","百貨公司裡，有些人在服飾專櫃挑選保暖的外套，有些人在寢具專櫃選著保暖的棉被。"],"a":0,"why":"「……接著……」是連貫複句。正確的句子：大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。"},{"id":"N1p12","ex":"即使……也……","exl":"句型","pq":"下面哪一個句子使用了「即使……也……」的句型？","o":["即使這件事情難以完成，小安也會盡最大的力量去做好它。","裁縫師傅用粉筆在布料上做好記號後，才開始裁剪布料。","灰濛濛的天空颳起了風，然後雨就嘩啦啦的下了起來。","藝術家羅丹說：「世界不是缺少美，而是缺少發現美的眼睛。」"],"a":0,"why":"「即使……也……」是假設複句。正確的句子：即使這件事情難以完成，小安也會盡最大的力量去做好它。"},{"id":"N1p13","ex":"即使……也……","exl":"句型","pq":"下面哪一個句子使用了「即使……也……」的句型？","o":["小可很期待明天開始的連假，即使可能下雨，也不減她想出遊的興致。","距離電影開始還有半小時，我們決定先買爆米花，再入場。","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。"],"a":0,"why":"「即使……也……」是假設複句。正確的句子：小可很期待明天開始的連假，即使可能下雨，也不減她想出遊的興致。"},{"id":"N1p14","ex":"要是……就……","exl":"句型","pq":"下面哪一個句子使用了「要是……就……」的句型？","o":["要是這個假日天氣轉晴，我們全家就會去山上露營。","灰濛濛的天空颳起了風，然後雨就嘩啦啦的下了起來。","只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。"],"a":0,"why":"「要是……就……」是假設複句。正確的句子：要是這個假日天氣轉晴，我們全家就會去山上露營。"},{"id":"N1p15","ex":"要是……就……","exl":"句型","pq":"下面哪一個句子使用了「要是……就……」的句型？","o":["要是我前一天先整理好書包、早點上床睡覺，今天就不會慌慌張張的出門上學。","這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。","妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。","今天晚上，你想要吃中式料理、日式料理或是義式料理？"],"a":0,"why":"「要是……就……」是假設複句。正確的句子：要是我前一天先整理好書包、早點上床睡覺，今天就不會慌慌張張的出門上學。"},{"id":"N1p16","ex":"……或是……","exl":"句型","pq":"下面哪一個句子使用了「……或是……」的句型？","o":["放學後，我想去文具店買文具，或是到書店買書。","只要我們願意專心一致、努力不懈的練習，就可以在這次運動會上奪得亮眼的佳績。","由於低溫與水氣旺盛，高山下起今年的第一場雪。","小可很期待明天開始的連假，即使可能下雨，也不減她想出遊的興致。"],"a":0,"why":"「……或是……」是選擇複句。正確的句子：放學後，我想去文具店買文具，或是到書店買書。"},{"id":"N1p17","ex":"……或是……","exl":"句型","pq":"下面哪一個句子使用了「……或是……」的句型？","o":["今天晚上，你想要吃中式料理、日式料理或是義式料理？","一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。","讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。","如果小華數學也考一百分，加上其他科目的分數，他不就是全校第一名了嗎？"],"a":0,"why":"「……或是……」是選擇複句。正確的句子：今天晚上，你想要吃中式料理、日式料理或是義式料理？"},{"id":"N1p18","ex":"沒有……也沒有……甚至……","exl":"句型","pq":"下面哪一個句子使用了「沒有……也沒有……甚至……」的句型？","o":["我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","他們剛開始感情並不好，現在卻是無話不談的好朋友。","爸爸很重視子女的教育，尤其是品行，要求特別嚴格。","一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。"],"a":0,"why":"「沒有……也沒有……甚至……」是遞進複句。正確的句子：我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。"},{"id":"N1p19","ex":"沒有……也沒有……甚至……","exl":"句型","pq":"下面哪一個句子使用了「沒有……也沒有……甚至……」的句型？","o":["妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。","如果小華數學也考一百分，加上其他科目的分數，他不就是全校第一名了嗎？","舞臺上，演員時而做出滑稽動作，時而展現誇張的表情，逗得臺下的觀眾哈哈大笑。","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。"],"a":0,"why":"「沒有……也沒有……甚至……」是遞進複句。正確的句子：妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。"}]},{"ver":"南一","no":2,"title":"做人做事做長久","sum":"小師傅到作者家獨力安裝冷氣機，先把工具依序排好、井然有序的安裝、最後收拾環境，表現敬業。和技高人散漫的資深師傅不同。做人要真誠，做事要精確完善。","chars":[{"c":"按","z":"ㄢˋ","r":"手","w":"按照"},{"c":"掃","z":"ㄙㄠˇ","r":"手","w":"打掃"},{"c":"確","z":"ㄑㄩㄝˋ","r":"石","w":"確定"},{"c":"碑","z":"ㄅㄟ","r":"石","w":"石碑"},{"c":"傳","z":"ㄔㄨㄢˊ","r":"人","w":"傳承"},{"c":"釘","z":"ㄉㄧㄥ","r":"金","w":"釘子"},{"c":"延","z":"ㄧㄢˊ","r":"廴","w":"延長"},{"c":"遞","z":"ㄉㄧˋ","r":"辵","w":"傳遞"},{"c":"富","z":"ㄈㄨˋ","r":"宀","w":"豐富"},{"c":"穩","z":"ㄨㄣˇ","r":"禾","w":"穩定"},{"c":"熟","z":"ㄕㄡˊ","r":"火","w":"熟練"},{"c":"務","z":"ㄨˋ","r":"力","w":"服務"},{"c":"讚","z":"ㄗㄢˋ","r":"言","w":"稱讚"},{"c":"績","z":"ㄐㄧ","r":"糸","w":"成績"},{"c":"障","z":"ㄓㄤˋ","r":"阜","w":"障礙"},{"c":"率","z":"ㄌㄩˋ","r":"玄","w":"效率"},{"c":"涵","z":"ㄏㄢˊ","r":"水","w":"涵養"},{"c":"預","z":"ㄩˋ","r":"頁","w":"預備"}],"reading":[{"t":"年輕的水電師傅","p":["社區請來一位年輕的水電師傅修理水管。他一到就先把工具按照順序排好，再仔細確認漏水的位置。","修好後，他還把地上的水擦乾、把垃圾帶走。阿嬤稱讚他：「做事不只要快，更要穩當完善，你以後一定會有很好的成績。」"],"qs":[{"id":"N2r0q0","q":"師傅一到，先做了什麼？","o":["馬上拆水管","把工具按照順序排好","坐下來休息","打電話問老闆"],"a":1,"ev":"先把工具按照順序排好"},{"id":"N2r0q1","q":"修好水管後，師傅還做了什麼？","o":["直接離開","把地上的水擦乾、把垃圾帶走","要求多收錢","請阿嬤自己打掃"],"a":1,"ev":"把地上的水擦乾、把垃圾帶走"},{"id":"N2r0q2","q":"阿嬤認為做事最重要的是什麼？","o":["越快越好","不只要快，更要穩當完善","只要便宜就好","不用太認真"],"a":1,"ev":"做事不只要快，更要穩當完善"}]},{"t":"發聯絡簿","p":["小傑負責每天傳遞班上的聯絡簿。剛開始他常常求快，結果有好幾本送錯了人。","後來他改變做法，每次發之前都先確認名字，再一本一本交到同學手上。雖然多花了一點時間，卻再也沒有出錯。老師說：「效率不只是快，而是把事情做對。」"],"qs":[{"id":"N2r1q0","q":"小傑負責什麼工作？","o":["打掃走廊","傳遞班上的聯絡簿","收作業","擦黑板"],"a":1,"ev":"小傑負責每天傳遞班上的聯絡簿"},{"id":"N2r1q1","q":"小傑一開始為什麼會送錯？","o":["聯絡簿太多","常常求快","同學亂拿","老師寫錯名字"],"a":1,"ev":"剛開始他常常求快"},{"id":"N2r1q2","q":"老師說的「效率」是什麼意思？","o":["做得越快越好","把事情做對","少做一點事","請別人幫忙"],"a":1,"ev":"效率不只是快，而是把事情做對"}]}],"text":[{"id":"N2t0","q":"〈做人做事做長久〉中，小師傅到作者家做什麼？","o":["修理電視","獨力安裝冷氣機","打掃房子","送貨"],"a":1,"why":"小師傅前來作者家，獨力安裝冷氣機。"},{"id":"N2t1","q":"小師傅開始安裝前，先做了什麼？","o":["先休息喝水","將工具依序排好","先跟作者聊天","先打電話給老闆"],"a":1,"why":"小師傅先將工具依序排好，再井然有序的安裝。"},{"id":"N2t2","q":"小師傅安裝完冷氣後，還做了什麼？","o":["馬上離開","收拾環境、清理善後","要求小費","請作者自己打掃"],"a":1,"why":"小師傅用小掃把收拾善後，表現敬業。"},{"id":"N2t3","q":"課文中的資深師傅給人什麼感覺？","o":["技術差但很認真","技高人散漫","動作很慢但很細心","非常體貼"],"a":1,"why":"資深師傅技術好，態度卻散漫，覺得不關我的事。"},{"id":"N2t4","q":"小師傅認為生意要做得長久，必須做到什麼？","o":["價錢最便宜","使顧客滿意","做得最快","多找幾個人幫忙"],"a":1,"why":"小師傅說生意要做得長久，必須使顧客滿意。"},{"id":"N2t5","q":"〈做人做事做長久〉作者認為「高效率的內涵」是什麼？","o":["重視快速完工","技高人散漫","做得完善且周全","既省時又省力"],"a":2,"why":"許多人誤解高效率，只求快速；真正的高效率是做得完善周全。"},{"id":"N2t6","q":"〈做人做事做長久〉的主旨是什麼？","o":["做事越快越好","做人要真誠，做事要精確完善，才能邁向成功","有技術就不用在乎態度","賺錢最重要"],"a":1,"why":"主旨：做人要真誠，做事要精確完善，抱持把事業做長久的態度，才能邁向成功。"}],"phrase":[{"id":"N2p0","ex":"「安裝得平穩好用」","o":["談論得口沫橫飛","看著可愛且活潑的孩子","背著沉重且龐大的行李","蓋著鬆鬆軟軟的棉被"],"a":0,"why":"課本結構：動詞＋得＋四字語詞"},{"id":"N2p1","ex":"「安裝得平穩好用」","o":["建造得宏偉壯觀","撒下嗆辣的胡椒","寫一篇有趣的故事","種植水果的農夫"],"a":0,"why":"課本結構：動詞＋得＋四字語詞"},{"id":"N2p2","ex":"「井然有序的安裝流程」","o":["高潮迭起的故事情節","攀登百岳的登山客","在黑夜裡散發柔和的光芒","張張空白的稿紙"],"a":0,"why":"課本結構：四字形容詞＋的＋名詞（事物）"},{"id":"N2p3","ex":"「井然有序的安裝流程」","o":["淺顯易懂的課文解說","好好整理自己的房間","擺放得井井有條","義憤填膺的控訴當天在捷運遇到的麻煩"],"a":0,"why":"課本結構：四字形容詞＋的＋名詞（事物）"},{"id":"N2p4","ex":"……才……","exl":"句型","pq":"下面哪一個句子使用了「……才……」的句型？","o":["裁縫師傅用粉筆在布料上做好記號後，才開始裁剪布料。","天上的雲朵變化萬千，時而像小狗，時而像小貓，真是有趣。","如果每天練跑時，我們能培養良好的默契，那麼就有機會贏得這場比賽。","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？"],"a":0,"why":"「……才……」是連貫複句。正確的句子：裁縫師傅用粉筆在布料上做好記號後，才開始裁剪布料。"},{"id":"N2p5","ex":"……才……","exl":"句型","pq":"下面哪一個句子使用了「……才……」的句型？","o":["這群學生看見行人交通號誌綠燈亮起，確認左右無來車後，才過馬路。","今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","要是這個假日天氣轉晴，我們全家就會去山上露營。","養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。"],"a":0,"why":"「……才……」是連貫複句。正確的句子：這群學生看見行人交通號誌綠燈亮起，確認左右無來車後，才過馬路。"},{"id":"N2p6","ex":"……再……","exl":"句型","pq":"下面哪一個句子使用了「……再……」的句型？","o":["距離電影開始還有半小時，我們決定先買爆米花，再入場。","一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。","只要我們願意專心一致、努力不懈的練習，就可以在這次運動會上奪得亮眼的佳績。","妹妹一會兒跑步，一會兒跳舞，真是體力過人。"],"a":0,"why":"「……再……」是連貫複句。正確的句子：距離電影開始還有半小時，我們決定先買爆米花，再入場。"},{"id":"N2p7","ex":"……再……","exl":"句型","pq":"下面哪一個句子使用了「……再……」的句型？","o":["寫作文時，要先擬好大綱，再開始下筆。","如果把人生比作變幻莫測的天氣，那麼既會有萬里晴空，也會有狂風驟雨。","小可很期待明天開始的連假，即使可能下雨，也不減她想出遊的興致。","要是這個假日天氣轉晴，我們全家就會去山上露營。"],"a":0,"why":"「……再……」是連貫複句。正確的句子：寫作文時，要先擬好大綱，再開始下筆。"},{"id":"N2p8","ex":"只要……可以……","exl":"句型","pq":"下面哪一個句子使用了「只要……可以……」的句型？","o":["只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","放學後，我想去文具店買文具，或是到書店買書。","如果小華數學也考一百分，加上其他科目的分數，他不就是全校第一名了嗎？","讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。"],"a":0,"why":"「只要……可以……」是條件複句。正確的句子：只要同學間彼此關心、互相幫助，就可以建立良好的友誼。"},{"id":"N2p9","ex":"只要……可以……","exl":"句型","pq":"下面哪一個句子使用了「只要……可以……」的句型？","o":["只要我們願意專心一致、努力不懈的練習，就可以在這次運動會上奪得亮眼的佳績。","要是這個假日天氣轉晴，我們全家就會去山上露營。","這棵樹的枝椏先是冒出綠芽，接著長出了茂密的綠葉。","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。"],"a":0,"why":"「只要……可以……」是條件複句。正確的句子：只要我們願意專心一致、努力不懈的練習，就可以在這次運動會上奪得亮眼的佳績。"}]},{"ver":"南一","no":3,"title":"孔雀錯了","sum":"作者和曹萱玲各有所長，互相炫耀、妒忌，都不快樂。老師說孔雀互相傷害、兩敗俱傷的故事，兩人感到慚愧，和好並良性競爭。","chars":[{"c":"性","z":"ㄒㄧㄥˋ","r":"心","w":"個性"},{"c":"忌","z":"ㄐㄧˋ","r":"心","w":"猜忌"},{"c":"惜","z":"ㄒㄧ","r":"心","w":"珍惜"},{"c":"慈","z":"ㄘˊ","r":"心","w":"慈祥"},{"c":"慚","z":"ㄘㄢˊ","r":"心","w":"慚愧"},{"c":"愧","z":"ㄎㄨㄟˋ","r":"心","w":"愧疚"},{"c":"評","z":"ㄆㄧㄥˊ","r":"言","w":"評分"},{"c":"楚","z":"ㄔㄨˇ","r":"木","w":"清楚"},{"c":"橡","z":"ㄒㄧㄤˋ","r":"木","w":"橡皮擦"},{"c":"似","z":"ㄙˋ","r":"人","w":"相似"},{"c":"卷","z":"ㄐㄩㄢˇ","r":"卩","w":"考卷"},{"c":"綵","z":"ㄘㄞˇ","r":"糸","w":"剪綵"},{"c":"塗","z":"ㄊㄨˊ","r":"土","w":"塗鴉"},{"c":"拼","z":"ㄆㄧㄣ","r":"手","w":"拼圖"},{"c":"眉","z":"ㄇㄟˊ","r":"目","w":"眉毛"},{"c":"秀","z":"ㄒㄧㄡˋ","r":"禾","w":"秀麗"},{"c":"妒","z":"ㄉㄨˋ","r":"女","w":"嫉妒"},{"c":"屏","z":"ㄆㄧㄥˊ","r":"尸","w":"屏風"}],"reading":[{"t":"妹妹的畫","p":["妹妹的畫被老師評為全班第一，大家都稱讚她。我心裡卻冒出一股妒忌，忍不住說：「只是運氣好吧！」","看到妹妹難過地低下頭，我覺得很慚愧，趕緊向她道歉。媽媽說：「家人之間應該互相欣賞，別人的好表現，也可以成為自己進步的動力。」"],"qs":[{"id":"N3r0q0","q":"妹妹的畫得到什麼結果？","o":["被老師退回","被老師評為全班第一","被弄丟了","沒有人注意"],"a":1,"ev":"妹妹的畫被老師評為全班第一"},{"id":"N3r0q1","q":"「我」為什麼覺得慚愧？","o":["畫畫輸給妹妹","看到妹妹難過地低下頭","被老師罵","沒有交作業"],"a":1,"ev":"看到妹妹難過地低下頭"},{"id":"N3r0q2","q":"媽媽的話是什麼意思？","o":["不要跟家人比賽","別人的好表現，可以成為自己進步的動力","畫畫不重要","運氣最重要"],"a":1,"ev":"別人的好表現，也可以成為自己進步的動力"}]},{"t":"考卷發下來","p":["數學考卷發下來，小琪考了一百分，小美只考了八十分。小美心裡有點不是滋味，故意不跟小琪說話。","下課時，小琪主動拿著考卷來找小美：「這題我也錯過，我教你一個方法。」小美聽完恍然大悟，也為自己的小心眼感到愧疚。兩人約好下次一起努力，互相比賽、互相幫忙。"],"qs":[{"id":"N3r1q0","q":"小美為什麼故意不跟小琪說話？","o":["小琪弄壞她的筆","考得比小琪差，心裡不是滋味","小琪說她壞話","她們吵架了"],"a":1,"ev":"小美心裡有點不是滋味，故意不跟小琪說話"},{"id":"N3r1q1","q":"下課時，小琪主動做了什麼？","o":["向老師告狀","教小美一個解題方法","拿考卷炫耀","不理小美"],"a":1,"ev":"這題我也錯過，我教你一個方法"},{"id":"N3r1q2","q":"兩人最後約好什麼？","o":["以後不再說話","互相比賽、互相幫忙","只比誰分數高","換座位"],"a":1,"ev":"互相比賽、互相幫忙"}]}],"text":[{"id":"N3t0","q":"〈孔雀錯了〉中，作者哪一科的成績比曹萱玲好？","o":["數學","作文","英文","自然"],"a":1,"why":"作者的作文成績比曹萱玲好，還向曹萱玲炫耀。"},{"id":"N3t1","q":"〈孔雀錯了〉中，曹萱玲哪一科的成績比作者好？","o":["作文","英文","體育","美勞"],"a":1,"why":"曹萱玲的英文成績比作者好，也向作者炫耀。"},{"id":"N3t2","q":"作者和曹萱玲互相妒忌時，兩人的心情如何？","o":["都很快樂","都很不快樂","只有作者快樂","只有曹萱玲快樂"],"a":1,"why":"兩人彼此妒忌，都感到很不快樂。"},{"id":"N3t3","q":"老師說的孔雀故事，結果是什麼？","o":["孔雀變成好朋友","孔雀互相傷害，最後兩敗俱傷","孔雀飛走了","孔雀得到冠軍"],"a":1,"why":"老師說了孔雀互相傷害，最後兩敗俱傷的故事。"},{"id":"N3t4","q":"聽完孔雀的故事後，作者和曹萱玲最後怎麼了？","o":["繼續吵架","兩人和好，像友愛的孔雀努力開屏","換座位","都不想上學"],"a":1,"why":"兩人和好，像友愛的孔雀，努力開屏，不再妒忌。"},{"id":"N3t5","q":"〈孔雀錯了〉的主旨是什麼？","o":["孔雀和人一樣愛爭高下，無法和平相處","多和同學起爭執，進步最快","同學之間應欣賞對方優點，良性競爭、互相友愛","透過故事宣導，可以立刻改變人的行為"],"a":2,"why":"主旨：同學相處要能欣賞對方的優點，透過良性競爭一起成長，互相友愛。"}],"phrase":[{"id":"N3p0","ex":"「張著四四方方的嘴」","o":["寫著歪歪扭扭的字","為圓滾滾的貓熊餵食鮮嫩的竹子","攪拌著咖啡色的咖哩","遞送包裹的郵差"],"a":0,"why":"課本結構：動詞＋著＋四字疊字形容詞（ＡＡＢＢ）＋的＋名詞"},{"id":"N3p1","ex":"「張著四四方方的嘴」","o":["蓋著鬆鬆軟軟的棉被","在溫暖的被窩中酣然入睡","穿著輕便且透氣的運動服","值得購買的商品"],"a":0,"why":"課本結構：動詞＋著＋四字疊字形容詞（ＡＡＢＢ）＋的＋名詞"},{"id":"N3p2","ex":"「好好愛惜自己的羽毛」","o":["好好整理自己的房間","攪拌著咖啡色的咖哩","回答得頭頭是道","為靜悄悄的森林帶來些許的聲息"],"a":0,"why":"課本結構：好好＋動詞＋自己的＋名詞"},{"id":"N3p3","ex":"「好好愛惜自己的羽毛」","o":["好好鍛鍊自己的身體","沉浸在一部感人的電影中","博物館中各種古老的收藏品","穿著輕便且透氣的運動服"],"a":0,"why":"課本結構：好好＋動詞＋自己的＋名詞"},{"id":"N3p4","ex":"「在亮麗的陽光下努力開屏」","o":["在狹窄的房間裡認真學習","悶煮著奶白色的濃湯","吃一口美味的便當","為圓滾滾的貓熊餵食鮮嫩的竹子"],"a":0,"why":"課本結構：在＋形容詞＋的＋名詞（地點）＋下（裡、上……）＋副詞＋動詞"},{"id":"N3p5","ex":"「在亮麗的陽光下努力開屏」","o":["在陌生的城市中奮力打拚","看著可愛且活潑的孩子","得意洋洋的展示當天在比賽得到的獎牌","好好釐清自己的思緒"],"a":0,"why":"課本結構：在＋形容詞＋的＋名詞（地點）＋下（裡、上……）＋副詞＋動詞"},{"id":"N3p6","ex":"把「尾巴」「張」得「漂漂亮亮」","o":["把「頭髮」「梳」得「整整齊齊」","把「頭髮」「梳」得「整齊」","把「整整齊齊」「梳」得「頭髮」","把「頭髮」「漂亮」得「梳梳」"],"a":0,"why":"例句是「把＋東西＋動作＋得＋AABB 疊字」。"},{"id":"N3p7","ex":"……尤其……","exl":"句型","pq":"下面哪一個句子使用了「……尤其……」的句型？","o":["爸爸很重視子女的教育，尤其是品行，要求特別嚴格。","即使這件事情難以完成，小安也會盡最大的力量去做好它。","藝術家羅丹說：「世界不是缺少美，而是缺少發現美的眼睛。」","提到中秋節，你先想到的是月餅，還是柚子呢？"],"a":0,"why":"「……尤其……」是遞進複句。正確的句子：爸爸很重視子女的教育，尤其是品行，要求特別嚴格。"},{"id":"N3p8","ex":"……尤其……","exl":"句型","pq":"下面哪一個句子使用了「……尤其……」的句型？","o":["媽媽做的菜餚很美味，尤其是紅燒獅子頭，吃過的人皆讚不絕口。","養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。","提到中秋節，你先想到的是月餅，還是柚子呢？","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？"],"a":0,"why":"「……尤其……」是遞進複句。正確的句子：媽媽做的菜餚很美味，尤其是紅燒獅子頭，吃過的人皆讚不絕口。"},{"id":"N3p9","ex":"如果……那麼……","exl":"句型","pq":"下面哪一個句子使用了「如果……那麼……」的句型？","o":["如果每天練跑時，我們能培養良好的默契，那麼就有機會贏得這場比賽。","阿里山的日出美景聞名中外，因此吸引許多遊客慕名前往。","今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。"],"a":0,"why":"「如果……那麼……」是假設複句。正確的句子：如果每天練跑時，我們能培養良好的默契，那麼就有機會贏得這場比賽。"},{"id":"N3p10","ex":"如果……那麼……","exl":"句型","pq":"下面哪一個句子使用了「如果……那麼……」的句型？","o":["如果把人生比作變幻莫測的天氣，那麼既會有萬里晴空，也會有狂風驟雨。","藝術家羅丹說：「世界不是缺少美，而是缺少發現美的眼睛。」","今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。"],"a":0,"why":"「如果……那麼……」是假設複句。正確的句子：如果把人生比作變幻莫測的天氣，那麼既會有萬里晴空，也會有狂風驟雨。"},{"id":"N3p11","ex":"如果……不就是……","exl":"句型","pq":"下面哪一個句子使用了「如果……不就是……」的句型？","o":["如果能不斷達成每次設定的目標，不就是一直在超越自己嗎？","寫作文時，要先擬好大綱，再開始下筆。","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？","裁縫師傅用粉筆在布料上做好記號後，才開始裁剪布料。"],"a":0,"why":"「如果……不就是……」是假設複句。正確的句子：如果能不斷達成每次設定的目標，不就是一直在超越自己嗎？"},{"id":"N3p12","ex":"如果……不就是……","exl":"句型","pq":"下面哪一個句子使用了「如果……不就是……」的句型？","o":["如果小華數學也考一百分，加上其他科目的分數，他不就是全校第一名了嗎？","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。","今天晚上，你想要吃中式料理、日式料理或是義式料理？","美食旅遊節目的主持人詳細的介紹餐廳的料理，然後開始大快朵頤。"],"a":0,"why":"「如果……不就是……」是假設複句。正確的句子：如果小華數學也考一百分，加上其他科目的分數，他不就是全校第一名了嗎？"}]},{"ver":"南一","no":4,"title":"特別的海","sum":"臺灣有特別的海：宜蘭龜山島的牛奶海（海底熱泉遇低溫海水產生白色物質，氣味像壞掉的雞蛋）；馬祖西莒島的方格海（地形與海流使海浪交會成格子）。大海千變萬化。","chars":[{"c":"渲","z":"ㄒㄩㄢˋ","r":"水","w":"渲染"},{"c":"滲","z":"ㄕㄣˋ","r":"水","w":"滲透"},{"c":"漿","z":"ㄐㄧㄤ","r":"水","w":"豆漿"},{"c":"泉","z":"ㄑㄩㄢˊ","r":"水","w":"泉水"},{"c":"漲","z":"ㄓㄤˇ","r":"水","w":"漲潮"},{"c":"乳","z":"ㄖㄨˇ","r":"乙","w":"牛乳"},{"c":"臭","z":"ㄔㄡˋ","r":"自","w":"臭味"},{"c":"產","z":"ㄔㄢˇ","r":"生","w":"生產"},{"c":"囪","z":"ㄘㄨㄥ","r":"囗","w":"煙囪"},{"c":"列","z":"ㄌㄧㄝˋ","r":"刀","w":"排列"},{"c":"羅","z":"ㄌㄨㄛˊ","r":"网","w":"羅列"},{"c":"耀","z":"ㄧㄠˋ","r":"羽","w":"照耀"},{"c":"螢","z":"ㄧㄥˊ","r":"虫","w":"螢光"},{"c":"眩","z":"ㄒㄩㄢˋ","r":"目","w":"眩目"},{"c":"係","z":"ㄒㄧˋ","r":"人","w":"關係"},{"c":"殊","z":"ㄕㄨ","r":"歹","w":"特殊"},{"c":"呈","z":"ㄔㄥˊ","r":"口","w":"呈現"},{"c":"貌","z":"ㄇㄠˋ","r":"豸","w":"面貌"}],"reading":[{"t":"會發光的海","p":["春天的夜晚，馬祖的海面有時會出現一片藍色光點，好像螢火蟲在水上飛舞，人們稱它為「藍眼淚」。","其實，這些光點是一種小小的生物。當海浪拍打牠們，牠們就會發出藍光。因為成因特殊，這片海呈現的美景格外耀眼，吸引許多遊客前往。"],"qs":[{"id":"N4r0q0","q":"「藍眼淚」出現在哪裡？","o":["墾丁的沙灘","馬祖的海面","日月潭的湖面","花蓮的溪谷"],"a":1,"ev":"馬祖的海面有時會出現一片藍色光點"},{"id":"N4r0q1","q":"藍色光點其實是什麼？","o":["天上的星星","一種小小的生物","漁船的燈光","螢火蟲"],"a":1,"ev":"這些光點是一種小小的生物"},{"id":"N4r0q2","q":"這些光點在什麼時候會發光？","o":["太陽出來時","海浪拍打牠們時","下雨的時候","有人唱歌時"],"a":1,"ev":"當海浪拍打牠們，牠們就會發出藍光"}]},{"t":"退潮後的小路","p":["有些海邊在退潮時，海水會退到很遠的地方，露出一條通往小島的小路；漲潮時，小路又被海水淹沒。","這種景象並不是魔法，而是潮水漲落造成的。所以想走這條小路，一定要先查好潮汐時間，以免被困在海中央。"],"qs":[{"id":"N4r1q0","q":"什麼時候會露出通往小島的小路？","o":["漲潮時","退潮時","颱風天","晚上"],"a":1,"ev":"在退潮時，海水會退到很遠的地方"},{"id":"N4r1q1","q":"這種景象是怎麼造成的？","o":["有人施了魔法","潮水漲落造成的","地震造成的","有人填海造路"],"a":1,"ev":"而是潮水漲落造成的"},{"id":"N4r1q2","q":"想走這條小路，一定要先做什麼？","o":["帶游泳圈","查好潮汐時間","等到半夜","穿雨衣"],"a":1,"ev":"一定要先查好潮汐時間"}]}],"text":[{"id":"N4t0","q":"〈特別的海〉中，牛奶海在哪裡？","o":["馬祖西莒島","宜蘭龜山島","澎湖","墾丁"],"a":1,"why":"宜蘭龜山島的海域有乳白色的牛奶海。"},{"id":"N4t1","q":"牛奶海讓人聯想到什麼有趣的畫面？","o":["烏龜喝牛奶","海水畫表格","鯨魚噴水","螃蟹過馬路"],"a":0,"why":"龜山島前端乳白色的海水，讓人聯想到「烏龜喝牛奶」。"},{"id":"N4t2","q":"〈特別的海〉作者為什麼用「臭美」形容牛奶海？","o":["它能治療體臭、養顏美容","它的景觀很美，卻帶有強烈的氣味","它吸引許多遊客，卻造成環境問題","它看起來像女子低頭嘆氣"],"a":1,"why":"牛奶海景觀很美，氣味卻像壞掉的雞蛋，所以說「臭美」。"},{"id":"N4t3","q":"牛奶海是怎麼形成的？","o":["有人倒牛奶進海裡","海底熱泉遇到低溫海水，產生白色物質","海浪從不同方向交會","藻類發光"],"a":1,"why":"海水經岩漿加熱形成海底熱泉，遇到相對低溫的海水，產生白色物質。"},{"id":"N4t4","q":"「海水畫表格」的方格海在哪裡？","o":["宜蘭龜山島","馬祖西莒島","臺東三仙台","花蓮七星潭"],"a":1,"why":"馬祖西莒島的淺灘有「海水畫表格」的景象。"},{"id":"N4t5","q":"方格海是怎麼形成的？","o":["火山噴發","地形與海流的關係，漲潮時海浪從不同方向交會","有人在沙灘上畫格子","船隻經過留下的痕跡"],"a":1,"why":"由於地形與海流，漲潮時海浪從不同方向交會，一行一列形成方格海。"},{"id":"N4t6","q":"〈特別的海〉的主旨是什麼？","o":["臺灣的海都一樣","大海千變萬化，不同成因呈現不同面貌，值得深入探索","牛奶海可以喝","海邊很危險不要去"],"a":1,"why":"主旨：大海千變萬化，隨著不同成因，會呈現不同面貌，值得我們深入探索。"}],"phrase":[{"id":"N4p0","ex":"「陣陣強烈的氣味」","o":["幢幢華麗的房屋","看著可愛且活潑的孩子","背著沉重且龐大的行李","在狹窄的房間裡認真學習"],"a":0,"why":"課本結構：疊字量詞＋形容詞＋的＋名詞"},{"id":"N4p1","ex":"「陣陣強烈的氣味」","o":["張張空白的稿紙","遞送包裹的郵差","好好整理自己的房間","在樹枝上發出清脆的鳴叫"],"a":0,"why":"課本結構：疊字量詞＋形容詞＋的＋名詞"},{"id":"N4p2","ex":"「閃耀著亮藍色的螢光」","o":["飄落著粉紅色的花瓣","屋頂上各種吵雜的聲響","為光禿禿的山頭種植大量的樹苗","在黑夜裡散發柔和的光芒"],"a":0,"why":"課本結構：動詞＋著＋形容詞（顏色）＋的＋名詞"},{"id":"N4p3","ex":"「閃耀著亮藍色的螢光」","o":["攪拌著咖啡色的咖哩","描繪得栩栩如生","值得造訪的景點","撒下嗆辣的胡椒"],"a":0,"why":"課本結構：動詞＋著＋形容詞（顏色）＋的＋名詞"},{"id":"N4p4","ex":"乳白色的海水向外渲染。","o":["金黃的稻穗向下低垂。","枯木是動物的大飯店。","努力是為我帶來希望的方法。","大自然是人類的教室。"],"a":0,"why":"課本結構：形容詞＋的＋名詞＋向、往、朝＋外（裡、上……）＋動詞。"},{"id":"N4p5","ex":"乳白色的海水向外渲染。","o":["翠綠的樹苗向上生長。","小河是魚兒的遊樂園。","珊瑚是小魚的避難所。","天空是鳥兒的遊樂場。"],"a":0,"why":"課本結構：形容詞＋的＋名詞＋向、往、朝＋外（裡、上……）＋動詞。"},{"id":"N4p6","ex":"「格子」忽「大」忽「小」","o":["「身影」忽「隱」忽「現」","「身影」忽「大」忽「大」","忽「隱」「身影」忽「現」","「身影」忽「高興」忽「跑步」"],"a":0,"why":"「忽……忽……」中間要放意思相反的字。"},{"id":"N4p7","ex":"是……還是……","exl":"句型","pq":"下面哪一個句子使用了「是……還是……」的句型？","o":["今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？","美食旅遊節目的主持人詳細的介紹餐廳的料理，然後開始大快朵頤。","寫作文時，要先擬好大綱，再開始下筆。","由於阿虎的努力與堅持，造就他今日的輝煌成就。"],"a":0,"why":"「是……還是……」是選擇複句。正確的句子：今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？"},{"id":"N4p8","ex":"是……還是……","exl":"句型","pq":"下面哪一個句子使用了「是……還是……」的句型？","o":["提到中秋節，你先想到的是月餅，還是柚子呢？","阿幸工作時總是不苟言笑，私底下卻是朋友公認的開心果。","寫作文時，要先擬好大綱，再開始下筆。","妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。"],"a":0,"why":"「是……還是……」是選擇複句。正確的句子：提到中秋節，你先想到的是月餅，還是柚子呢？"},{"id":"N4p9","ex":"……因此……","exl":"句型","pq":"下面哪一個句子使用了「……因此……」的句型？","o":["阿里山的日出美景聞名中外，因此吸引許多遊客慕名前往。","要是我前一天先整理好書包、早點上床睡覺，今天就不會慌慌張張的出門上學。","提到中秋節，你先想到的是月餅，還是柚子呢？","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？"],"a":0,"why":"「……因此……」是因果複句。正確的句子：阿里山的日出美景聞名中外，因此吸引許多遊客慕名前往。"},{"id":"N4p10","ex":"……因此……","exl":"句型","pq":"下面哪一個句子使用了「……因此……」的句型？","o":["今日降雨機率偏高，因此出門要記得攜帶雨具。","只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","小可很期待明天開始的連假，即使可能下雨，也不減她想出遊的興致。","如果每天練跑時，我們能培養良好的默契，那麼就有機會贏得這場比賽。"],"a":0,"why":"「……因此……」是因果複句。正確的句子：今日降雨機率偏高，因此出門要記得攜帶雨具。"},{"id":"N4p11","ex":"不是……而是……","exl":"句型","pq":"下面哪一個句子使用了「不是……而是……」的句型？","o":["藝術家羅丹說：「世界不是缺少美，而是缺少發現美的眼睛。」","距離電影開始還有半小時，我們決定先買爆米花，再入場。","這群學生看見行人交通號誌綠燈亮起，確認左右無來車後，才過馬路。","阿里山的日出美景聞名中外，因此吸引許多遊客慕名前往。"],"a":0,"why":"「不是……而是……」是並列複句。正確的句子：藝術家羅丹說：「世界不是缺少美，而是缺少發現美的眼睛。」"},{"id":"N4p12","ex":"不是……而是……","exl":"句型","pq":"下面哪一個句子使用了「不是……而是……」的句型？","o":["讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。","養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。","百貨公司裡，有些人在服飾專櫃挑選保暖的外套，有些人在寢具專櫃選著保暖的棉被。","阿興特別提早出門，然而因為大塞車，他還是遲到了。"],"a":0,"why":"「不是……而是……」是並列複句。正確的句子：讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。"},{"id":"N4p13","ex":"一會兒……一會兒……","exl":"句型","pq":"下面哪一個句子使用了「一會兒……一會兒……」的句型？","o":["妹妹一會兒跑步，一會兒跳舞，真是體力過人。","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","距離電影開始還有半小時，我們決定先買爆米花，再入場。","由於阿虎的努力與堅持，造就他今日的輝煌成就。"],"a":0,"why":"「一會兒……一會兒……」是並列複句。正確的句子：妹妹一會兒跑步，一會兒跳舞，真是體力過人。"},{"id":"N4p14","ex":"一會兒……一會兒……","exl":"句型","pq":"下面哪一個句子使用了「一會兒……一會兒……」的句型？","o":["今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","爸爸很重視子女的教育，尤其是品行，要求特別嚴格。","大掃除時，我們將桌椅搬出去，接著開始刷教室的地板。","這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。"],"a":0,"why":"「一會兒……一會兒……」是並列複句。正確的句子：今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。"},{"id":"N4p15","ex":"由於……","exl":"句型","pq":"下面哪一個句子使用了「由於……」的句型？","o":["由於低溫與水氣旺盛，高山下起今年的第一場雪。","今日降雨機率偏高，因此出門要記得攜帶雨具。","要是這個假日天氣轉晴，我們全家就會去山上露營。","要是我前一天先整理好書包、早點上床睡覺，今天就不會慌慌張張的出門上學。"],"a":0,"why":"「由於……」是因果複句。正確的句子：由於低溫與水氣旺盛，高山下起今年的第一場雪。"},{"id":"N4p16","ex":"由於……","exl":"句型","pq":"下面哪一個句子使用了「由於……」的句型？","o":["由於阿虎的努力與堅持，造就他今日的輝煌成就。","距離電影開始還有半小時，我們決定先買爆米花，再入場。","奶奶雖已離開人世，然而她和藹的笑容永遠留存在我心中。","一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。"],"a":0,"why":"「由於……」是因果複句。正確的句子：由於阿虎的努力與堅持，造就他今日的輝煌成就。"}]},{"ver":"南一","no":5,"title":"漫遊花東","sum":"作者沿蘇花公路前往花東，經過清水斷崖、太魯閣燕子口步道的峽谷美景；第二天經花東縱谷到臺東，池上的稻浪隨風搖曳，令人醉心。","chars":[{"c":"峭","z":"ㄑㄧㄠˋ","r":"山","w":"陡峭"},{"c":"崖","z":"ㄧㄞˊ","r":"山","w":"懸崖"},{"c":"凹","z":"ㄠ","r":"凵","w":"凹陷"},{"c":"凸","z":"ㄊㄨˊ","r":"凵","w":"凸出"},{"c":"駛","z":"ㄕˇ","r":"馬","w":"行駛"},{"c":"陡","z":"ㄉㄡˇ","r":"阜","w":"陡坡"},{"c":"蕾","z":"ㄌㄟˊ","r":"艸","w":"花蕾"},{"c":"躍","z":"ㄩㄝˋ","r":"足","w":"跳躍"},{"c":"坑","z":"ㄎㄥ","r":"土","w":"坑洞"},{"c":"斧","z":"ㄈㄨˇ","r":"斤","w":"斧頭"},{"c":"雄","z":"ㄒㄩㄥˊ","r":"隹","w":"雄偉"},{"c":"偉","z":"ㄨㄟˇ","r":"人","w":"偉大"},{"c":"臨","z":"ㄌㄧㄣˊ","r":"臣","w":"來臨"},{"c":"縱","z":"ㄗㄨㄥˋ","r":"糸","w":"縱使"},{"c":"稻","z":"ㄉㄠˋ","r":"禾","w":"稻田"},{"c":"澄","z":"ㄔㄥˊ","r":"水","w":"清澄"},{"c":"曳","z":"ㄧˋ","r":"曰","w":"搖曳"},{"c":"醉","z":"ㄗㄨㄟˋ","r":"酉","w":"陶醉"}],"reading":[{"t":"斷崖邊的公路","p":["車子在蘇花公路上緩緩行駛，一邊是陡峭的山壁，一邊是深藍色的太平洋。","從高處望下去，懸崖筆直地插進海裡，浪花一陣陣拍打著岩石。爸爸說，這就是有名的清水斷崖。大家看得如痴如醉，都捨不得離開。"],"qs":[{"id":"N5r0q0","q":"車子行駛時，兩旁是什麼景色？","o":["稻田和小溪","陡峭的山壁和深藍色的太平洋","高樓和商店","草原和牛羊"],"a":1,"ev":"一邊是陡峭的山壁，一邊是深藍色的太平洋"},{"id":"N5r0q1","q":"爸爸說這裡是哪裡？","o":["太魯閣","清水斷崖","三仙台","伯朗大道"],"a":1,"ev":"這就是有名的清水斷崖"},{"id":"N5r0q2","q":"大家看到美景後的心情如何？","o":["覺得很害怕","看得如痴如醉，捨不得離開","覺得很無聊","急著回家"],"a":1,"ev":"大家看得如痴如醉，都捨不得離開"}]},{"t":"縱谷的稻浪","p":["夏天的花東縱谷，一大片稻田在陽光下閃閃發亮。風一吹，稻穗輕輕搖曳，就像金黃色的海浪。","我們騎著腳踏車慢慢前進，遠處的山清清楚楚，天空藍得像剛洗過一樣。這樣的美景，讓人覺得心情也跟著明亮了起來。"],"qs":[{"id":"N5r1q0","q":"風吹過稻田時，稻穗看起來像什麼？","o":["綠色的地毯","金黃色的海浪","白色的雲朵","高高的山"],"a":1,"ev":"就像金黃色的海浪"},{"id":"N5r1q1","q":"「我們」用什麼方式前進？","o":["開車","騎腳踏車","坐火車","走路"],"a":1,"ev":"我們騎著腳踏車慢慢前進"},{"id":"N5r1q2","q":"作者怎麼形容天空？","o":["灰濛濛的","藍得像剛洗過一樣","紅得像火","黑漆漆的"],"a":1,"ev":"天空藍得像剛洗過一樣"}]}],"text":[{"id":"N5t0","q":"〈漫遊花東〉中，作者的車子一開始行駛在哪一條公路上？","o":["蘇花公路","中山高速公路","南迴公路","北宜公路"],"a":0,"why":"車子行駛在曲折的蘇花公路上。"},{"id":"N5t1","q":"進入太魯閣國家公園之前，車子經過了哪裡？","o":["清水斷崖","三仙台","伯朗大道","鵝鑾鼻"],"a":0,"why":"車子經過清水斷崖，進入太魯閣國家公園。"},{"id":"N5t2","q":"作者一行人在哪個步道欣賞峽谷美景？","o":["燕子口步道","阿里山步道","陽明山步道","合歡山步道"],"a":0,"why":"作者一行人進入燕子口步道，峽谷美景令人驚嘆。"},{"id":"N5t3","q":"第二天，作者從花蓮市經過哪裡前往臺東？","o":["花東縱谷","雪山隧道","中橫公路","高屏溪"],"a":0,"why":"第二天，作者從花蓮市經過花東縱谷前往臺東。"},{"id":"N5t4","q":"〈漫遊花東〉中，什麼景色讓作者忘情的喊叫？","o":["池上隨風擺動的稻浪","城市的夜景","海上的煙火","雪地的風景"],"a":0,"why":"看著池上隨風擺動的稻浪，作者忘情的喊叫。"},{"id":"N5t5","q":"〈漫遊花東〉「陣陣海風吹皺太平洋的藍裙子」，「藍裙子」指的是什麼？","o":["天空","海水","溪水","縱谷"],"a":1,"why":"把被風吹起波紋的海面，比喻成被吹皺的藍裙子。"},{"id":"N5t6","q":"〈漫遊花東〉的主旨是什麼？","o":["花東交通很不方便","花東景物之美，教人醉心","旅行一定要很多天","臺東比花蓮漂亮"],"a":1,"why":"主旨：花東景物之美，教人醉心。"}],"phrase":[{"id":"N5p0","ex":"「在石頭上激起雪白的水花」","o":["在操場邊伸展柔軟的筋骨","描繪得栩栩如生","為靜悄悄的森林帶來些許的聲息","種植水果的農夫"],"a":0,"why":"課本結構：在＋名詞＋上（裡、中……）＋動詞＋形容詞＋的＋名詞（事物）"},{"id":"N5p1","ex":"「在石頭上激起雪白的水花」","o":["在黑夜裡散發柔和的光芒","好好培養自己的興趣","值得觀看的電影","為乾巴巴的土地帶來豐沛的雨水"],"a":0,"why":"課本結構：在＋名詞＋上（裡、中……）＋動詞＋形容詞＋的＋名詞（事物）"},{"id":"N5p2","ex":"「行駛在一幅美麗的風景畫裡」","o":["攀爬在一面陡峭的山壁上","在樹枝上發出清脆的鳴叫","塗抹著金黃色的奶油","悶煮著奶白色的濃湯"],"a":0,"why":"課本結構：動詞＋在＋量詞＋形容詞＋的＋名詞＋裡（外、上……）"},{"id":"N5p3","ex":"「行駛在一幅美麗的風景畫裡」","o":["漂流在一條清澈的溪流中","做著甜甜蜜蜜的夢","回答得頭頭是道","義憤填膺的控訴當天在捷運遇到的麻煩"],"a":0,"why":"課本結構：動詞＋在＋量詞＋形容詞＋的＋名詞＋裡（外、上……）"},{"id":"N5p4","ex":"「迷失方向的小船」","o":["遞送包裹的郵差","做著甜甜蜜蜜的夢","電影裡各種神奇的魔法","為靜悄悄的森林帶來些許的聲息"],"a":0,"why":"課本結構：動詞＋名詞＋的＋名詞"},{"id":"N5p5","ex":"「迷失方向的小船」","o":["種植水果的農夫","擺放得井井有條","好好鍛鍊自己的身體","好好整理自己的房間"],"a":0,"why":"課本結構：動詞＋名詞＋的＋名詞"},{"id":"N5p6","ex":"如「煙火」般「燦爛」","o":["如「星星」般「閃耀」","如「閃耀」般「星星」","如「星星」般「跑步」","「星星」如般「閃耀」"],"a":0,"why":"「如＋事物＋般＋形容詞」，把形容詞和事物連起來。"},{"id":"N5p7","ex":"時而……時而……","exl":"句型","pq":"下面哪一個句子使用了「時而……時而……」的句型？","o":["天上的雲朵變化萬千，時而像小狗，時而像小貓，真是有趣。","養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？","這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。"],"a":0,"why":"「時而……時而……」是並列複句。正確的句子：天上的雲朵變化萬千，時而像小狗，時而像小貓，真是有趣。"},{"id":"N5p8","ex":"時而……時而……","exl":"句型","pq":"下面哪一個句子使用了「時而……時而……」的句型？","o":["舞臺上，演員時而做出滑稽動作，時而展現誇張的表情，逗得臺下的觀眾哈哈大笑。","今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。","奶奶雖已離開人世，然而她和藹的笑容永遠留存在我心中。"],"a":0,"why":"「時而……時而……」是並列複句。正確的句子：舞臺上，演員時而做出滑稽動作，時而展現誇張的表情，逗得臺下的觀眾哈哈大笑。"},{"id":"N5p9","ex":"……卻是……","exl":"句型","pq":"下面哪一個句子使用了「……卻是……」的句型？","o":["他們剛開始感情並不好，現在卻是無話不談的好朋友。","提到中秋節，你先想到的是月餅，還是柚子呢？","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","天上的雲朵變化萬千，時而像小狗，時而像小貓，真是有趣。"],"a":0,"why":"「……卻是……」是轉折複句。正確的句子：他們剛開始感情並不好，現在卻是無話不談的好朋友。"},{"id":"N5p10","ex":"……卻是……","exl":"句型","pq":"下面哪一個句子使用了「……卻是……」的句型？","o":["阿幸工作時總是不苟言笑，私底下卻是朋友公認的開心果。","妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。","如果把人生比作變幻莫測的天氣，那麼既會有萬里晴空，也會有狂風驟雨。","只要我們願意專心一致、努力不懈的練習，就可以在這次運動會上奪得亮眼的佳績。"],"a":0,"why":"「……卻是……」是轉折複句。正確的句子：阿幸工作時總是不苟言笑，私底下卻是朋友公認的開心果。"}]},{"ver":"南一","no":6,"title":"護送螃蟹過馬路","sum":"月圓之夜在墾丁國家公園護送陸蟹媽媽過馬路，讓牠們到海邊釋放螃蟹寶寶，避免被車輛輾壓，提醒大家重視海洋生態保育。","chars":[{"c":"綻","z":"ㄓㄢˋ","r":"糸","w":"綻放"},{"c":"緩","z":"ㄏㄨㄢˇ","r":"糸","w":"緩慢"},{"c":"溝","z":"ㄍㄡ","r":"水","w":"水溝"},{"c":"浸","z":"ㄐㄧㄣˋ","r":"水","w":"浸泡"},{"c":"陸","z":"ㄌㄨˋ","r":"阜","w":"陸蟹"},{"c":"阻","z":"ㄗㄨˇ","r":"阜","w":"阻礙"},{"c":"暇","z":"ㄒㄧㄚˊ","r":"日","w":"閒暇"},{"c":"愈","z":"ㄩˋ","r":"心","w":"愈來愈"},{"c":"悲","z":"ㄅㄟ","r":"心","w":"悲傷"},{"c":"螃","z":"ㄆㄤˊ","r":"虫","w":"螃蟹"},{"c":"乎","z":"ㄏㄨ","r":"丿","w":"在乎"},{"c":"召","z":"ㄓㄠ","r":"口","w":"號召"},{"c":"蹲","z":"ㄉㄨㄣ","r":"足","w":"蹲下"},{"c":"腹","z":"ㄈㄨˋ","r":"肉","w":"腹部"},{"c":"殖","z":"ㄓˊ","r":"歹","w":"繁殖"},{"c":"顯","z":"ㄒㄧㄢˇ","r":"頁","w":"明顯"},{"c":"孵","z":"ㄈㄨ","r":"子","w":"孵化"},{"c":"歷","z":"ㄌㄧˋ","r":"止","w":"經歷"}],"reading":[{"t":"陸蟹媽媽的旅程","p":["每年夏天的夜晚，墾丁的陸蟹媽媽會從山林出發，穿過馬路，走到海邊釋放小寶寶。","可是馬路上車子很多，不少螃蟹被車輪壓傷。於是志工們拿著手電筒在路邊守護，提醒車子放慢速度，陪螃蟹媽媽安全過馬路。"],"qs":[{"id":"N6r0q0","q":"陸蟹媽媽要去哪裡？","o":["山上找食物","海邊釋放小寶寶","河邊洗澡","回到洞裡睡覺"],"a":1,"ev":"走到海邊釋放小寶寶"},{"id":"N6r0q1","q":"陸蟹媽媽在路上會遇到什麼危險？","o":["被鳥吃掉","被車輪壓傷","迷路","被雨淋"],"a":1,"ev":"不少螃蟹被車輪壓傷"},{"id":"N6r0q2","q":"志工們做了什麼？","o":["把螃蟹抓回家","提醒車子放慢速度，陪螃蟹過馬路","封住所有馬路","餵螃蟹吃東西"],"a":1,"ev":"提醒車子放慢速度，陪螃蟹媽媽安全過馬路"}]},{"t":"海龜保育營","p":["暑假，我參加了海龜保育營。志工說，小海龜孵化後會朝著有亮光的方向爬，如果岸邊燈光太亮，牠們就會迷路，爬不回大海。","所以晚上巡守沙灘時，我們關掉手電筒，也請遊客不要開閃光燈。看著小海龜一隻隻爬進浪花裡，我覺得保護生命真是一件很有意義的事。"],"qs":[{"id":"N6r1q0","q":"小海龜孵化後會往哪裡爬？","o":["往山上爬","朝著有亮光的方向爬","往黑暗的地方爬","原地不動"],"a":1,"ev":"會朝著有亮光的方向爬"},{"id":"N6r1q1","q":"岸邊燈光太亮會怎樣？","o":["小海龜長得更快","小海龜會迷路，爬不回大海","小海龜睡不著","沒有影響"],"a":1,"ev":"牠們就會迷路，爬不回大海"},{"id":"N6r1q2","q":"巡守沙灘時，「我們」怎麼做？","o":["打開所有燈","關掉手電筒，也請遊客不要開閃光燈","把小海龜裝進桶子","大聲叫小海龜"],"a":1,"ev":"我們關掉手電筒，也請遊客不要開閃光燈"}]}],"text":[{"id":"N6t0","q":"〈護送螃蟹過馬路〉的活動在哪裡展開？","o":["墾丁國家公園","太魯閣國家公園","陽明山國家公園","玉山國家公園"],"a":0,"why":"月圓之夜，作者在墾丁國家公園展開護蟹活動。"},{"id":"N6t1","q":"護蟹活動通常在什麼時候進行？","o":["月圓之日的傍晚","下雨的早上","冬天的中午","每天清晨"],"a":0,"why":"活動時間是月圓之日、太陽下山後的傍晚。"},{"id":"N6t2","q":"陸蟹媽媽為什麼要選在滿月的時候到海邊？","o":["滿月比較亮可以找食物","滿月時海水漲潮，可以少走一大段路","滿月時車子比較少","滿月時天氣比較冷"],"a":1,"why":"滿月時海水漲潮，陸蟹媽媽可以少走一大段路。"},{"id":"N6t3","q":"人們為什麼要發起「護送螃蟹過馬路」的活動？","o":["螃蟹的繁殖路線變成馬路，許多螃蟹命喪輪底","想抓螃蟹來吃","螃蟹太多擋住交通","想拍照留念"],"a":0,"why":"陸蟹繁殖後代的路線變成馬路，讓許多螃蟹與寶寶命喪輪底，所以人們採取護蟹行動。"},{"id":"N6t4","q":"陸蟹媽媽到了海邊之後，螃蟹寶寶怎麼了？","o":["被帶回山上","隨著海流漂離媽媽的懷抱","被人帶回家養","留在沙灘上"],"a":1,"why":"螃蟹寶寶隨著海流，漂離媽媽的懷抱。"},{"id":"N6t5","q":"〈護送螃蟹過馬路〉活動的目的是什麼？","o":["讓螃蟹得到更多食物","讓螃蟹順利到海邊繁衍後代","讓螃蟹返回山林中生活","讓螃蟹找到可替換的外殼"],"a":1,"why":"活動是協助陸蟹媽媽安全穿越馬路，到海邊釋放寶寶、繁衍後代。"},{"id":"N6t6","q":"〈護送螃蟹過馬路〉的主旨是什麼？","o":["螃蟹很好吃","藉由護蟹活動，提醒大家海洋生態保育的重要","晚上不要開車","螃蟹不需要人類幫忙"],"a":1,"why":"主旨：藉由「護送螃蟹過馬路」的活動，提醒大家海洋生態保育的重要性。"}],"phrase":[{"id":"N6p0","ex":"「為黑沉沉的夜幕帶來鮮麗的色彩」","o":["為乾巴巴的土地帶來豐沛的雨水","在樹枝上發出清脆的鳴叫","吃一口美味的便當","攪拌著咖啡色的咖哩"],"a":0,"why":"課本結構：為＋疊字形容詞（ＡＢＢ）＋的＋名詞＋動詞＋形容詞＋的＋名詞"},{"id":"N6p1","ex":"「為黑沉沉的夜幕帶來鮮麗的色彩」","o":["為圓滾滾的貓熊餵食鮮嫩的竹子","在溫暖的被窩中酣然入睡","值得參考的書籍","撒下嗆辣的胡椒"],"a":0,"why":"課本結構：為＋疊字形容詞（ＡＢＢ）＋的＋名詞＋動詞＋形容詞＋的＋名詞"},{"id":"N6p2","ex":"「阻斷川流的車潮」","o":["發送美味的便當","飄落著粉紅色的花瓣","在黑夜裡散發柔和的光芒","小心翼翼的拿出當天在商店購買的東西"],"a":0,"why":"課本結構：動詞＋形容詞＋的＋名詞"},{"id":"N6p3","ex":"「阻斷川流的車潮」","o":["撒下嗆辣的胡椒","為光禿禿的山頭種植大量的樹苗","在黑夜裡散發柔和的光芒","背著沉重且龐大的行李"],"a":0,"why":"課本結構：動詞＋形容詞＋的＋名詞"},{"id":"N6p4","ex":"「盡一分微小的力量」","o":["買一杯清涼的果汁","高潮迭起的故事情節","穿梭在一座古老的建築裡","談論得口沫橫飛"],"a":0,"why":"課本結構：動詞＋一＋單位量詞＋形容詞＋的＋名詞"},{"id":"N6p5","ex":"「盡一分微小的力量」","o":["吃一口美味的便當","值得造訪的景點","張張空白的稿紙","哼著輕快且逗趣的曲調"],"a":0,"why":"課本結構：動詞＋一＋單位量詞＋形容詞＋的＋名詞"},{"id":"N6p6","ex":"海洋是螃蟹的育兒室。","o":["小河是魚兒的遊樂園。","濃重的霧氣向外瀰漫。","翠綠的樹苗向上生長。","金黃的稻穗向下低垂。"],"a":0,"why":"課本結構：名詞（大自然）＋是＋名詞（人、動物、植物）＋的＋名詞。"},{"id":"N6p7","ex":"海洋是螃蟹的育兒室。","o":["珊瑚是小魚的避難所。","堅韌的植物向下扎根。","濃重的霧氣向外瀰漫。","金黃的稻穗向下低垂。"],"a":0,"why":"課本結構：名詞（大自然）＋是＋名詞（人、動物、植物）＋的＋名詞。"},{"id":"N6p8","ex":"……然後……","exl":"句型","pq":"下面哪一個句子使用了「……然後……」的句型？","o":["灰濛濛的天空颳起了風，然後雨就嘩啦啦的下了起來。","我們輸了比賽，教練沒有露出失望的表情，也沒有責罵我們，甚至笑著拍拍我們的肩膀，鼓勵大家繼續努力。","這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。","天上的雲朵變化萬千，時而像小狗，時而像小貓，真是有趣。"],"a":0,"why":"「……然後……」是連貫複句。正確的句子：灰濛濛的天空颳起了風，然後雨就嘩啦啦的下了起來。"},{"id":"N6p9","ex":"……然後……","exl":"句型","pq":"下面哪一個句子使用了「……然後……」的句型？","o":["美食旅遊節目的主持人詳細的介紹餐廳的料理，然後開始大快朵頤。","今天外頭一會兒下起綿綿細雨，一會兒豔陽高照，真是奇怪。","只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","舞臺上，演員時而做出滑稽動作，時而展現誇張的表情，逗得臺下的觀眾哈哈大笑。"],"a":0,"why":"「……然後……」是連貫複句。正確的句子：美食旅遊節目的主持人詳細的介紹餐廳的料理，然後開始大快朵頤。"},{"id":"N6p10","ex":"……然而……","exl":"句型","pq":"下面哪一個句子使用了「……然而……」的句型？","o":["奶奶雖已離開人世，然而她和藹的笑容永遠留存在我心中。","由於低溫與水氣旺盛，高山下起今年的第一場雪。","要是這個假日天氣轉晴，我們全家就會去山上露營。","今天的晚餐，不知道爸爸是買巷口自助餐的便當，還是小吃店的水餃和酸辣湯？"],"a":0,"why":"「……然而……」是轉折複句。正確的句子：奶奶雖已離開人世，然而她和藹的笑容永遠留存在我心中。"},{"id":"N6p11","ex":"……然而……","exl":"句型","pq":"下面哪一個句子使用了「……然而……」的句型？","o":["阿興特別提早出門，然而因為大塞車，他還是遲到了。","即使這件事情難以完成，小安也會盡最大的力量去做好它。","要是我前一天先整理好書包、早點上床睡覺，今天就不會慌慌張張的出門上學。","妹妹一會兒跑步，一會兒跳舞，真是體力過人。"],"a":0,"why":"「……然而……」是轉折複句。正確的句子：阿興特別提早出門，然而因為大塞車，他還是遲到了。"},{"id":"N6p12","ex":"讓……也讓……","exl":"句型","pq":"下面哪一個句子使用了「讓……也讓……」的句型？","o":["這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。","阿里山的日出美景聞名中外，因此吸引許多遊客慕名前往。","爸爸很重視子女的教育，尤其是品行，要求特別嚴格。","讀書不是為了讓父母開心，而是為了讓自己的未來有更多的選擇。"],"a":0,"why":"「讓……也讓……」是並列複句。正確的句子：這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。"},{"id":"N6p13","ex":"讓……也讓……","exl":"句型","pq":"下面哪一個句子使用了「讓……也讓……」的句型？","o":["養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。","阿興特別提早出門，然而因為大塞車，他還是遲到了。","由於低溫與水氣旺盛，高山下起今年的第一場雪。","如果每天練跑時，我們能培養良好的默契，那麼就有機會贏得這場比賽。"],"a":0,"why":"「讓……也讓……」是並列複句。正確的句子：養成運動的習慣，讓睡眠品質變得更好，也讓身體愈來愈健康。"},{"id":"N6p14","ex":"有些……有些……","exl":"句型","pq":"下面哪一個句子使用了「有些……有些……」的句型？","o":["一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。","妹妹因為生病，沒有食慾，也沒有精神，甚至連轉開瓶蓋的力氣都沒有。","只要同學間彼此關心、互相幫助，就可以建立良好的友誼。","由於阿虎的努力與堅持，造就他今日的輝煌成就。"],"a":0,"why":"「有些……有些……」是並列複句。正確的句子：一早的教室裡，有些同學在閱讀區安靜的看課外讀物，有些同學在益智區輕聲的玩桌遊。"},{"id":"N6p15","ex":"有些……有些……","exl":"句型","pq":"下面哪一個句子使用了「有些……有些……」的句型？","o":["百貨公司裡，有些人在服飾專櫃挑選保暖的外套，有些人在寢具專櫃選著保暖的棉被。","他們剛開始感情並不好，現在卻是無話不談的好朋友。","這間二手商店，讓獨居的老婆婆有了生活重心，也讓這些二手物品物盡其用。","奶奶雖已離開人世，然而她和藹的笑容永遠留存在我心中。"],"a":0,"why":"「有些……有些……」是並列複句。正確的句子：百貨公司裡，有些人在服飾專櫃挑選保暖的外套，有些人在寢具專櫃選著保暖的棉被。"}]},{"ver":"翰林","no":1,"title":"你我之間","sum":"由「立場」「距離」「合作」等短詩組成：各種物品有值得學習的特性；刺蝟愛氣球，用繩子帶氣球旅行保持距離；刷牙時牙刷和牙膏各有功能、相輔相成。談人與人的相處。","chars":[{"c":"堅","z":"ㄐㄧㄢ","r":"土","w":"堅持"},{"c":"耐","z":"ㄋㄞˋ","r":"而","w":"耐心"},{"c":"勞","z":"ㄌㄠˊ","r":"力","w":"勞動"},{"c":"元","z":"ㄩㄢˊ","r":"儿","w":"元宵"},{"c":"蝟","z":"ㄨㄟˋ","r":"虫","w":"刺蝟"},{"c":"擁","z":"ㄩㄥ","r":"手","w":"擁抱"},{"c":"繩","z":"ㄕㄥˊ","r":"糸","w":"繩子"},{"c":"刷","z":"ㄕㄨㄚ","r":"刀","w":"牙刷"},{"c":"膏","z":"ㄍㄠ","r":"肉","w":"牙膏"},{"c":"遭","z":"ㄗㄠ","r":"辵","w":"遭遇"},{"c":"係","z":"ㄒㄧˋ","r":"人","w":"關係"},{"c":"充","z":"ㄔㄨㄥ","r":"儿","w":"充滿"},{"c":"供","z":"ㄍㄨㄥ","r":"人","w":"提供"},{"c":"凸","z":"ㄊㄨˊ","r":"凵","w":"凸出"},{"c":"彼","z":"ㄅㄧˇ","r":"彳","w":"彼此"},{"c":"協","z":"ㄒㄧㄝˊ","r":"十","w":"協調"},{"c":"融","z":"ㄖㄨㄥˊ","r":"虫","w":"融化"},{"c":"洽","z":"ㄑㄧㄚˋ","r":"水","w":"融洽"},{"c":"諦","z":"ㄉㄧˋ","r":"言","w":"真諦"}],"reading":[{"t":"刺蝟的擁抱","p":["冬天到了，兩隻刺蝟想靠在一起取暖。可是牠們一靠近，身上的刺就扎得彼此好痛。","試了好幾次，牠們終於找到一個剛剛好的距離：既能感受到對方的溫暖，又不會刺傷彼此。原來相處的真諦，就是互相協調，找到讓兩個人都舒服的距離。"],"qs":[{"id":"H1r0q0","q":"兩隻刺蝟為什麼想靠在一起？","o":["吵架","取暖","找食物","比賽"],"a":1,"ev":"想靠在一起取暖"},{"id":"H1r0q1","q":"牠們一靠近，發生了什麼事？","o":["馬上睡著","身上的刺扎得彼此好痛","變得更冷","互相擁抱"],"a":1,"ev":"身上的刺就扎得彼此好痛"},{"id":"H1r0q2","q":"文章說相處的真諦是什麼？","o":["越靠近越好","互相協調，找到讓兩個人都舒服的距離","各自生活最好","不要交朋友"],"a":1,"ev":"就是互相協調，找到讓兩個人都舒服的距離"}]},{"t":"不一樣的好朋友","p":["小晴喜歡安靜看書，小宇卻是個停不下來的運動高手。一開始，兩人常常覺得對方很奇怪。","有一次分組報告，小晴負責查資料，小宇負責上台說明，結果合作得十分融洽。他們發現，個性不同不是缺點，只要互相包容，就能讓彼此變得更好。"],"qs":[{"id":"H1r1q0","q":"小晴喜歡做什麼？","o":["打球","安靜看書","唱歌","畫畫"],"a":1,"ev":"小晴喜歡安靜看書"},{"id":"H1r1q1","q":"分組報告時，兩人怎麼分工？","o":["都去查資料","小晴查資料，小宇上台說明","小宇查資料，小晴上台","都不想做"],"a":1,"ev":"小晴負責查資料，小宇負責上台說明"},{"id":"H1r1q2","q":"他們最後發現了什麼？","o":["個性不同就不能做朋友","只要互相包容，就能讓彼此變得更好","運動比讀書重要","要找一樣的朋友"],"a":1,"ev":"只要互相包容，就能讓彼此變得更好"}]}],"text":[{"id":"H1t0","q":"〈你我之間〉中，作者認為牙膏和牙刷哪一個比較重要？","o":["牙刷","牙膏","都重要","都不重要"],"a":2,"why":"刷牙時，牙刷和牙膏各有功能，相輔相成，所以兩者都重要。"},{"id":"H1t1","q":"〈你我之間〉是用什麼形式寫成的？","o":["短詩","書信","劇本","日記"],"a":0,"why":"課文由「立場」「距離」「合作」幾首短詩組成。"},{"id":"H1t2","q":"〈你我之間〉第一首「立場」，寫原子筆、相機、抹布、海報，是想說明什麼？","o":["這些東西都很貴","每樣東西都有值得學習的特性","這些東西都沒有用","東西越多越好"],"a":1,"why":"「立場」寫出原子筆、相機、抹布、海報等物品，各有值得學習的特性。"},{"id":"H1t3","q":"〈你我之間〉第二首「距離」中，刺蝟怎麼帶著氣球去旅行？","o":["把氣球抱在懷裡","用繩子帶著氣球","把氣球放進背包","請別人幫忙拿"],"a":1,"why":"刺蝟愛氣球，卻怕刺破它，於是用繩子帶氣球去旅行，保持適當的距離。"},{"id":"H1t4","q":"〈你我之間〉第三首「合作」，是用什麼來說明合作？","o":["鉛筆和橡皮擦","刷牙時的牙刷和牙膏","碗和筷子","鞋子和襪子"],"a":1,"why":"「合作」寫刷牙時，牙刷和牙膏各有功能，相輔相成。"},{"id":"H1t5","q":"〈你我之間〉想告訴我們什麼？","o":["朋友越少越好","人和人相處要欣賞彼此的特性、保持距離、互相合作","要比較誰比較重要","只能和個性一樣的人做朋友"],"a":1,"why":"詩人藉短詩寫出對人際關係的觀察：欣賞別人、保持適當距離、互相合作。"}],"phrase":[{"id":"H1p0","ex":"「原子筆告訴鉛筆要堅定」","o":["汽車告訴機車要穩重","突破人體的極限","一間食品與服飾的專賣店","用電腦計算複雜的數字"],"a":0,"why":"課本結構：（甲事物）＋告訴＋（乙事物）＋要＋形容詞（怎麼樣）"},{"id":"H1p1","ex":"「原子筆告訴鉛筆要堅定」","o":["機車告訴汽車要靈巧","表演中不可或缺的道具","這封信讓表姐非常感動","用相機拍攝美麗的彩虹"],"a":0,"why":"課本結構：（甲事物）＋告訴＋（乙事物）＋要＋形容詞（怎麼樣）"},{"id":"H1p2","ex":"「刷牙時沒有人會去計較／牙刷和牙膏／誰重要」","o":["寫字時沒有人會去計較／紙和筆／誰重要","這封信讓表姐非常感動","突破人體的極限","大家在公園都盪過秋千"],"a":0,"why":"課本結構：（做什麼事）時＋沒有人會去計較／（甲事物）＋和＋（乙事物）／誰重要"},{"id":"H1p3","ex":"「刷牙時沒有人會去計較／牙刷和牙膏／誰重要」","o":["吃藥時沒有人會去計較／水和藥丸／誰重要","收穫遠遠超過大家的付出","電視中武藝高強的神祕俠客","機車告訴汽車要靈巧"],"a":0,"why":"課本結構：（做什麼事）時＋沒有人會去計較／（甲事物）＋和＋（乙事物）／誰重要"},{"id":"H1p4","ex":"「鉛筆」告訴「原子筆」要「隨和」","o":["「橡皮擦」告訴「尺」要「細心」","「橡皮擦」告訴「尺」要「鉛筆」","告訴「橡皮擦」「尺」要「細心」","「細心」告訴「尺」要「橡皮擦」"],"a":0,"why":"「文具＋告訴＋文具＋要＋個性（形容詞）」。"}]},{"ver":"翰林","no":2,"title":"風起，大家都在","sum":"作者接兒子放學，聽見校園縈繞直笛聲；孩子們從獨奏、齊奏到分工合奏，音樂像從不同方向吹來的風。孤單時想像自己是一陣微風，加入風的隊伍，就有更強的威力。談合作。","chars":[{"c":"笛","z":"ㄉㄧˊ","r":"竹","w":"直笛"},{"c":"奏","z":"ㄗㄡˋ","r":"大","w":"演奏"},{"c":"簡","z":"ㄐㄧㄢˇ","r":"竹","w":"簡單"},{"c":"旋","z":"ㄒㄩㄢˊ","r":"方","w":"旋律"},{"c":"律","z":"ㄌㄩˋ","r":"彳","w":"規律"},{"c":"縈","z":"ㄧㄥˊ","r":"糸","w":"縈繞"},{"c":"繞","z":"ㄖㄠˋ","r":"糸","w":"圍繞"},{"c":"梢","z":"ㄕㄠ","r":"木","w":"樹梢"},{"c":"廊","z":"ㄌㄤˊ","r":"广","w":"走廊"},{"c":"熟","z":"ㄕㄡˊ","r":"火","w":"熟練"},{"c":"悉","z":"ㄒㄧ","r":"心","w":"熟悉"},{"c":"諧","z":"ㄒㄧㄝˊ","r":"言","w":"和諧"},{"c":"階","z":"ㄐㄧㄝ","r":"阜","w":"階段"},{"c":"須","z":"ㄒㄩ","r":"頁","w":"必須"},{"c":"絮","z":"ㄒㄩˋ","r":"糸","w":"柳絮"},{"c":"伍","z":"ㄨˇ","r":"人","w":"隊伍"},{"c":"威","z":"ㄨㄟ","r":"女","w":"威力"}],"reading":[{"t":"直笛隊的練習","p":["直笛隊準備參加比賽，一開始每個人各吹各的，笛聲零零亂亂，一點也不好聽。","老師請大家先學會自己的部分，再慢慢配合彼此的節奏。練習了好幾個星期，大家的旋律終於變得和諧動聽。比賽那天，悠揚的笛聲在禮堂裡繚繞不去。"],"qs":[{"id":"H2r0q0","q":"剛開始練習時，笛聲聽起來怎麼樣？","o":["非常好聽","零零亂亂，一點也不好聽","沒有聲音","只有一個人在吹"],"a":1,"ev":"笛聲零零亂亂，一點也不好聽"},{"id":"H2r0q1","q":"老師請大家怎麼練習？","o":["大家自己隨便吹","先學會自己的部分，再配合彼此的節奏","只練最難的地方","比誰吹得大聲"],"a":1,"ev":"先學會自己的部分，再慢慢配合彼此的節奏"},{"id":"H2r0q2","q":"比賽那天的笛聲如何？","o":["斷斷續續","悠揚的笛聲在禮堂裡繚繞不去","大家都吹錯","沒人聽見"],"a":1,"ev":"悠揚的笛聲在禮堂裡繚繞不去"}]},{"t":"大隊接力","p":["運動會的大隊接力是全班一起參加的比賽。練習時，小凱總是急著衝出去，接棒時常常掉棒。","隊長提醒他：「接力不是一個人跑得快就好，必須大家的腳步配合好。」小凱聽了，開始放慢起跑，專心看著隊友的手。比賽那天，全班順利跑完，大家都說：這是我們一起贏來的。"],"qs":[{"id":"H2r1q0","q":"練習時，小凱出了什麼問題？","o":["跑得太慢","急著衝出去，接棒時常常掉棒","不想參加","跑錯跑道"],"a":1,"ev":"接棒時常常掉棒"},{"id":"H2r1q1","q":"隊長提醒小凱什麼？","o":["要跑得更快","大家的腳步必須配合好","不要再跑了","換別人跑"],"a":1,"ev":"必須大家的腳步配合好"},{"id":"H2r1q2","q":"比賽後，大家覺得這次的成果是怎麼來的？","o":["小凱一個人贏的","我們一起贏來的","運氣好","對手太弱"],"a":1,"ev":"這是我們一起贏來的"}]}],"text":[{"id":"H2t0","q":"〈風起，大家都在〉中，作者在什麼情況下觀察學生練習直笛？","o":["參加音樂會","接兒子放學","到學校上班","看電視轉播"],"a":1,"why":"作者接兒子放學，觀察學生練習直笛吹奏。"},{"id":"H2t1","q":"〈風起，大家都在〉中，校園裡到處縈繞著什麼聲音？","o":["上課鐘聲","練習直笛吹奏的聲音","同學的笑聲","風吹樹葉的聲音"],"a":1,"why":"校園裡，到處縈繞著練習直笛吹奏的聲音。"},{"id":"H2t2","q":"〈風起，大家都在〉中，孩子們的直笛練習經過哪幾個階段？","o":["獨奏→伴奏→合奏","合奏→獨奏→齊奏","獨奏→齊奏→合奏","齊奏→合奏→獨奏"],"a":2,"why":"孩子們熟悉旋律後開始練習齊奏，最後分工演奏（合奏）。"},{"id":"H2t3","q":"齊奏的時候，要注意什麼？","o":["自己吹得越快越好","必須等候別的同學，或者要跟緊一點","吹得越大聲越好","不用管別人"],"a":1,"why":"齊奏時必須等候別的同學，或者要跟緊一點。"},{"id":"H2t4","q":"分工演奏時，作者覺得音樂像什麼？","o":["下雨的聲音","從不同方向吹來的風","海浪拍岸","火車開過"],"a":1,"why":"分工演奏時，音樂就像從不同方向吹來的風，將落葉、花絮都飄起來。"},{"id":"H2t5","q":"作者希望孩子未來感覺孤單時，可以怎麼想？","o":["自己一個人最好","想像自己是一陣微風，加入風的隊伍","不要再吹直笛","趕快回家"],"a":1,"why":"未來感覺孤單時，想像自己是一陣微風，加入風的隊伍，能產生更強的威力。"}],"phrase":[{"id":"H2p0","ex":"「用直笛吹奏簡單的旋律」","o":["用電腦計算複雜的數字","立下全國冠軍的成績","突破人體的極限","這句話讓爸爸相當開心"],"a":0,"why":"課本結構：用＋名詞（物品）＋動詞（動作）＋形容詞（怎麼樣）＋的＋名詞（事物）"},{"id":"H2p1","ex":"「用直笛吹奏簡單的旋律」","o":["用相機拍攝美麗的彩虹","大家在公園都盪過秋千","看出魔術的破綻","一項天文與科學的大發現"],"a":0,"why":"課本結構：用＋名詞（物品）＋動詞（動作）＋形容詞（怎麼樣）＋的＋名詞（事物）"},{"id":"H2p2","ex":"「許多人在學校都吹過直笛」","o":["我們在市場都看過攤販","一項天文與科學的大發現","故事中心地善良的可愛姑娘","用電腦計算複雜的數字"],"a":0,"why":"課本結構：（誰）＋在＋名詞（地點）＋都＋動詞（動作）＋過＋名詞（事物）"},{"id":"H2p3","ex":"「許多人在學校都吹過直笛」","o":["大家在公園都盪過秋千","用電腦計算複雜的數字","皮鞋告訴運動鞋要端莊","一間食品與服飾的專賣店"],"a":0,"why":"課本結構：（誰）＋在＋名詞（地點）＋都＋動詞（動作）＋過＋名詞（事物）"},{"id":"H2p4","ex":"「零亂」變成「和諧」","o":["「爭吵」變成「和好」","「爭吵」變成「爭吵」","變成「爭吵」「和好」","「爭吵」變成「吃飯」"],"a":0,"why":"「A 變成 B」，A 和 B 意思相反，表示變化。"},{"id":"H2p5","ex":"「樹梢」的「微風」","o":["「窗邊」的「陽光」","「窗邊」的「很溫暖」","「窗邊」「陽光」的","「跑步」的「陽光」"],"a":0,"why":"「地方＋的＋自然景物」。"},{"id":"H2p6","ex":"有的……有些……","exl":"句型","pq":"下面哪一個句子使用了「有的……有些……」的句型？","o":["螢火蟲有的在天上，像是天空中的星星；有些在地面，像是地上的鑽石。","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","他雖非富裕家庭出身，卻沒有放棄追求夢想。","你這樣好學的態度，連老師都會感到佩服，更何況是同班同學呢！"],"a":0,"why":"「有的……有些……」是並列複句。"}]},{"ver":"翰林","no":3,"title":"廉頗與藺相如","sum":"藺相如立功升官，廉頗不滿想羞辱他；藺相如以國家為重處處退讓。廉頗知道後負荊請罪，兩人成為肝膽相照的朋友。","chars":[{"c":"璧","z":"ㄅㄧˋ","r":"玉","w":"和氏璧"},{"c":"歸","z":"ㄍㄨㄟ","r":"止","w":"歸還"},{"c":"諸","z":"ㄓㄨ","r":"言","w":"諸侯"},{"c":"侯","z":"ㄏㄡˊ","r":"人","w":"王侯"},{"c":"挺","z":"ㄊㄧㄥˇ","r":"手","w":"挺身"},{"c":"官","z":"ㄍㄨㄢ","r":"宀","w":"官位"},{"c":"軍","z":"ㄐㄩㄣ","r":"車","w":"將軍"},{"c":"羞","z":"ㄒㄧㄡ","r":"羊","w":"羞辱"},{"c":"辱","z":"ㄖㄨˇ","r":"辰","w":"恥辱"},{"c":"懦","z":"ㄋㄨㄛˋ","r":"心","w":"懦弱"},{"c":"恥","z":"ㄔˇ","r":"心","w":"羞恥"},{"c":"權","z":"ㄑㄩㄢˊ","r":"木","w":"權勢"},{"c":"勢","z":"ㄕˋ","r":"力","w":"氣勢"},{"c":"攻","z":"ㄍㄨㄥ","r":"攴","w":"攻打"},{"c":"君","z":"ㄐㄩㄣ","r":"口","w":"國君"},{"c":"鎮","z":"ㄓㄣˋ","r":"金","w":"鎮定"},{"c":"愧","z":"ㄎㄨㄟˋ","r":"心","w":"慚愧"},{"c":"荊","z":"ㄐㄧㄥ","r":"艸","w":"荊條"},{"c":"肝","z":"ㄍㄢ","r":"肉","w":"肝膽"}],"reading":[{"t":"誤會之後","p":["小芸以為同學拿走了她的鉛筆盒，在全班面前大聲指責對方，讓對方覺得很羞辱。","後來，她在書包最底下找到了鉛筆盒。小芸覺得十分慚愧，立刻到同學面前誠心道歉，並且說：「以後我會先確認清楚，再說話。」"],"qs":[{"id":"H3r0q0","q":"小芸以為發生了什麼事，就大聲指責同學？","o":["同學打她","同學拿走了她的鉛筆盒","同學說她壞話","同學考得比她好"],"a":1,"ev":"以為同學拿走了她的鉛筆盒"},{"id":"H3r0q1","q":"鉛筆盒最後在哪裡找到？","o":["同學的抽屜","書包最底下","垃圾桶","老師桌上"],"a":1,"ev":"在書包最底下找到了鉛筆盒"},{"id":"H3r0q2","q":"小芸從這件事學到什麼？","o":["不要帶鉛筆盒","先確認清楚，再說話","不用道歉","要更大聲說話"],"a":1,"ev":"以後我會先確認清楚，再說話"}]},{"t":"隊長的退讓","p":["班際籃球賽前，阿哲和阿翔都想當隊長，兩人爭得面紅耳赤。最後老師選了阿翔，阿哲很不服氣，練球時故意不傳球給他。","阿翔沒有生氣，反而請阿哲負責指揮防守。他說：「我們吵架，球隊就輸了；比起誰當隊長，全隊贏球更重要。」阿哲聽了很慚愧，從此兩人合作無間。"],"qs":[{"id":"H3r1q0","q":"阿哲不服氣時做了什麼？","o":["退出球隊","練球時故意不傳球給阿翔","向老師抗議","請阿翔吃飯"],"a":1,"ev":"練球時故意不傳球給他"},{"id":"H3r1q1","q":"阿翔怎麼回應阿哲？","o":["跟他吵架","請阿哲負責指揮防守","不讓他上場","告訴老師"],"a":1,"ev":"反而請阿哲負責指揮防守"},{"id":"H3r1q2","q":"阿翔認為什麼比當隊長更重要？","o":["自己得分","全隊贏球","被老師稱讚","當上隊長"],"a":1,"ev":"比起誰當隊長，全隊贏球更重要"}]}],"text":[{"id":"H3t0","q":"〈廉頗與藺相如〉中，廉頗為什麼對藺相如不滿？","o":["藺相如搶了他的房子","藺相如多次立功、快速升官","藺相如罵他","趙王討厭廉頗"],"a":1,"why":"藺相如多次建立奇功而升官，廉頗不滿他快速升官，想要羞辱他。"},{"id":"H3t1","q":"〈廉頗與藺相如〉中，藺相如為什麼要躲開廉頗？","o":["討厭他","趙王勸他","以國家安全為重，避免衝突","畏懼他的權勢"],"a":2,"why":"藺相如跟部下說明，躲避廉頗是以國家安全為重，並不是怕他。"},{"id":"H3t2","q":"藺相如說：「連秦王都不怕了，怎麼會怕廉頗將軍呢？」這句話表示什麼？","o":["他其實很怕廉頗","他躲開廉頗，不是因為害怕","他想跟廉頗比武","他不尊重秦王"],"a":1,"why":"藺相如連秦王都不怕，躲開廉頗是為了國家，不是因為膽小。"},{"id":"H3t3","q":"廉頗知道藺相如的用心後，做了什麼事？","o":["向趙王告狀","負荊請罪","辭官回家","找藺相如比武"],"a":1,"why":"廉頗知道真相後，背著荊條向藺相如請罪。"},{"id":"H3t4","q":"「負荊請罪」的意思是什麼？","o":["背著柴去賣錢","主動向人認錯、請求原諒","責怪別人","為國家打仗"],"a":1,"why":"廉頗背著荊條請藺相如責打，後來用來比喻主動認錯道歉。"},{"id":"H3t5","q":"廉頗和藺相如和好之後，兩人成為什麼樣的朋友？","o":["點頭之交","肝膽相照的朋友","酒肉朋友","一般同事"],"a":1,"why":"廉頗和藺相如成為肝膽相照的朋友。"}],"phrase":[{"id":"H3p0","ex":"「立下「完璧歸趙」的奇功」","o":["立下全國冠軍的成績","用相機拍攝美麗的彩虹","一項天文與科學的大發現","這封信讓表姐非常感動"],"a":0,"why":"課本結構：立下＋形容詞（怎樣）＋的＋名詞（表現）"},{"id":"H3p1","ex":"「立下「完璧歸趙」的奇功」","o":["立下世界最快的紀錄","收穫遠遠超過大家的付出","我們在市場都看過攤販","賣場中不可或缺的產品"],"a":0,"why":"課本結構：立下＋形容詞（怎樣）＋的＋名詞（表現）"},{"id":"H3p2","ex":"「這件事讓廉頗十分不滿」","o":["這句話讓爸爸相當開心","我們在市場都看過攤販","看出魔術的破綻","立下世界最快的紀錄"],"a":0,"why":"課本結構：這＋名詞（什麼）＋讓＋名詞（誰）＋副詞（如何）＋形容詞（情緒）"},{"id":"H3p3","ex":"「這件事讓廉頗十分不滿」","o":["這封信讓表姐非常感動","皮鞋告訴運動鞋要端莊","產量遠遠超過老闆的期望","突破人體的極限"],"a":0,"why":"課本結構：這＋名詞（什麼）＋讓＋名詞（誰）＋副詞（如何）＋形容詞（情緒）"},{"id":"H3p4","ex":"連「秦王」都不「怕」了，怎麼會「怕廉頗將軍」呢？","o":["連「老虎」都不「怕」了，怎麼會「怕小貓」呢？","連「小貓」都不「怕」了，怎麼會「怕老虎」呢？","連「老虎」都「怕」了，怎麼會「怕小貓」呢？","連「老虎」都不「怕」了，所以「怕小貓」"],"a":0,"why":"前面是比較厲害的，後面是比較不厲害的，用反問加強語氣。"},{"id":"H3p5","ex":"每到……時，……就……，以免……","exl":"句型","pq":"下面哪一個句子使用了「每到……時，……就……，以免……」的句型？","o":["每到出門時，我就隨身帶著雨傘，以免臨時下雨被淋溼。","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？","如果有更多人一起奉獻愛心，那麼弱勢族群就能得到更好的照顧。"],"a":0,"why":"「每到……時，……就……，以免……」是目的複句。"},{"id":"H3p6","ex":"每到……時，……就……，以免……","exl":"句型","pq":"下面哪一個句子使用了「每到……時，……就……，以免……」的句型？","o":["每到要上朝時，藺相如就假裝生病，以免遇見廉頗。","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？","你這樣好學的態度，連老師都會感到佩服，更何況是同班同學呢！"],"a":0,"why":"「每到……時，……就……，以免……」是目的複句。"},{"id":"H3p7","ex":"連……更何況……","exl":"句型","pq":"下面哪一個句子使用了「連……更何況……」的句型？","o":["你這樣好學的態度，連老師都會感到佩服，更何況是同班同學呢！","每到出門時，我就隨身帶著雨傘，以免臨時下雨被淋溼。","不論是紙箱、竹筷或舊衣服，都可以成為製作美術作品的材料。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？"],"a":0,"why":"「連……更何況……」是遞進複句。"},{"id":"H3p8","ex":"如果……不是正好……","exl":"句型","pq":"下面哪一個句子使用了「如果……不是正好……」的句型？","o":["如果今天停班停課，不是正好讓爸爸可以休息一下嗎？","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","螢火蟲有的在天上，像是天空中的星星；有些在地面，像是地上的鑽石。","你這樣好學的態度，連老師都會感到佩服，更何況是同班同學呢！"],"a":0,"why":"「如果……不是正好……」是假設複句。"}]},{"ver":"翰林","no":4,"title":"來場快樂的桌遊","sum":"說明文：桌遊店興起，桌遊是在桌上進行的不插電遊戲，寓教於樂，能排解無聊、拉近距離、提升心智、培養耐心；玩桌遊要適可而止，不要患得患失。","chars":[{"c":"筍","z":"ㄙㄨㄣˇ","r":"竹","w":"竹筍"},{"c":"廳","z":"ㄊㄧㄥ","r":"广","w":"客廳"},{"c":"眾","z":"ㄓㄨㄥˋ","r":"目","w":"大眾"},{"c":"據","z":"ㄐㄩˋ","r":"手","w":"根據"},{"c":"逐","z":"ㄓㄨˊ","r":"辵","w":"逐漸"},{"c":"棋","z":"ㄑㄧˊ","r":"木","w":"下棋"},{"c":"撲","z":"ㄆㄨ","r":"手","w":"撲克牌"},{"c":"富","z":"ㄈㄨˋ","r":"宀","w":"豐富"},{"c":"純","z":"ㄔㄨㄣˊ","r":"糸","w":"單純"},{"c":"寓","z":"ㄩˋ","r":"宀","w":"寓言"},{"c":"超","z":"ㄔㄠ","r":"走","w":"超過"},{"c":"炒","z":"ㄔㄠˇ","r":"火","w":"炒菜"},{"c":"氛","z":"ㄈㄣ","r":"气","w":"氣氛"},{"c":"齡","z":"ㄌㄧㄥˊ","r":"齒","w":"年齡"},{"c":"技","z":"ㄐㄧˋ","r":"手","w":"技巧"},{"c":"例","z":"ㄌㄧˋ","r":"人","w":"例如"},{"c":"憶","z":"ㄧˋ","r":"心","w":"回憶"},{"c":"培","z":"ㄆㄟˊ","r":"土","w":"培養"},{"c":"患","z":"ㄏㄨㄢˋ","r":"心","w":"患得患失"}],"reading":[{"t":"一起玩桌遊","p":["桌遊是在桌上進行的遊戲，例如下棋、撲克牌，都屬於桌遊。玩的人不分年齡，大家圍著桌子就能同樂。","根據一些老師的觀察，玩桌遊能培養思考能力，也能練習遵守規則。更重要的是，大家一邊玩一邊聊天，家人和朋友的感情也會逐漸變好。"],"qs":[{"id":"H4r0q0","q":"下列哪一個是文章舉的桌遊例子？","o":["躲避球","下棋","溜滑梯","跳繩"],"a":1,"ev":"例如下棋、撲克牌，都屬於桌遊"},{"id":"H4r0q1","q":"玩桌遊能培養哪些能力？","o":["跑步速度","思考能力，也能練習遵守規則","唱歌技巧","畫畫能力"],"a":1,"ev":"玩桌遊能培養思考能力，也能練習遵守規則"},{"id":"H4r0q2","q":"文章說玩桌遊「更重要」的好處是什麼？","o":["可以贏錢","家人和朋友的感情逐漸變好","可以不用寫功課","可以一個人玩"],"a":1,"ev":"家人和朋友的感情也會逐漸變好"}]},{"t":"輸了也開心","p":["弟弟第一次玩桌遊就輸了，他氣得把卡片丟在地上。爸爸沒有責罵他，而是拿起卡片，陪他一起回想剛才哪一步走錯了。","第二局，弟弟想得更仔細，雖然還是輸了，卻笑著說：「好好玩，再來一局！」爸爸說，玩桌遊最重要的不是輸贏，而是一起思考、一起歡笑的氣氛。"],"qs":[{"id":"H4r1q0","q":"弟弟第一次輸了以後做了什麼？","o":["笑著再來一局","氣得把卡片丟在地上","跑去睡覺","向爸爸道謝"],"a":1,"ev":"他氣得把卡片丟在地上"},{"id":"H4r1q1","q":"爸爸怎麼處理？","o":["大聲責罵弟弟","陪他一起回想剛才哪一步走錯了","把桌遊收起來","讓弟弟贏"],"a":1,"ev":"陪他一起回想剛才哪一步走錯了"},{"id":"H4r1q2","q":"爸爸認為玩桌遊最重要的是什麼？","o":["一定要贏","一起思考、一起歡笑的氣氛","玩得越久越好","買很多桌遊"],"a":1,"ev":"而是一起思考、一起歡笑的氣氛"}]}],"text":[{"id":"H4t0","q":"〈來場快樂的桌遊〉中，玩桌遊應該有什麼心態？","o":["不把輸贏看得太重","患得患失","過度沉迷","不和別人合作"],"a":0,"why":"玩桌遊要適可而止，不要患得患失，才能樂在其中。"},{"id":"H4t1","q":"作者從什麼現象，看出桌遊受到國人喜愛？","o":["學校規定要玩","桌遊店和主題餐廳興起，桌遊進口總值上升","電視天天廣告","桌遊價格越來越便宜"],"a":1,"why":"桌遊店和主題餐廳興起，桌遊進口總值上升，顯示桌遊受國人喜愛。"},{"id":"H4t2","q":"課文中，「桌遊」的定義是什麼？","o":["要插電的電動遊戲","在桌上或平面進行的不插電遊戲","在戶外進行的運動","用手機玩的遊戲"],"a":1,"why":"桌遊是在桌上或平面進行的不插電遊戲。"},{"id":"H4t3","q":"課文說現在的桌遊有什麼特色？","o":["寓教於樂","只能一個人玩","價格很貴","規則很少"],"a":0,"why":"現在的桌遊具有寓教於樂的特色。"},{"id":"H4t4","q":"下列哪一項「不是」課文提到玩桌遊的好處？","o":["拉近距離","培養耐心","加速反應","增強體力"],"a":3,"why":"課文提到桌遊能排解無聊、製造歡樂、拉近距離、提升心智、加速反應和培養耐心，沒有提到增強體力。"},{"id":"H4t5","q":"〈來場快樂的桌遊〉屬於哪一種文章？","o":["說明文","童詩","劇本","寓言"],"a":0,"why":"課文依觀察、定義、好處、提醒分段介紹桌遊，是說明文。"}],"phrase":[{"id":"H4p0","ex":"「好處遠遠超過你我的想像」","o":["收穫遠遠超過大家的付出","立下全國冠軍的成績","汽車告訴機車要穩重","這句話讓爸爸相當開心"],"a":0,"why":"課本結構：名詞（事物）＋遠遠超過＋名詞（誰）＋的＋名詞（事物）"},{"id":"H4p1","ex":"「好處遠遠超過你我的想像」","o":["產量遠遠超過老闆的期望","立下世界最快的紀錄","一間食品與服飾的專賣店","皮鞋告訴運動鞋要端莊"],"a":0,"why":"課本結構：名詞（事物）＋遠遠超過＋名詞（誰）＋的＋名詞（事物）"},{"id":"H4p2","ex":"「打破年齡的界線」","o":["突破人體的極限","立下世界最快的紀錄","這封信讓表姐非常感動","一項天文與科學的大發現"],"a":0,"why":"課本結構：動詞（動作）＋名詞（事物）＋的＋名詞（情況）"},{"id":"H4p3","ex":"「打破年齡的界線」","o":["看出魔術的破綻","電視中武藝高強的神祕俠客","這句話讓爸爸相當開心","用相機拍攝美麗的彩虹"],"a":0,"why":"課本結構：動詞（動作）＋名詞（事物）＋的＋名詞（情況）"},{"id":"H4p4","ex":"由於……加上……，所以……","exl":"句型","pq":"下面哪一個句子使用了「由於……加上……，所以……」的句型？","o":["由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","每到要上朝時，藺相如就假裝生病，以免遇見廉頗。","螢火蟲有的在天上，像是天空中的星星；有些在地面，像是地上的鑽石。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？"],"a":0,"why":"「由於……加上……，所以……」是因果複句。"},{"id":"H4p5","ex":"不論……就……","exl":"句型","pq":"下面哪一個句子使用了「不論……就……」的句型？","o":["不論是從哪個國家來的人們，一起參加露營活動，很快就能成為朋友。","每到要上朝時，藺相如就假裝生病，以免遇見廉頗。","每到出門時，我就隨身帶著雨傘，以免臨時下雨被淋溼。","手機雖然功能多又方便，但也要注意使用時間和姿勢，以免過度使用而傷害視力。"],"a":0,"why":"「不論……就……」是條件複句。"},{"id":"H4p6","ex":"雖然……但……，以免……","exl":"句型","pq":"下面哪一個句子使用了「雖然……但……，以免……」的句型？","o":["手機雖然功能多又方便，但也要注意使用時間和姿勢，以免過度使用而傷害視力。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？","如果有更多人一起奉獻愛心，那麼弱勢族群就能得到更好的照顧。","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。"],"a":0,"why":"「雖然……但……，以免……」是轉折複句。"}]},{"ver":"翰林","no":5,"title":"超級英雄","sum":"銳邦看完英雄電影，想幫同學搜尋影片，爸爸說明分享未經授權的影片雖是好意卻違法。最後找同學再去看一次電影，尊重著作權。","chars":[{"c":"英","z":"ㄧㄥ","r":"艸","w":"英雄"},{"c":"采","z":"ㄘㄞˇ","r":"釆","w":"神采"},{"c":"揚","z":"ㄧㄤˊ","r":"手","w":"表揚"},{"c":"媲","z":"ㄆㄧˋ","r":"女","w":"媲美"},{"c":"搜","z":"ㄙㄡ","r":"手","w":"搜尋"},{"c":"劇","z":"ㄐㄩˋ","r":"刀","w":"戲劇"},{"c":"螢","z":"ㄧㄥˊ","r":"虫","w":"螢幕"},{"c":"拯","z":"ㄓㄥˇ","r":"手","w":"拯救"},{"c":"預","z":"ㄩˋ","r":"頁","w":"預告"},{"c":"脈","z":"ㄇㄞˋ","r":"肉","w":"山脈"},{"c":"院","z":"ㄩㄢˋ","r":"阜","w":"電影院"},{"c":"授","z":"ㄕㄡˋ","r":"手","w":"授權"},{"c":"犯","z":"ㄈㄢˋ","r":"犬","w":"侵犯"},{"c":"吔","z":"˙ㄧㄝ","r":"口","w":"好吔"},{"c":"違","z":"ㄨㄟˊ","r":"辵","w":"違反"},{"c":"司","z":"ㄙ","r":"口","w":"公司"},{"c":"潤","z":"ㄖㄨㄣˋ","r":"水","w":"利潤"},{"c":"愕","z":"ㄜˋ","r":"心","w":"驚愕"},{"c":"創","z":"ㄔㄨㄤˋ","r":"刀","w":"創作"}],"reading":[{"t":"借來的照片","p":["小美做報告時，從網路上找到一張很漂亮的照片，想直接放進自己的作品裡。","老師提醒她：「照片也是別人的創作，使用前要先看清楚能不能使用，或請作者授權，並且註明出處。」小美聽了，找到一張開放使用的照片，也在旁邊寫上作者的名字。"],"qs":[{"id":"H5r0q0","q":"小美原本想怎麼使用網路上的照片？","o":["自己重新拍一張","直接放進自己的作品裡","印出來賣","傳給朋友"],"a":1,"ev":"想直接放進自己的作品裡"},{"id":"H5r0q1","q":"老師提醒小美使用照片前要做什麼？","o":["什麼都不用做","看清楚能不能使用，或請作者授權，並註明出處","把照片改顏色","只用一半"],"a":1,"ev":"或請作者授權，並且註明出處"},{"id":"H5r0q2","q":"小美最後怎麼做？","o":["不做報告了","找開放使用的照片，並寫上作者的名字","偷偷用原來的照片","請同學幫她畫"],"a":1,"ev":"也在旁邊寫上作者的名字"}]},{"t":"電影的連結","p":["阿凱在網路上看到一部剛上映的電影，有人把整部片偷偷錄下來分享。阿凱很想把連結傳給同學。","哥哥說：「拍電影的人付出了很多心血，偷錄、分享沒有授權的影片，都是侵犯著作權的行為。」阿凱想了想，決定週末和家人一起到電影院觀賞。"],"qs":[{"id":"H5r1q0","q":"網路上的那部電影是怎麼來的？","o":["電影公司免費提供","有人偷偷錄下來分享","阿凱自己拍的","學校老師放的"],"a":1,"ev":"有人把整部片偷偷錄下來分享"},{"id":"H5r1q1","q":"哥哥認為分享那個連結是什麼行為？","o":["熱心助人","侵犯著作權的行為","很聰明的做法","沒有關係"],"a":1,"ev":"都是侵犯著作權的行為"},{"id":"H5r1q2","q":"阿凱最後決定怎麼做？","o":["偷偷傳給同學","和家人一起到電影院觀賞","自己錄一部","不看電影了"],"a":1,"ev":"決定週末和家人一起到電影院觀賞"}]}],"text":[{"id":"H5t0","q":"〈超級英雄〉中，銳邦為什麼要搜尋影片？","o":["要交作業","看完英雄電影後，答應幫大家搜尋影片","爸爸叫他找","想自己拍電影"],"a":1,"why":"銳邦看完英雄電影，答應幫大家搜尋影片。"},{"id":"H5t1","q":"〈超級英雄〉中，銳邦找不到影片時，向誰求助？","o":["老師","爸爸","同學","警察"],"a":1,"why":"銳邦找不到影片，向爸爸求助。"},{"id":"H5t2","q":"〈超級英雄〉中，下列哪一種行為會觸犯著作權法？","o":["和家人分享趣事","分享未授權影片的連結","送同學生日卡","寫日記"],"a":1,"why":"分享未經授權的影片，雖然是好意，卻是違法的。"},{"id":"H5t3","q":"銳邦知道分享未經授權的影片後，明白了什麼？","o":["只要是好意就沒關係","雖然是好意，卻是違法的","分享越多越好","爸爸不懂網路"],"a":1,"why":"銳邦才知道分享未經授權影片，雖然是好意，卻是違法的。"},{"id":"H5t4","q":"銳邦最後接受了爸爸什麼建議？","o":["偷偷分享就好","找同學再去看一次電影","不要再看電影","自己錄影片"],"a":1,"why":"銳邦接受爸爸的建議，找同學再去看一次電影，既能一起討論，也能幫助電影商拍出更多好電影。"},{"id":"H5t5","q":"〈超級英雄〉主要想告訴我們什麼？","o":["影片越多人看越好","要尊重別人的創作，不侵犯著作權","網路上的東西都可以隨便用","超級英雄最厲害"],"a":1,"why":"課文提醒我們使用別人的作品要經過授權，尊重著作權。"}],"phrase":[{"id":"H5p0","ex":"「電影中無所不能的超級英雄」","o":["電視中武藝高強的神祕俠客","用相機拍攝美麗的彩虹","運動鞋告訴皮鞋要活潑","立下全國冠軍的成績"],"a":0,"why":"課本結構：名詞（事物）＋中＋形容詞一＋的＋形容詞二＋名詞（人物）"},{"id":"H5p1","ex":"「電影中無所不能的超級英雄」","o":["故事中心地善良的可愛姑娘","皮鞋告訴運動鞋要端莊","這封信讓表姐非常感動","收穫遠遠超過大家的付出"],"a":0,"why":"課本結構：名詞（事物）＋中＋形容詞一＋的＋形容詞二＋名詞（人物）"},{"id":"H5p2","ex":"如果……那麼……","exl":"句型","pq":"下面哪一個句子使用了「如果……那麼……」的句型？","o":["如果有更多人一起奉獻愛心，那麼弱勢族群就能得到更好的照顧。","手機雖然功能多又方便，但也要注意使用時間和姿勢，以免過度使用而傷害視力。","每到要上朝時，藺相如就假裝生病，以免遇見廉頗。","他雖非富裕家庭出身，卻沒有放棄追求夢想。"],"a":0,"why":"「如果……那麼……」是假設複句。"},{"id":"H5p3","ex":"不論……都……","exl":"句型","pq":"下面哪一個句子使用了「不論……都……」的句型？","o":["不論是紙箱、竹筷或舊衣服，都可以成為製作美術作品的材料。","如果今天停班停課，不是正好讓爸爸可以休息一下嗎？","由於氣候變化大，加上棲息地減少，所以許多動物面臨絕滅的危機。","手機雖然功能多又方便，但也要注意使用時間和姿勢，以免過度使用而傷害視力。"],"a":0,"why":"「不論……都……」是條件複句。"}]},{"ver":"翰林","no":6,"title":"世足賽的贏家","sum":"說明文：世足賽國家隊穿臺灣製造的環保球衣，用回收寶特瓶經清洗、切碎、熔化、抽絲紡織而成，節省能源、減少汙染，結合運動時尚與環保科技。","chars":[{"c":"盃","z":"ㄅㄟ","r":"皿","w":"獎盃"},{"c":"缺","z":"ㄑㄩㄝ","r":"缶","w":"缺少"},{"c":"席","z":"ㄒㄧˊ","r":"巾","w":"出席"},{"c":"塑","z":"ㄙㄨˋ","r":"土","w":"塑膠"},{"c":"廢","z":"ㄈㄟˋ","r":"广","w":"廢棄"},{"c":"質","z":"ㄓˊ","r":"貝","w":"品質"},{"c":"飲","z":"ㄧㄣˇ","r":"食","w":"飲料"},{"c":"掩","z":"ㄧㄢˇ","r":"手","w":"掩埋"},{"c":"焚","z":"ㄈㄣˊ","r":"火","w":"焚化"},{"c":"熔","z":"ㄖㄨㄥˊ","r":"火","w":"熔化"},{"c":"抽","z":"ㄔㄡ","r":"手","w":"抽絲"},{"c":"紡","z":"ㄈㄤˇ","r":"糸","w":"紡織"},{"c":"極","z":"ㄐㄧˊ","r":"木","w":"積極"},{"c":"複","z":"ㄈㄨˋ","r":"衣","w":"複雜"},{"c":"織","z":"ㄓ","r":"糸","w":"編織"},{"c":"耗","z":"ㄏㄠˋ","r":"耒","w":"消耗"},{"c":"至","z":"ㄓˋ","r":"至","w":"甚至"},{"c":"摩","z":"ㄇㄛˊ","r":"手","w":"摩擦"},{"c":"屆","z":"ㄐㄧㄝˋ","r":"尸","w":"首屆"}],"reading":[{"t":"寶特瓶變衣服","p":["一個用過的寶特瓶，其實可以變成衣服！回收的寶特瓶要先經過清洗、切碎，再熔化、抽絲，才能紡織成布料。","這樣做不但減少了需要焚化或掩埋的垃圾，也能降低能源的消耗。所以，喝完飲料後，記得把寶特瓶洗乾淨再回收。"],"qs":[{"id":"H6r0q0","q":"回收的寶特瓶要經過哪些步驟才能紡織成布料？","o":["直接剪開縫起來","清洗、切碎，再熔化、抽絲","曬乾後染色","磨成粉"],"a":1,"ev":"要先經過清洗、切碎，再熔化、抽絲"},{"id":"H6r0q1","q":"這樣做有什麼好處？","o":["讓垃圾變多","減少需要焚化或掩埋的垃圾，也降低能源消耗","讓衣服變貴","讓寶特瓶不能用"],"a":1,"ev":"減少了需要焚化或掩埋的垃圾，也能降低能源的消耗"},{"id":"H6r0q2","q":"文章提醒我們喝完飲料後要怎麼做？","o":["直接丟進垃圾桶","把寶特瓶洗乾淨再回收","把寶特瓶燒掉","埋進土裡"],"a":1,"ev":"記得把寶特瓶洗乾淨再回收"}]},{"t":"舊衣新生命","p":["社區設置了舊衣回收箱，鼓勵大家把不穿的衣服捐出來。完整的衣服整理後送給需要的人，破損的衣服則會被做成抹布或其他材料。","一開始參加的人不多，後來社區主委在公告欄說明回收的好處，越來越多居民響應，回收箱很快就裝滿了。"],"qs":[{"id":"H6r1q0","q":"破損的衣服會被怎麼處理？","o":["直接丟掉","做成抹布或其他材料","送給別人穿","燒掉"],"a":1,"ev":"破損的衣服則會被做成抹布或其他材料"},{"id":"H6r1q1","q":"後來為什麼有越來越多居民響應？","o":["可以領獎金","社區主委在公告欄說明回收的好處","衣服太多放不下","有人強迫"],"a":1,"ev":"社區主委在公告欄說明回收的好處"},{"id":"H6r1q2","q":"完整的衣服會被怎麼處理？","o":["做成抹布","整理後送給需要的人","拿去燒掉","做成紙"],"a":1,"ev":"完整的衣服整理後送給需要的人"}]}],"text":[{"id":"H6t0","q":"〈世足賽的贏家〉中，臺灣製的環保塑料球衣，原料取自什麼？","o":["鋁罐","寶特瓶","紙張","廢電池"],"a":1,"why":"環保球衣是用回收寶特瓶製成的再生纖維做的。"},{"id":"H6t1","q":"小明讀完〈世足賽的贏家〉後，對臺灣研發環保球衣十分佩服。身為足球迷的他，比較可能做哪些事？\n甲、拿出五百萬元支持紡織業研發球衣\n乙、告訴外國人世足賽選手穿的球衣是臺灣製造\n丙、加入環保志工團體，做寶特瓶回收\n丁、喝完飲料後，隨手丟棄寶特瓶","o":["甲乙","乙丙","丙丁","甲丁"],"a":1,"why":"甲不符合小學生能力，丁是不環保的行為；乙、丙才是合理又可行的做法。"},{"id":"H6t2","q":"根據〈世足賽的贏家〉，臺灣紡織業者在研發環保球衣的過程中，展現了什麼精神？","o":["半途而廢","自私自利","有頭無尾","永不放棄"],"a":3,"why":"回收寶特瓶做成球衣步驟繁複，業者仍持續研發，展現永不放棄的精神。"},{"id":"H6t3","q":"根據〈世足賽的贏家〉，下面哪一個「不是」環保球衣的特色？","o":["輕薄透氣","沒有彈性","吸溼排汗","低摩擦"],"a":1,"why":"環保球衣彈性佳，「沒有彈性」不是它的特色。"},{"id":"H6t4","q":"在〈世足賽的贏家〉中，下面哪一個是寶特瓶要回收再利用的原因之一？","o":["無法重複使用","可以任意丟棄，對環境沒有影響","掩埋時容易分解","焚化時會造成空氣汙染"],"a":3,"why":"寶特瓶不容易分解，焚化又會汙染空氣，所以要回收再利用。"},{"id":"H6t5","q":"根據〈世足賽的贏家〉，環保球衣有很多優點，下列哪一項「錯誤」？","o":["減少寶特瓶造成的環境問題，符合節能減碳","色彩明亮醒目、質感輕薄透氣，展現運動時尚","方便耐用、繽紛耀眼，能讓球員展現高超球技","具備吸溼、排汗、富彈性、低摩擦等特色"],"a":2,"why":"課文介紹的是輕薄透氣、吸溼排汗、彈性佳等特色，沒有提到「方便耐用」。"},{"id":"H6t6","q":"根據〈世足賽的贏家〉，下列哪一個排列順序正確？\n甲、臺灣研發的球衣獲得好評\n乙、參加世足賽的國家代表隊身穿臺灣製的球衣\n丙、臺灣研發的球衣能減少能源消耗\n丁、球衣的材質與研發過程","o":["丁丙乙甲","丁乙甲丙","乙丁丙甲","乙丙丁甲"],"a":0,"why":"先有材質與研發過程（丁）→能減少能源消耗（丙）→各國代表隊穿上（乙）→獲得好評（甲）。"},{"id":"H6t7","q":"根據〈世足賽的贏家〉，做一件環保球衣大約需要幾個寶特瓶？","o":["1到2個","8到13個","50個","100個"],"a":1,"why":"課文說明一件環保球衣大約需要8到13個寶特瓶。"},{"id":"H6t8","q":"〈世足賽的贏家〉中，環保球衣對環境有什麼好處？","o":["讓球員跑得更快","節省能源消耗，減少水和空氣汙染","讓球衣更便宜","讓比賽更好看"],"a":1,"why":"環保球衣節省能源消耗，減少水和空氣汙染，改善環境問題。"}],"phrase":[{"id":"H6p0","ex":"「生活中不可或缺的容器」","o":["表演中不可或缺的道具","這封信讓表姐非常感動","收穫遠遠超過大家的付出","皮鞋告訴運動鞋要端莊"],"a":0,"why":"課本結構：名詞（情境）＋中＋不可或缺的＋名詞（事物）"},{"id":"H6p1","ex":"「生活中不可或缺的容器」","o":["賣場中不可或缺的產品","看出魔術的破綻","運動鞋告訴皮鞋要活潑","用相機拍攝美麗的彩虹"],"a":0,"why":"課本結構：名詞（情境）＋中＋不可或缺的＋名詞（事物）"},{"id":"H6p2","ex":"「一場球技與時尚的嘉年華」","o":["一間食品與服飾的專賣店","大家在公園都盪過秋千","看出魔術的破綻","這封信讓表姐非常感動"],"a":0,"why":"課本結構：一＋量詞＋名詞（事物一）＋與＋名詞（事物二）＋的＋名詞（什麼）"},{"id":"H6p3","ex":"「一場球技與時尚的嘉年華」","o":["一項天文與科學的大發現","故事中心地善良的可愛姑娘","這封信讓表姐非常感動","賣場中不可或缺的產品"],"a":0,"why":"課本結構：一＋量詞＋名詞（事物一）＋與＋名詞（事物二）＋的＋名詞（什麼）"},{"id":"H6p4","ex":"雖非……卻沒有……","exl":"句型","pq":"下面哪一個句子使用了「雖非……卻沒有……」的句型？","o":["他雖非富裕家庭出身，卻沒有放棄追求夢想。","你這樣好學的態度，連老師都會感到佩服，更何況是同班同學呢！","如果有更多人一起奉獻愛心，那麼弱勢族群就能得到更好的照顧。","不論是從哪個國家來的人們，一起參加露營活動，很快就能成為朋友。"],"a":0,"why":"「雖非……卻沒有……」是轉折複句。"}]}];
+
+/* ================= 基本資料 ================= */
+const VERS = ['南一','翰林'];
+const TYPES = ['zhuyin','radical','word','phrase','text','reading'];
+const CHAR_KINDS = ['zhuyin','radical','word'];
+const TYPE_LABELS = {zhuyin:'注音', radical:'部首', word:'字形（看注音選字）', phrase:'照樣寫短語／句型', text:'課文理解', reading:'閱讀理解'};
+const TYPE_SHORT = {zhuyin:'注音', radical:'部首', word:'字形', phrase:'照樣寫', text:'課文理解', reading:'閱讀', weak:'錯題卷'};
+const NUM = '一二三四五六';
+const LKEY = (v,n)=> v+n;
+const LBY = {}; LESSONS.forEach(l=>{ LBY[LKEY(l.ver,l.no)] = l; l.extra = []; });
+const KEY = (v,n,k,id)=> [v,n,k,id].join('|');
+
+const RADICAL_POOL = Array.from(new Set(LESSONS.flatMap(l=>l.chars.map(c=>c.r))));
+const CHARS_BY_VER = {};
+LESSONS.forEach(l=>{ (CHARS_BY_VER[l.ver] = CHARS_BY_VER[l.ver]||[]).push(...l.chars); });
+const zyBase = z => z.replace(/[ˊˇˋ˙]/g,'');
+
+function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+function sample(arr,n){ return shuffle(arr).slice(0,n); }
+function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text!==undefined) e.textContent = text; return e; }
+function uniq(a){ return Array.from(new Set(a)); }
+function normName(s){ return (s||'').trim().replace(/\s+/g,''); }
+function mcq(correct, pool){
+  const ds = sample(uniq(pool.filter(x=>x!==correct)), 3);
+  const options = shuffle([correct, ...ds]);
+  return {options, answer: options.indexOf(correct)};
+}
+function shuffledOpts(o, a){ const idx = shuffle(o.map((_,i)=>i)); return {options: idx.map(i=>o[i]), answer: idx.indexOf(a)}; }
+const allReading = l => l.reading.concat(l.extra);
+
+/* ================= 出題 ================= */
+// 生字題有正向、反向兩種問法：id 以 R 開頭代表反向（看注音／部首選字）
+function charQ(l, c, kind, rev){
+  const id = (rev?'R':'') + c.c;
+  const base = {kind, ver:l.ver, no:l.no, title:l.title, id, char:c.c, zy:c.z, rev:!!rev};
+  const vchars = CHARS_BY_VER[l.ver];
+  if(kind==='zhuyin' && !rev){
+    let pool = l.chars.map(x=>x.z);
+    const sameBase = vchars.map(x=>x.z).filter(z=>zyBase(z)===zyBase(c.z) && z!==c.z);
+    const {options, answer} = mcq(c.z, sameBase.length ? uniq(sameBase).slice(0,1).concat(pool) : pool.concat(vchars.map(x=>x.z)));
+    return {...base, big:c.c, prompt:`「${c.c}」的注音是？`, options, answer, ansText:c.z};
+  }
+  if(kind==='zhuyin' && rev){
+    const pool = shuffle(vchars.filter(x=>x.z!==c.z)).map(x=>x.c);
+    const options = shuffle([c.c, ...uniq(pool).slice(0,3)]);
+    return {...base, big:c.z, prompt:`哪一個字讀作「${c.z}」？`, options, answer: options.indexOf(c.c), ansText:c.c};
+  }
+  if(kind==='radical' && !rev){
+    const {options, answer} = mcq(c.r, RADICAL_POOL);
+    return {...base, big:c.c, prompt:`「${c.c}」的部首是？`, options, answer, ansText:c.r+'部'};
+  }
+  if(kind==='radical' && rev){
+    const pool = shuffle(vchars.filter(x=>x.r!==c.r)).map(x=>x.c);
+    const options = shuffle([c.c, ...uniq(pool).slice(0,3)]);
+    return {...base, big:c.r+'部', prompt:`哪一個字的部首是「${c.r}」？`, options, answer: options.indexOf(c.c), ansText:c.c};
+  }
+  // word：看注音選字
+  const pool = vchars.filter(x=>x.c!==c.c);
+  const homo = pool.filter(x=>zyBase(x.z)===zyBase(c.z)).map(x=>x.c);
+  const sameRad = pool.filter(x=>x.r===c.r).map(x=>x.c);
+  const ranked = uniq([...shuffle(homo), ...shuffle(sameRad), ...shuffle(pool.map(x=>x.c))]).filter(x=>x!==c.c);
+  const options = shuffle([c.c, ...ranked.slice(0,3)]);
+  const i = c.w.indexOf(c.c);
+  const blanked = c.w.slice(0,i) + '＿' + c.w.slice(i+1);
+  return {...base, big:blanked, blanked, prompt:`「${blanked}」的＿要填哪一個字？（讀音：${c.z}）`, options, answer: options.indexOf(c.c), ansText:c.c, word:c.w};
+}
+function readingQ(l, p, q){
+  const {options, answer} = shuffledOpts(q.o, q.a);
+  return {kind:'reading', ver:l.ver, no:l.no, title:l.title, id:q.id, ptitle:p.t, paras:p.p, ev:q.ev, prompt:q.q, options, answer, ansText:q.o[q.a]};
+}
+function textQ(l, q){ const {options, answer} = shuffledOpts(q.o, q.a);
+  return {kind:'text', ver:l.ver, no:l.no, title:l.title, id:q.id, prompt:q.q, why:q.why, options, answer, ansText:q.o[q.a]}; }
+function phraseQ(l, q){ const {options, answer} = shuffledOpts(q.o, q.a);
+  return {kind:'phrase', ver:l.ver, no:l.no, title:l.title, id:q.id, ex:q.ex, exl:q.exl||'例句', why:q.why, prompt:q.pq || '照樣寫：下面哪一個和例句的結構一樣？', options, answer, ansText:q.o[q.a]}; }
+
+function makeFromKey(key){
+  const [v, nS, k, id] = key.split('|'); const n = +nS; const l = LBY[LKEY(v,n)]; if(!l) return null;
+  if(CHAR_KINDS.includes(k)){ const rev = id[0]==='R'; const c = l.chars.find(x=>x.c===id.replace(/^R/,'')); return c ? charQ(l, c, k, rev && k!=='word') : null; }
+  if(k==='reading'){ for(const p of allReading(l)){ const q = p.qs.find(x=>x.id===id); if(q) return readingQ(l,p,q); } return null; }
+  if(k==='text'){ const q = l.text.find(x=>x.id===id); return q ? textQ(l,q) : null; }
+  if(k==='phrase'){ const q = l.phrase.find(x=>x.id===id); return q ? phraseQ(l,q) : null; }
+  return null;
+}
+// 題庫：每一題是 {key, kind, make}
+function buildPool(lessons, types){
+  const byKind = {}; types.forEach(t=>byKind[t]=[]);
+  lessons.forEach(l=>{
+    CHAR_KINDS.forEach(k=>{ if(!byKind[k]) return;
+      l.chars.forEach(c=>{
+        byKind[k].push({key:KEY(l.ver,l.no,k,c.c), kind:k, make:()=>charQ(l,c,k,false)});
+        if(k!=='word') byKind[k].push({key:KEY(l.ver,l.no,k,'R'+c.c), kind:k, make:()=>charQ(l,c,k,true)});
+      });
+    });
+    if(byKind.reading) allReading(l).forEach(p=>p.qs.forEach(q=>byKind.reading.push({key:KEY(l.ver,l.no,'reading',q.id), kind:'reading', make:()=>readingQ(l,p,q)})));
+    if(byKind.text) l.text.forEach(q=>byKind.text.push({key:KEY(l.ver,l.no,'text',q.id), kind:'text', make:()=>textQ(l,q)}));
+    if(byKind.phrase) l.phrase.forEach(q=>byKind.phrase.push({key:KEY(l.ver,l.no,'phrase',q.id), kind:'phrase', make:()=>phraseQ(l,q)}));
+  });
+  return byKind;
+}
+// 排序：老師指定的弱題 → 沒做過的 → 做過的（越久以前做的越前面）
+function orderEntries(entries, seen, focus){
+  const f = focus ? new Set(focus) : new Set();
+  const a = [], b = [], c = [];
+  shuffle(entries).forEach(e=>{ if(f.has(e.key)) a.push(e); else if(!seen.has(e.key)) b.push(e); else c.push(e); });
+  c.sort((x,y)=> seen.get(x.key) - seen.get(y.key));
+  return a.concat(b, c);
+}
+// 各大題輪流抽，混合時才不會被生字題洗版
+function drawBalanced(byKind, n, seen, focus){
+  const bags = {}; Object.keys(byKind).forEach(k=>bags[k] = orderEntries(byKind[k], seen, focus));
+  const out = []; const usedChar = new Set();
+  let kinds = shuffle(Object.keys(bags).filter(k=>bags[k].length));
+  while(out.length<n && kinds.length){
+    for(const k of kinds){
+      if(out.length>=n) break;
+      let e = bags[k].shift();
+      // 同一個字不要在同一份卷子裡正反問兩次
+      while(e && CHAR_KINDS.includes(k) && usedChar.has(k+e.key.split('|')[3].replace(/^R/,''))) e = bags[k].shift();
+      if(!e) continue;
+      if(CHAR_KINDS.includes(k)) usedChar.add(k+e.key.split('|')[3].replace(/^R/,''));
+      out.push(e.make());
+    }
+    kinds = kinds.filter(k=>bags[k].length);
+  }
+  return shuffle(out);
+}
+
+/* ================= 狀態 ================= */
+const state = { selVer:new Set(['南一']), selLesson:new Set([1,2,3,4,5,6]), mode:'mix', selType:new Set(['zhuyin']),
+  count:30, queue:[], idx:0, score:0, misses:[], results:[], locked:false, studentName:'', assign:null };
+let TEST = false;
+let dbNS = null, userNS = null, canManage = false;
+let ASSIGNMENTS = [], BANK = [];
+
+(async function initCloud(){
+  try{ dbNS = await BR.use('db'); }catch(e){ dbNS = null; }
+  try{ userNS = await BR.use('user'); }catch(e){ userNS = null; }
+  try{
+    if(!userNS) canManage = true;
+    else { const o = await userNS.isOwner(); const e = await userNS.canEdit(); canManage = !!(o||e); }
+  }catch(e){ canManage = false; }
+  if(dbNS){
+    try{
+      dbNS.collection('assignments').onSnapshot(s=>{ ASSIGNMENTS = s.docs.map(d=>({_id:d.id, ...d.data()})); paintAssignBox(); if(!document.getElementById('dashboard').hidden) renderStudentTable(); }, ()=>{});
+      dbNS.collection('bank').onSnapshot(s=>{ BANK = s.docs.map(d=>({_id:d.id, ...d.data()})); mergeBank(); paintBankStatus(); }, ()=>{});
+    }catch(e){}
+  }
+  paintBankStatus();
+  if(!document.getElementById('dashboard').hidden){ loadDashboard(); }
+})();
+
+function mergeBank(){
+  LESSONS.forEach(l=>l.extra = []);
+  BANK.forEach(b=>{ const l = LBY[LKEY(b.ver,b.no)]; if(!l || !Array.isArray(b.p) || !Array.isArray(b.qs)) return;
+    l.extra.push({t:b.t, p:b.p, ai:true, _id:b._id, qs:b.qs.map((q,i)=>({...q, id:`B${b._id}q${i}`}))}); });
+}
+
+const selTypes = ()=> state.mode==='mix' ? TYPES.slice() : TYPES.filter(t=>state.selType.has(t));
+
+/* ================= 設定頁 ================= */
+function renderChips(container, items, selSet, labelFn, onToggle){
+  container.innerHTML = '';
+  items.forEach(item=>{
+    const chip = el('button','chip', labelFn(item)); chip.type = 'button';
+    if(selSet.has(item)) chip.classList.add('on');
+    chip.addEventListener('click', ()=>{ if(selSet.has(item)) selSet.delete(item); else selSet.add(item); chip.classList.toggle('on'); onToggle && onToggle(); });
+    container.appendChild(chip);
+  });
+}
+function paintSetup(){
+  renderChips(document.getElementById('verChips'), VERS, state.selVer, v=>v+'版', ttSelPaint);
+  renderChips(document.getElementById('lessonChips'), [1,2,3,4,5,6], state.selLesson, n=>'第'+NUM[n-1]+'課', ttSelPaint);
+  renderChips(document.getElementById('typeChips'), TYPES, state.selType, t=>TYPE_LABELS[t], ttSelPaint);
+  document.getElementById('modeMix').classList.toggle('on', state.mode==='mix');
+  document.getElementById('modePick').classList.toggle('on', state.mode==='pick');
+  document.getElementById('typePick').hidden = state.mode!=='pick';
+  ttSelPaint();
+}
+function showOnly(id){
+  ['setup','quizArea','resultArea','dashboard'].forEach(x=>document.getElementById(x).hidden = (x!==id));
+  document.getElementById('assignBox').hidden = (id!=='setup') || !myAssignments().length;
+  window.scrollTo(0,0);
+}
+
+function init(){
+  paintSetup();
+  document.getElementById('modeMix').addEventListener('click', ()=>{ state.mode='mix'; paintSetup(); });
+  document.getElementById('modePick').addEventListener('click', ()=>{ state.mode='pick'; paintSetup(); });
+  document.getElementById('allLessonBtn').addEventListener('click', ()=>{
+    if(state.selLesson.size===6) state.selLesson.clear(); else [1,2,3,4,5,6].forEach(n=>state.selLesson.add(n));
+    paintSetup();
+  });
+  const cr = document.getElementById('countRange');
+  cr.value = state.count; document.getElementById('countVal').textContent = state.count;
+  cr.addEventListener('input', ()=>{ state.count = +cr.value; document.getElementById('countVal').textContent = state.count; ttSelPaint(); });
+  document.getElementById('startBtn').addEventListener('click', ()=>{ state.assign = null; startQuiz(); });
+  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+  document.getElementById('redoBtn').addEventListener('click', ()=>{ if(TEST){ ttEnd(); return; } state.assign = null; showOnly('setup'); paintAssignBox(); });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{ if(state.assign){ startAssignPart(state.assign.id, state.assign.kind); } else startQuiz(); });
+  const ni = document.getElementById('nameInput');
+  try{ const s = localStorage.getItem('quizStudentName'); if(s) ni.value = s; }catch(e){}
+  ni.addEventListener('input', ()=>{ try{ localStorage.setItem('quizStudentName', ni.value); }catch(e){} document.getElementById('formErr').textContent=''; paintAssignBox(); });
+  document.getElementById('dashBtn').addEventListener('click', ()=>{ try{ location.hash = 'teacher'; }catch(e){} openDashboard(); });
+  document.getElementById('closeDashBtn').addEventListener('click', ()=>{ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} showOnly('setup'); paintAssignBox(); });
+  document.getElementById('dashFilter').addEventListener('input', renderRecordTable);
+  document.getElementById('ttStartBtn').addEventListener('click', ttStart);
+  document.getElementById('ttBankBtn').addEventListener('click', qbOpen);
+  document.getElementById('aiGenBtn').addEventListener('click', aiGenerate);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ const o = document.querySelector('.ov'); if(o) o.remove(); } });
+  if(location.hash === '#teacher') openDashboard(); else paintAssignBox();
+}
+
+/* ================= 學生：老師出的加強練習 ================= */
+function myAssignments(){
+  const n = normName(document.getElementById('nameInput').value);
+  if(!n) return [];
+  return ASSIGNMENTS.filter(a=>a.name===n && a.status!=='done').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+}
+function paintAssignBox(){
+  const box = document.getElementById('assignBox'); if(!box) return;
+  const list = myAssignments();
+  box.innerHTML = '';
+  box.hidden = !list.length || document.getElementById('setup').hidden;
+  list.forEach(a=>{
+    box.appendChild(el('div','sec-label', `📌 老師幫你準備的加強練習（${a.date||''}）`));
+    box.appendChild(el('p','hint', `範圍：${(a.vers||[]).join('、')}　${LESSON_LABEL(a.lessons)}。每一部分做完都會記錄成績，可以分好幾次完成。`));
+    const grid = el('div','part-grid');
+    (a.parts||[]).forEach(p=>{
+      const done = a.progress && a.progress[p.k];
+      const b = el('button','part-btn'+(done?' done':'')); b.type = 'button';
+      b.append(el('b','', TYPE_SHORT[p.k]), el('span','', done ? `✔ 已完成 ${done.score}/${done.total}` : `${p.n} 題`));
+      b.addEventListener('click', ()=>startAssignPart(a._id, p.k));
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
+  });
+}
+async function startAssignPart(id, kind){
+  const a = ASSIGNMENTS.find(x=>x._id===id); if(!a) return;
+  const part = (a.parts||[]).find(p=>p.k===kind); if(!part) return;
+  state.assign = {id, kind};
+  if(kind==='weak'){ await startQuiz({keys: (a.focus||{}).weak || [], count: part.n}); return; }
+  await startQuiz({lessons: LESSONS.filter(l=>(a.vers||[]).includes(l.ver) && (a.lessons||[]).includes(l.no)), types:[kind], count: part.n, focus: (a.focus||{})[kind] || []});
+}
+
+/* ================= 作答 ================= */
+async function loadSeen(name){
+  const seen = new Map();
+  if(!dbNS || !name) return seen;
+  try{
+    const snap = await dbNS.collection('attempts').where('name','==',name).get();
+    snap.docs.forEach(d=>{ const r = d.data(); (r.items||[]).forEach(x=>{ const k = KEY(x.v,x.n,x.k,x.id); seen.set(k, Math.max(seen.get(k)||0, r.timestamp||0)); }); });
+  }catch(e){}
+  return seen;
+}
+async function startQuiz(opt){
+  opt = opt || {};
+  const err = document.getElementById('formErr'); err.textContent = '';
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name && !TEST){ err.textContent = '請先輸入姓名，老師才查得到你的記錄。'; document.getElementById('nameInput').focus(); return false; }
+  const lessons = opt.lessons || LESSONS.filter(l=>state.selVer.has(l.ver) && state.selLesson.has(l.no));
+  const types = opt.types || selTypes();
+  if(!opt.keys && (!lessons.length || !types.length)){
+    const m = '請至少選一個版本、一個課次' + (state.mode==='pick' ? '，以及一種大題' : '') + '。';
+    if(TEST) ttToast(m); else err.textContent = m;
+    return false;
+  }
+  state.studentName = TEST ? '老師試玩' : name;
+  const seen = TEST ? new Map() : await loadSeen(name);
+  state.queue = opt.keys ? opt.keys.slice(0, opt.count || 40).map(makeFromKey).filter(Boolean)
+                         : drawBalanced(buildPool(lessons, types), opt.count || state.count, seen, opt.focus);
+  if(!state.queue.length){ (TEST?ttToast:(m=>err.textContent=m))('選的範圍沒有題目，請換一下設定。'); return false; }
+  state.idx = 0; state.score = 0; state.misses = []; state.results = [];
+  state.liveId = TEST ? null : ('L' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
+  state.liveStart = Date.now();
+  document.getElementById('saveStatus').textContent = '';
+  showOnly('quizArea');
+  pushLive('doing');
+  ttPaint();
+  renderQuestion();
+  return true;
+}
+
+function renderPassage(q){
+  const box = el('div','q-passage');
+  box.appendChild(el('div','ptitle', q.ptitle));
+  q.paras.forEach(t=>{ const p = el('p'); p.textContent = t; box.appendChild(p); });
+  return box;
+}
+function highlightEvidence(box, ev){
+  if(!box || !ev) return false;
+  for(const p of box.querySelectorAll('p')){
+    const t = p.textContent; const i = t.indexOf(ev);
+    if(i<0) continue;
+    p.textContent = '';
+    p.append(document.createTextNode(t.slice(0,i)));
+    const m = el('mark','hl', ev); p.append(m);
+    p.append(document.createTextNode(t.slice(i+ev.length)));
+    try{ m.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){}
+    return true;
+  }
+  return false;
+}
+
+function renderQuestion(){
+  state.locked = false;
+  const total = state.queue.length, q = state.queue[state.idx];
+  document.getElementById('progressText').textContent = (state.assign ? '加強練習・' : '') + `第 ${state.idx+1} / ${total} 題`;
+  document.getElementById('scoreText').textContent = `目前得分：${state.score}`;
+  document.getElementById('progressBar').style.width = (state.idx/total*100)+'%';
+  const tagRow = document.getElementById('tagRow'); tagRow.innerHTML = '';
+  tagRow.append(el('span','tag', q.ver+'版'), el('span','tag', '第'+NUM[q.no-1]+'課　'+q.title), el('span','tag', TYPE_LABELS[q.kind]));
+  const body = document.getElementById('qBody'); body.innerHTML = '';
+  if(q.big) body.appendChild(el('div','q-char'+(q.big.length>3?' long':''), q.big));
+  if(q.kind==='reading') body.appendChild(renderPassage(q));
+  if(q.kind==='phrase'){ const b = el('div','ex-box'); b.appendChild(el('small','', q.exl)); b.append(document.createTextNode(q.ex)); body.appendChild(b); }
+  body.appendChild(el('div','q-text', q.prompt));
+  const list = el('div','opt-list');
+  q.options.forEach((opt,i)=>{
+    const b = el('button','opt'); b.type = 'button';
+    b.append(el('span','letter','ABCD'[i]), el('span','txt', opt));
+    b.addEventListener('click', ()=>selectOption(i, list));
+    list.appendChild(b);
+  });
+  body.appendChild(list);
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('nextBtn').hidden = true;
+}
+
+function selectOption(i, list){
+  if(state.locked) return;
+  state.locked = true;
+  const q = state.queue[state.idx];
+  const ok = i === q.answer;
+  [...list.children].forEach((b,k)=>{ b.classList.add('locked'); if(k===q.answer) b.classList.add('correct'); else if(k===i) b.classList.add('wrong'); });
+  state.results.push({q, ok, chosen: q.options[i]});
+  pushLive('doing');
+  if(ok) state.score++; else state.misses.push(q);
+  const fb = document.getElementById('feedback'); fb.innerHTML = '';
+  const box = el('div','feedback '+(ok?'good':'bad'), ok ? '答對了！' : `答錯了，正確答案是「${q.options[q.answer]}」。`);
+  if(q.kind==='reading' && highlightEvidence(document.querySelector('#qBody .q-passage'), q.ev)) box.appendChild(el('div','why','💡 答案的出處已經用黃色螢光筆標在文章裡。'));
+  if(q.why) box.appendChild(el('div','why','💡 '+q.why));
+  if(q.kind==='word') box.appendChild(el('div','why',`💡 正確寫法：${q.word}（${q.char} ${q.zy}）`));
+  if(q.rev && q.kind==='zhuyin') box.appendChild(el('div','why',`💡 「${q.char}」讀作 ${q.zy}`));
+  fb.appendChild(box);
+  document.getElementById('scoreText').textContent = `目前得分：${state.score}`;
+  const nb = document.getElementById('nextBtn'); nb.hidden = false;
+  nb.textContent = (state.idx+1 < state.queue.length) ? '下一題' : '查看結果';
+}
+function nextQuestion(){ state.idx++; if(state.idx >= state.queue.length) showResult(); else renderQuestion(); }
+
+function showResult(){
+  showOnly('resultArea');
+  pushLive('done');
+  ttPaint();
+  const total = state.queue.length;
+  document.getElementById('resultScore').textContent = `${state.score} / ${total}`;
+  const pct = total ? Math.round(state.score/total*100) : 0;
+  document.getElementById('resultSub').textContent = pct>=90 ? '非常熟練，繼續保持！' : pct>=70 ? '表現不錯，再加強一下就更穩了。' : '還需要多複習，可以再測一次。';
+  const byType = {};
+  state.results.forEach(({q,ok})=>{ const b = byType[q.kind] = byType[q.kind]||{correct:0,total:0}; b.total++; if(ok) b.correct++; });
+  const bd = document.getElementById('breakdown'); bd.innerHTML = '';
+  TYPES.forEach(k=>{ if(!byType[k]) return; bd.append(el('div','label', TYPE_LABELS[k]), el('div','val', `${byType[k].correct} / ${byType[k].total}`)); });
+  const mw = document.getElementById('missWrap'), ml = document.getElementById('missList'); ml.innerHTML = '';
+  mw.hidden = !state.misses.length;
+  state.misses.forEach(q=>{ const it = el('div','miss-item'); it.append(el('span','', itemLabel(q)), el('b','', q.ansText)); ml.appendChild(it); });
+  document.getElementById('redoBtn').textContent = state.assign ? '回到加強練習' : '重新設定';
+  document.getElementById('retryBtn').textContent = state.assign ? '這部分再做一次' : '再測一次';
+  saveAttempt(byType, total, pct);
+}
+
+async function saveAttempt(byType, total, pct){
+  const st = document.getElementById('saveStatus');
+  if(TEST){ st.textContent = '🧪 試玩模式：這次不會記錄成績，也不會出現在老師後台。'; return; }
+  if(!dbNS){ st.textContent = '（這個裝置目前沒有連上雲端記錄，成績只顯示在畫面上）'; return; }
+  const rec = {
+    name: state.studentName, date: new Date().toLocaleDateString('sv-SE'), timestamp: Date.now(),
+    vers: uniq(state.results.map(r=>r.q.ver)), lessons: uniq(state.results.map(r=>r.q.no)).sort(),
+    types: uniq(state.results.map(r=>r.q.kind)), score: state.score, total, pct,
+    byType: Object.fromEntries(Object.entries(byType).map(([k,v])=>[k, `${v.correct}/${v.total}`])),
+    missChars: state.misses.filter(q=>q.char).map(q=>q.char),
+    items: state.results.map(({q,ok,chosen})=>({v:q.ver, n:q.no, k:q.kind, id:q.id, ok: ok?1:0, c: String(chosen).slice(0,80), a: String(q.options[q.answer]).slice(0,80)})),
+    schema: 3
+  };
+  if(state.assign){ rec.assignmentId = state.assign.id; rec.part = state.assign.kind; }
+  try{
+    await dbNS.collection('attempts').add(rec);
+    st.textContent = '成績已記錄，老師可以在後台查到這次結果。';
+    if(state.assign){
+      const a = ASSIGNMENTS.find(x=>x._id===state.assign.id);
+      const progress = Object.assign({}, (a && a.progress) || {}, {[state.assign.kind]: {score: state.score, total, pct, ts: Date.now()}});
+      const allDone = a && (a.parts||[]).every(p=>progress[p.k]);
+      await dbNS.collection('assignments').doc(state.assign.id).update({progress, status: allDone ? 'done' : 'open'});
+      if(allDone) st.textContent += '　🎉 老師出的加強練習全部完成了！';
+    }
+  }catch(e){ st.textContent = '成績記錄失敗（可能是這個連結沒有開放寫入），請跟老師說。'; }
+}
+
+/* ================= 即時作答（老師後台看得到） ================= */
+let liveChain = Promise.resolve();
+function liveModeLabel(){
+  if(state.assign) return '加強練習・' + (TYPE_SHORT[state.assign.kind] || '');
+  return state.mode==='mix' ? '自選・全部混合' : '自選・' + TYPES.filter(t=>state.selType.has(t)).map(t=>TYPE_SHORT[t]).join('、');
+}
+function pushLive(status){
+  if(TEST || !dbNS || !state.liveId) return;
+  const doc = {
+    name: normName(state.studentName), mode: liveModeLabel(), startedAt: state.liveStart, updatedAt: Date.now(), status,
+    total: state.queue.length, done: state.results.length, score: state.score,
+    current: status==='doing' && state.queue[state.idx] ? itemLabel(state.queue[state.idx]).slice(0,60) : '',
+    answers: state.results.map(({q,ok,chosen})=>({k:q.kind, v:q.ver, n:q.no, l:itemLabel(q).slice(0,70), c:String(chosen).slice(0,60), a:String(q.options[q.answer]).slice(0,60), ok: ok?1:0}))
+  };
+  const id = state.liveId;
+  liveChain = liveChain.then(()=>dbNS.collection('live').doc(id).set(doc)).catch(()=>{});
+}
+
+/* ================= 題目查詢（給後台、練習卷用） ================= */
+function findItem(v, n, k, id){
+  const l = LBY[LKEY(v,n)]; if(!l) return null;
+  if(CHAR_KINDS.includes(k)){ const ch = String(id).replace(/^R/,''); const c = l.chars.find(x=>x.c===ch); return c ? {kind:k, ver:v, no:n, title:l.title, id, char:c.c, c} : null; }
+  if(k==='reading'){ for(const p of allReading(l)){ const q = p.qs.find(x=>x.id===id); if(q) return {kind:k, ver:v, no:n, title:l.title, id, ptitle:p.t, paras:p.p, raw:q}; } return null; }
+  if(k==='text'){ const q = l.text.find(x=>x.id===id); return q ? {kind:k, ver:v, no:n, title:l.title, id, raw:q} : null; }
+  if(k==='phrase'){ const q = l.phrase.find(x=>x.id===id); return q ? {kind:k, ver:v, no:n, title:l.title, id, raw:q} : null; }
+  return null;
+}
+function itemLabel(q){
+  if(q.kind==='zhuyin') return `「${q.char}」的注音`;
+  if(q.kind==='radical') return `「${q.char}」的部首`;
+  if(q.kind==='word') return `字形：${q.word || (q.c && q.c.w) || q.char}`;
+  if(q.kind==='phrase') return `照樣寫：${q.ex || (q.raw && q.raw.ex)}`;
+  const t = q.prompt || (q.raw && q.raw.q) || '';
+  return (q.kind==='reading' ? '閱讀〈'+q.ptitle+'〉：' : '課文：') + t.split('\n')[0];
+}
+function itemAnswer(it){
+  if(it.kind==='zhuyin') return it.c.z;
+  if(it.kind==='radical') return it.c.r+'部';
+  if(it.kind==='word') return it.c.c;
+  return it.raw.o[it.raw.a];
+}
+
+/* ================= 老師後台 ================= */
+let dashUnsub = null, dashRecords = [];
+function openDashboard(){ TEST = false; ttPaint(); showOnly('dashboard'); ttSelPaint(); loadDashboard(); }
+function loadDashboard(){
+  const st = document.getElementById('dashStatus');
+  document.getElementById('manageHint').textContent = canManage ? '刪除按鈕要連按兩下才會真的刪除，刪掉就救不回來。' : '只有老師帳號（這個作品的擁有者或編輯者）才能刪除記錄、出加強練習。';
+  paintBankStatus();
+  loadLive();
+  if(!dbNS){ st.textContent = '這個裝置目前沒有連上雲端記錄，看不到全班資料（試玩和題庫仍可使用）。'; renderAll(); return; }
+  if(dashUnsub){ renderAll(); return; }
+  st.textContent = '讀取中…';
+  dashUnsub = dbNS.collection('attempts').orderBy('timestamp','desc').limit(1000).onSnapshot(
+    snap=>{ dashRecords = snap.docs.map(d=>({_id:d.id, ...d.data()})); st.textContent = dashRecords.length ? `共 ${dashRecords.length} 筆作答記錄，${groupByStudent().length} 位學生` : '目前還沒有任何作答記錄。'; renderAll(); },
+    err=>{ st.textContent = '讀取失敗：' + (err && err.message || err); dashUnsub = null; }
+  );
+}
+function renderAll(){ renderStudentTable(); renderRecordTable(); renderClassMiss(); }
+let liveUnsub = null, LIVE = [], liveOpenId = null;
+function loadLive(){
+  if(!dbNS || liveUnsub) return;
+  liveUnsub = dbNS.collection('live').orderBy('updatedAt','desc').limit(60).onSnapshot(s=>{
+    LIVE = s.docs.map(d=>({_id:d.id, ...d.data()})); renderLive();
+    if(liveOpenId){ const x = LIVE.find(r=>r._id===liveOpenId); if(x) paintLiveDetail(x); }
+  }, ()=>{});
+  setInterval(renderLive, 30000);
+}
+function ago(ts){ const m = Math.round((Date.now()-ts)/60000); return m<1 ? '剛剛' : m<60 ? m+' 分鐘前' : Math.round(m/60)+' 小時前'; }
+function renderLive(){
+  const box = document.getElementById('liveList'); if(!box) return;
+  box.innerHTML = '';
+  const recent = LIVE.filter(r=>Date.now()-(r.updatedAt||0) < 6*3600*1000);
+  if(!recent.length){ box.appendChild(el('p','hint','最近 6 小時沒有人在作答。學生開始作答後，這裡會自動出現。')); return; }
+  recent.forEach(r=>{
+    const doing = r.status==='doing' && Date.now()-(r.updatedAt||0) < 15*60*1000;
+    const row = el('button','live-row'+(doing?' doing':'')); row.type='button';
+    const pct = r.total ? Math.round(r.done/r.total*100) : 0;
+    const acc = r.done ? Math.round(r.score/r.done*100) : 0;
+    const top = el('div','lr-top');
+    top.append(el('b','', r.name||'（未填）'), el('span','lr-st', doing ? '● 作答中' : r.status==='done' ? '✔ 完成' : '暫停'), el('span','lr-mode', r.mode||''));
+    const bar = el('div','bar'); const i = el('i'); i.style.width = pct+'%'; bar.appendChild(i);
+    const bot = el('div','lr-bot', `${r.done}/${r.total} 題　答對 ${r.score} 題（${acc}%）　${ago(r.updatedAt)}` + (doing && r.current ? `　正在做：${r.current}` : ''));
+    row.append(top, bar, bot);
+    row.addEventListener('click', ()=>openLiveDetail(r._id));
+    box.appendChild(row);
+  });
+}
+function openLiveDetail(id){
+  liveOpenId = id;
+  const ov = el('div','ov'); ov.id = 'liveOv';
+  const box = el('div','ov-box'); box.id = 'liveBox';
+  ov.appendChild(box); ov.addEventListener('click', e=>{ if(e.target===ov){ ov.remove(); liveOpenId = null; } });
+  document.body.appendChild(ov);
+  const r = LIVE.find(x=>x._id===id); if(r) paintLiveDetail(r);
+}
+function answerTable(list){
+  const t = el('table','mx ans-tbl'); const hr = el('tr'); ['#','題目','他選的','正確答案',''].forEach(s=>hr.appendChild(el('th','',s))); t.appendChild(hr);
+  list.forEach((x,i)=>{ const tr = el('tr'); tr.append(el('td','',String(i+1)), el('td','lbl', `${x.v||''}${x.n?'第'+NUM[x.n-1]+'課':''}・${TYPE_SHORT[x.k]||''}　${x.l||''}`), el('td', x.ok?'g':'b', x.c||''), el('td','', x.a||''), el('td', x.ok?'g':'b', x.ok?'✔':'✘')); t.appendChild(tr); });
+  const w = el('div'); w.style.overflowX='auto'; w.appendChild(t); return w;
+}
+function paintLiveDetail(r){
+  const box = document.getElementById('liveBox'); if(!box) return;
+  box.innerHTML = '';
+  const head = el('div','ov-head'); head.appendChild(el('h3','', `${r.name}　${r.mode||''}`));
+  const x = el('button','btn sm secondary','關閉'); x.type='button'; x.addEventListener('click', ()=>{ document.getElementById('liveOv').remove(); liveOpenId = null; }); head.appendChild(x);
+  box.appendChild(head);
+  const doing = r.status==='doing' && Date.now()-(r.updatedAt||0) < 15*60*1000;
+  box.appendChild(el('p','hint', `${doing?'● 作答中（畫面會自動更新）':'已結束'}　進度 ${r.done}/${r.total}　答對 ${r.score} 題　最後更新：${ago(r.updatedAt)}` + (doing && r.current ? `\n正在做：${r.current}` : '')));
+  box.appendChild(answerTable(r.answers||[]));
+}
+function openRecordDetail(r){
+  const ov = el('div','ov'); const box = el('div','ov-box');
+  const head = el('div','ov-head'); head.appendChild(el('h3','', `${r.name}　${r.date||''}　${r.score}/${r.total}`));
+  const hb = el('div','tt-row');
+  const dl = el('button','btn sm secondary','⬇ 下載作答記錄'); dl.type='button';
+  const x = el('button','btn sm secondary','關閉'); x.type='button'; x.addEventListener('click', ()=>ov.remove());
+  hb.append(dl, x); head.appendChild(hb); box.appendChild(head);
+  const list = (r.items||[]).map(it=>{ const f = findItem(it.v,it.n,it.k,it.id); return {...it, l: f ? itemLabel(f) : it.id}; });
+  if(!list.some(x=>x.c)) box.appendChild(el('p','hint','這筆是比較早的記錄，只有對錯，沒有存學生選了哪個答案。'));
+  box.appendChild(answerTable(list.map(x=>({...x, c: x.c || (x.ok?'（答對）':'（答錯）'), a: x.a || (()=>{ const f = findItem(x.v,x.n,x.k,x.id); return f ? itemAnswer(f) : ''; })()}))));
+  dl.addEventListener('click', async ()=>{
+    const esc = s=>String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const rows = list.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.v)}第${NUM[x.n-1]}課・${esc(TYPE_SHORT[x.k]||'')}　${esc(x.l)}</td><td style="color:${x.ok?'#3f7a52':'#b8432c'}">${esc(x.c||'')}</td><td>${esc(x.a||'')}</td><td>${x.ok?'✔':'✘'}</td></tr>`).join('');
+    const doc = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${esc(r.name)} 作答記錄</title><style>body{font-family:"TW-MOE-Std-Kai","標楷體","BiauKai","DFKai-SB",serif;padding:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;font-size:15px;text-align:left}</style></head><body><h2>${esc(r.name)}　作答記錄</h2><p>${esc(r.date||'')}　得分 ${r.score} / ${r.total}（${r.pct}%）</p><table><tr><th>#</th><th>題目</th><th>他選的</th><th>正確答案</th><th></th></tr>${rows}</table></body></html>`;
+    try{ const d = await BR.use('downloads'); if(!d) throw {code:'unavailable'}; await d.save({filename:`${r.name}_${r.date||''}_作答記錄.html`, data: doc}); }
+    catch(e){ ttToast(e && e.code==='cancelled' ? '已取消下載' : '這裡沒辦法下載'); }
+  });
+  ov.appendChild(box); ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function groupByStudent(){
+  const g = {};
+  dashRecords.forEach(r=>{ const k = normName(r.name) || '（未填名字）'; (g[k] = g[k]||[]).push(r); });
+  return Object.entries(g).map(([name, recs])=>({name, recs})).sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
+}
+function armButton(btn, label, action){
+  let armed = false, timer = null;
+  btn.addEventListener('click', async ()=>{
+    if(!canManage){ ttToast('只有老師帳號可以刪除'); return; }
+    if(!armed){ armed = true; btn.classList.add('armed'); btn.textContent = '再按一次確定'; timer = setTimeout(()=>{ armed=false; btn.classList.remove('armed'); btn.textContent = label; }, 4000); return; }
+    clearTimeout(timer); btn.disabled = true; btn.textContent = '刪除中…';
+    try{ await action(); ttToast('已刪除'); }catch(e){ ttToast('刪除失敗：' + (e && (e.code||e.message) || e)); btn.disabled = false; btn.textContent = label; btn.classList.remove('armed'); armed = false; }
+  });
+}
+async function deleteRecords(recs){ for(const r of recs){ await dbNS.collection('attempts').doc(r._id).delete(); } }
+function assignStatusText(name){
+  const as = ASSIGNMENTS.filter(a=>a.name===name);
+  if(!as.length) return '—';
+  const open = as.filter(a=>a.status!=='done');
+  if(!open.length) return '✔ 已完成';
+  const a = open[open.length-1]; const d = Object.keys(a.progress||{}).length;
+  return `進行中 ${d}/${(a.parts||[]).length}`;
+}
+function renderStudentTable(){
+  const tb = document.querySelector('#stuTable tbody'); tb.innerHTML = '';
+  const groups = groupByStudent();
+  if(!groups.length){ const tr = el('tr'); const td = el('td','hint','還沒有學生記錄。'); td.colSpan = 6; tr.appendChild(td); tb.appendChild(tr); return; }
+  groups.forEach(({name, recs})=>{
+    const tr = el('tr');
+    const tdN = el('td'); const nb = el('button','stu-name', name); nb.type='button'; nb.addEventListener('click', ()=>openStudent(name)); tdN.appendChild(nb);
+    const avg = Math.round(recs.reduce((s,r)=>s+(r.pct||0),0)/recs.length);
+    tr.append(tdN, el('td','', recs.length+' 次'), el('td','', avg+'%'), el('td','', recs[0].date||''), el('td','', assignStatusText(name)));
+    const act = el('td','act');
+    const a = el('button','btn sm secondary','弱點／加強練習'); a.type='button'; a.addEventListener('click', ()=>openStudent(name));
+    act.appendChild(a);
+    if(canManage && dbNS){ const d = el('button','btn sm danger','刪除這位學生'); d.type='button'; armButton(d, '刪除這位學生', ()=>deleteRecords(recs)); act.appendChild(d); }
+    tr.appendChild(act); tb.appendChild(tr);
+  });
+}
+const VER_LABEL = v=> (v||[]).join('／');
+const LESSON_LABEL = ns=> (ns||[]).slice().sort().map(n=>'第'+NUM[n-1]+'課').join('、');
+function renderRecordTable(){
+  const f = normName(document.getElementById('dashFilter').value);
+  const tb = document.querySelector('#dashTable tbody'); tb.innerHTML = '';
+  dashRecords.filter(r=>!f || normName(r.name).includes(f)).forEach(r=>{
+    const tr = el('tr');
+    [r.date||'', r.name||'', VER_LABEL(r.vers)+'　'+LESSON_LABEL(r.lessons), (r.part ? '📌' + (r.part==='weak' ? '錯題卷' : '加強') + '・' : '') + (r.types||[]).map(t=>TYPE_SHORT[t]||t).join('、'), `${r.score} / ${r.total}（${r.pct}%）`].forEach(c=>tr.appendChild(el('td','',c)));
+    const act = el('td','act');
+    if(r.items){ const v = el('button','btn sm secondary','看作答'); v.type='button'; v.addEventListener('click', ()=>openRecordDetail(r)); act.appendChild(v); }
+    if(canManage && dbNS){ const d = el('button','btn sm danger','刪除'); d.type='button'; armButton(d,'刪除', ()=>deleteRecords([r])); act.appendChild(d); }
+    tr.appendChild(act); tb.appendChild(tr);
+  });
+}
+function renderClassMiss(){
+  const cnt = {};
+  dashRecords.forEach(r=>{
+    if(r.items) r.items.forEach(x=>{ if(!x.ok){ const k = CHAR_KINDS.includes(x.k) ? String(x.id).replace(/^R/,'')+'（'+TYPE_SHORT[x.k]+'）' : (TYPE_SHORT[x.k]+'：'+x.v+'第'+NUM[x.n-1]+'課'); cnt[k]=(cnt[k]||0)+1; } });
+    else (r.missChars||[]).forEach(c=>{ cnt[c]=(cnt[c]||0)+1; });
+  });
+  const w = document.getElementById('dashMiss'); w.innerHTML = '';
+  const s = Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,24);
+  if(!s.length) w.appendChild(el('span','hint','目前沒有錯題資料。'));
+  s.forEach(([k,n])=>w.appendChild(el('span','miss-chip', `${k}　×${n}`)));
+}
+
+/* ---- 個人分析 ---- */
+function charLesson(vers, ch){ for(const l of LESSONS){ if(vers.includes(l.ver) && l.chars.some(c=>c.c===ch)) return l; } return null; }
+function analyze(recs){
+  const items = {}; const typeTot = {}; const cell = {}; let oldCount = 0;
+  const vers = new Set(), lessons = new Set();
+  recs.slice().sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach(r=>{
+    (r.vers||[]).forEach(v=>vers.add(v)); (r.lessons||[]).forEach(n=>lessons.add(n));
+    if(!r.items){
+      oldCount++;
+      Object.entries(r.byType||{}).forEach(([k,v])=>{ const [c,t] = String(v).split('/').map(Number); const o = typeTot[k]=typeTot[k]||{c:0,t:0}; o.c+=c||0; o.t+=t||0; });
+      // 舊版記錄只有錯字清單：當成那一課的字形／注音錯題
+      const ck = (r.types||[]).includes('word') ? 'word' : (r.types||[]).includes('zhuyin') ? 'zhuyin' : (r.types||[]).includes('radical') ? 'radical' : 'word';
+      (r.missChars||[]).forEach(ch=>{ const l = charLesson(r.vers||VERS, ch); if(!l) return;
+        const key = KEY(l.ver,l.no,ck,ch); const it = items[key] = items[key]||{v:l.ver,n:l.no,k:ck,id:ch,right:0,wrong:0,last:0}; it.wrong++; it.last = 0; });
+      return;
+    }
+    r.items.forEach(x=>{
+      const key = KEY(x.v,x.n,x.k,x.id);
+      const it = items[key] = items[key]||{v:x.v,n:x.n,k:x.k,id:x.id,right:0,wrong:0,last:0};
+      if(x.ok) it.right++; else it.wrong++; it.last = x.ok;
+      const o = typeTot[x.k]=typeTot[x.k]||{c:0,t:0}; o.t++; if(x.ok) o.c++;
+      const ck = LKEY(x.v,x.n)+'|'+x.k; const cc = cell[ck]=cell[ck]||{c:0,t:0}; cc.t++; if(x.ok) cc.c++;
+    });
+  });
+  const weak = Object.values(items).filter(it=>it.wrong>0 && (!it.last || it.wrong>=it.right))
+    .sort((a,b)=> (b.wrong-b.right)-(a.wrong-a.right) || a.v.localeCompare(b.v) || a.n-b.n);
+  return {items, typeTot, cell, weak, oldCount, vers:[...vers], lessons:[...lessons].sort()};
+}
+function cls(p){ return p>=80?'g':p>=60?'m':'b'; }
+function openStudent(name){
+  const g = groupByStudent().find(x=>x.name===name); if(!g) return;
+  const A = analyze(g.recs);
+  const ov = el('div','ov'); const box = el('div','ov-box'); box.setAttribute('role','dialog'); box.setAttribute('aria-label', name+' 的分析');
+  const head = el('div','ov-head'); head.appendChild(el('h3','', `${name}　弱點分析`));
+  const hb = el('div','tt-row');
+  const pb = el('button','btn sm secondary','🖨 紙本練習卷'); pb.type='button'; pb.addEventListener('click', ()=>{ ov.remove(); openSheet(name, A); });
+  const xb = el('button','btn sm secondary','關閉'); xb.type='button'; xb.addEventListener('click', ()=>ov.remove());
+  hb.append(pb, xb); head.appendChild(hb); box.appendChild(head);
+  box.appendChild(el('p','hint', `共作答 ${g.recs.length} 次。` + (A.oldCount ? `其中 ${A.oldCount} 次是改版前的記錄，只有各大題總分和錯字，沒有逐題資料。` : '')));
+
+  // 出加強練習（平板作答）
+  box.appendChild(buildAssignForm(name, A));
+
+  box.appendChild(el('h4','','各大題答對率'));
+  const ts = el('div','type-sum');
+  TYPES.forEach(k=>{ const o = A.typeTot[k]; const d = el('div'); const p = o&&o.t ? Math.round(o.c/o.t*100) : null;
+    const b = el('b','', p===null?'—':p+'%'); if(p!==null) b.style.color = p>=80?'var(--good)':p>=60?'#8a6312':'var(--bad)';
+    d.append(b, el('span','', TYPE_LABELS[k] + (o&&o.t ? `（${o.c}/${o.t}）` : '（沒做過）'))); ts.appendChild(d); });
+  box.appendChild(ts);
+
+  box.appendChild(el('h4','','哪一課、哪一種題目比較弱'));
+  const lessonKeys = uniq(Object.keys(A.cell).map(k=>k.split('|')[0]));
+  if(!lessonKeys.length){ box.appendChild(el('p','hint','還沒有逐題資料（學生用新版作答後就會出現）。')); }
+  else {
+    const wrap = el('div'); wrap.style.overflowX='auto';
+    const t = el('table','mx'); const hr = el('tr'); hr.appendChild(el('th','','課次'));
+    TYPES.forEach(k=>hr.appendChild(el('th','',TYPE_SHORT[k]))); t.appendChild(hr);
+    LESSONS.filter(l=>lessonKeys.includes(LKEY(l.ver,l.no))).forEach(l=>{
+      const tr = el('tr'); tr.appendChild(el('td','lbl', `${l.ver} 第${NUM[l.no-1]}課 ${l.title}`));
+      TYPES.forEach(k=>{ const c = A.cell[LKEY(l.ver,l.no)+'|'+k]; if(!c){ tr.appendChild(el('td','n','—')); return; } const p = Math.round(c.c/c.t*100); tr.appendChild(el('td', cls(p), `${p}%（${c.c}/${c.t}）`)); });
+      t.appendChild(tr);
+    });
+    wrap.appendChild(t); box.appendChild(wrap);
+    box.appendChild(el('div','legend','綠：80% 以上　黃：60～79%　紅：未滿 60%　—：沒做過這一種'));
+  }
+
+  box.appendChild(el('h4','', `目前還不會的題目（${A.weak.length} 題）`));
+  const wl = el('div','weak-list');
+  if(!A.weak.length) wl.appendChild(el('p','hint','目前沒有錯題記錄。'));
+  A.weak.slice(0,60).forEach(w=>{ const it = findItem(w.v,w.n,w.k,w.id); if(!it) return;
+    const row = el('div','weak-item'); const lt = el('div','wl');
+    lt.append(el('span','tag', `${w.v}${NUM[w.n-1]}・${TYPE_SHORT[w.k]}`), document.createTextNode('　'+itemLabel(it)+'　答：'+itemAnswer(it)));
+    row.append(lt, el('span','wr', `錯 ${w.wrong}／對 ${w.right}`)); wl.appendChild(row); });
+  box.appendChild(wl);
+  ov.appendChild(box); ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function buildAssignForm(name, A){
+  const wrap = el('div','assign-card');
+  wrap.appendChild(el('h4','','📱 出加強練習給他（學生用平板直接作答）'));
+  const mine = ASSIGNMENTS.filter(a=>a.name===name).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  mine.forEach(a=>{
+    const row = el('div','weak-item');
+    const prog = (a.parts||[]).map(p=>{ const d = a.progress && a.progress[p.k]; return `${TYPE_SHORT[p.k]} ${d ? d.score+'/'+d.total : '未做'}`; }).join('　');
+    row.append(el('div','wl', `${a.date||''}　${a.status==='done'?'✔ 已完成':'進行中'}　${prog}`));
+    if(canManage && dbNS){ const d = el('button','btn sm danger','刪除'); d.type='button'; armButton(d,'刪除', ()=>dbNS.collection('assignments').doc(a._id).delete()); row.appendChild(d); }
+    wrap.appendChild(row);
+  });
+  if(!canManage || !dbNS){ wrap.appendChild(el('p','hint', dbNS ? '只有老師帳號可以出加強練習。' : '沒有連上雲端，無法出加強練習。')); return wrap; }
+
+  // 版本與課次：預設用他做過的範圍
+  const vers = new Set(A.vers.length ? A.vers : ['南一']);
+  const lessons = new Set(A.lessons.length ? A.lessons : [1,2,3,4,5,6]);
+  const r1 = el('div','chip-row'); r1.style.margin='6px 0';
+  renderChips(r1, VERS, vers, v=>v+'版'); wrap.appendChild(el('div','hint','版本')); wrap.appendChild(r1);
+  const r2 = el('div','chip-row'); r2.style.margin='6px 0';
+  renderChips(r2, [1,2,3,4,5,6], lessons, n=>'第'+NUM[n-1]+'課'); wrap.appendChild(el('div','hint','課次')); wrap.appendChild(r2);
+  // 預設勾答對率未滿 80% 或沒做過的大題
+  const parts = new Set(TYPES.filter(k=>{ const o = A.typeTot[k]; return !o || !o.t || o.c/o.t < 0.8; }));
+  if(!parts.size) TYPES.forEach(k=>parts.add(k));
+  if(A.weak.length) parts.clear();  // 有錯題時預設只出錯題卷，老師可再勾其他部分
+  const r3 = el('div','chip-row'); r3.style.margin='6px 0';
+  renderChips(r3, TYPES, parts, k=>{ const o = A.typeTot[k]; return TYPE_SHORT[k] + (o&&o.t ? ` ${Math.round(o.c/o.t*100)}%` : ''); });
+  wrap.appendChild(el('div','hint', A.weak.length ? '其他想加練的部分（每部分出新題目，可不選）' : '要練的部分（已先勾答對率未滿 80% 的）')); wrap.appendChild(r3);
+  const weakKeys = A.weak.map(w=>KEY(w.v,w.n,w.k,w.id)).filter(k=>makeFromKey(k));
+  const wkSet = new Set(weakKeys.length ? ['weak'] : []);
+  if(weakKeys.length){
+    const r0 = el('div','chip-row'); r0.style.margin='6px 0';
+    renderChips(r0, ['weak'], wkSet, ()=>`錯題卷：他錯過的 ${Math.min(weakKeys.length,40)} 題重做一次`);
+    wrap.appendChild(el('div','hint','錯題卷（只出他錯過的題目，各種題型混在一起）')); wrap.appendChild(r0);
+  }
+  const cntRow = el('div','count-field');
+  const rng = el('input'); rng.type='range'; rng.min='10'; rng.max='40'; rng.step='5'; rng.value='30';
+  const cv = el('span','count-val','30'); rng.addEventListener('input', ()=>cv.textContent = rng.value);
+  cntRow.append(el('span','hint','每部分題數'), rng, cv); wrap.appendChild(cntRow);
+  const go = el('button','btn','建立加強練習'); go.type='button'; go.style.marginTop='8px';
+  const msg = el('p','hint');
+  go.addEventListener('click', async ()=>{
+    if(!wkSet.size && (!vers.size || !lessons.size || !parts.size)){ msg.textContent = '請至少選一個版本、一個課次、一個部分。'; return; }
+    const focus = {}; if(wkSet.size) focus.weak = weakKeys.slice(0,40);
+    A.weak.forEach(w=>{ if(vers.has(w.v) && lessons.has(w.n)) (focus[w.k] = focus[w.k]||[]).push(KEY(w.v,w.n,w.k,w.id)); });
+    const doc = {name, createdAt: Date.now(), date: new Date().toLocaleDateString('sv-SE'), vers:[...vers], lessons:[...lessons].sort(),
+      parts: (wkSet.size ? [{k:'weak', n: Math.min(weakKeys.length,40)}] : []).concat(TYPES.filter(k=>parts.has(k)).map(k=>({k, n:+rng.value}))), focus, status:'open', progress:{}};
+    go.disabled = true; msg.textContent = '建立中…';
+    try{ await dbNS.collection('assignments').add(doc); msg.textContent = `已建立！${name} 在設定頁輸入名字後，就會看到這份加強練習。`; }
+    catch(e){ msg.textContent = '建立失敗：' + (e && (e.code||e.message) || e); }
+    go.disabled = false;
+  });
+  wrap.append(go, msg);
+  wrap.appendChild(el('p','hint','題目會先出他錯過的題，再出沒做過的題；同一個人每次抽到的題目會盡量不一樣。'));
+  return wrap;
+}
+
+/* ---- 紙本練習卷 ---- */
+const SHEET_ORDER = ['zhuyin','radical','word','phrase','text','reading'];
+const SHEET_TITLE = {zhuyin:'看字寫注音', radical:'寫出部首', word:'看注音寫國字', phrase:'照樣寫短語／句型', text:'課文理解（選擇題）', reading:'閱讀理解（選擇題）'};
+function buildSheetItems(A){
+  const picked = []; const seenKey = new Set(); const seenChar = new Set();
+  const CAP = {zhuyin:12, radical:8, word:12, phrase:5, text:5, reading:4};
+  const cnt = {}; const passages = new Set();
+  const push = (it, star)=>{
+    const ck = it.kind+'|'+(it.char||it.id);
+    if(CHAR_KINDS.includes(it.kind) && seenChar.has(ck)) return false;
+    if((cnt[it.kind]||0) >= CAP[it.kind]) return false;
+    if(it.kind==='reading'){ const pk = it.ver+it.no+it.ptitle; if(!passages.has(pk) && passages.size>=2) return false; passages.add(pk); }
+    cnt[it.kind] = (cnt[it.kind]||0)+1; it.star = star; picked.push(it); seenKey.add(KEY(it.ver,it.no,it.kind,it.id)); if(CHAR_KINDS.includes(it.kind)) seenChar.add(ck);
+    return true;
+  };
+  A.weak.forEach(w=>{ const it = findItem(w.v,w.n,w.k,w.id); if(it) push(it, true); });
+  if(picked.length > 24) picked.length = 24;
+  // 補到 16 題：先補錯題所在的課＋題型，沒有錯題時就用他做過的範圍
+  let groups = uniq(picked.filter(it=>it.kind!=='reading').map(it=>it.ver+'|'+it.no+'|'+it.kind));
+  if(!groups.length){
+    const vs = A.vers.length ? A.vers : ['南一']; const ns = A.lessons.length ? A.lessons : [1,2,3,4,5,6];
+    const weakTypes = TYPES.filter(k=>k!=='reading' && (!A.typeTot[k] || !A.typeTot[k].t || A.typeTot[k].c/A.typeTot[k].t < 0.8));
+    const ks = weakTypes.length ? weakTypes : ['zhuyin','word','phrase','text'];
+    vs.forEach(v=>ns.forEach(n=>ks.forEach(k=>groups.push(v+'|'+n+'|'+k))));
+    groups = shuffle(groups);
+  }
+  let gi = 0, guard = 0;
+  while(picked.length < 16 && groups.length && guard < 600){
+    guard++;
+    const gidx = gi % groups.length; const [v,n,k] = groups[gidx].split('|'); gi++;
+    const l = LBY[LKEY(v,+n)]; if(!l){ groups.splice(gidx,1); continue; }
+    let ids = [];
+    if(CHAR_KINDS.includes(k)) ids = l.chars.map(c=>c.c);
+    else if(k==='text') ids = l.text.map(q=>q.id);
+    else ids = l.phrase.map(q=>q.id);
+    const cand = shuffle(ids).find(id=>!seenKey.has(KEY(v,+n,k,id)) && !(CHAR_KINDS.includes(k) && seenChar.has(k+'|'+id)));
+    if(!cand || (cnt[k]||0) >= CAP[k]){ groups.splice(gidx,1); continue; }
+    const it = findItem(v,+n,k,cand); if(it) push(it, false);
+  }
+  picked.sort((a,b)=> SHEET_ORDER.indexOf(a.kind)-SHEET_ORDER.indexOf(b.kind) || a.ver.localeCompare(b.ver) || a.no-b.no);
+  return picked;
+}
+function sheetHTML(name, items){
+  const esc = s=>String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const circ = ['①','②','③','④'].map(x=>`<span class="nr">${x}</span>`);
+  let h = `<div class="sh-title">國語弱點加強練習卷</div><div class="sh-sub">依「${esc(name)}」在國語闖關的作答整理　★＝曾經答錯的題目</div>`;
+  h += `<div class="sh-info"><span>姓名：<u>${esc(name)}</u></span><span>得分：<u>&nbsp;</u></span></div>`;
+  let sec = 0;
+  SHEET_ORDER.forEach(k=>{
+    const its = items.filter(i=>i.kind===k); if(!its.length) return;
+    h += `<h5>${NUM[sec++]}、${SHEET_TITLE[k]}</h5>`;
+    const tag = it=> `<span class="tag2">（${it.ver}${NUM[it.no-1]}）</span>`;
+    const star = it=> it.star ? '★' : '';
+    if(k==='zhuyin'){ h += '<div class="grid">' + its.map(it=>`<div class="cell">${star(it)}${esc(it.c.c)}（<span class="blank"><span class="ans">${esc(it.c.z)}</span></span>）</div>`).join('') + '</div>'; }
+    else if(k==='radical'){ h += '<div class="grid">' + its.map(it=>`<div class="cell">${star(it)}${esc(it.c.c)}：<span class="blank sm"><span class="ans">${esc(it.c.r)}</span></span>部</div>`).join('') + '</div>'; }
+    else if(k==='word'){ h += '<div class="grid">' + its.map(it=>{ const w = it.c.w, i = w.indexOf(it.c.c); return `<div class="cell">${star(it)}${esc(w.slice(0,i))}（${esc(it.c.z)}）${esc(w.slice(i+1))}<br><span class="blank"><span class="ans">${esc(it.c.c)}</span></span></div>`; }).join('') + '</div>'; }
+    else if(k==='phrase'){ its.forEach((it,j)=>{ const r = it.raw; h += `<div class="item">${j+1}. ${star(it)}${r.exl==='句型' ? '用「'+esc(r.ex)+'」造句' : '例：'+esc(r.ex)} ${tag(it)}<br><span style="padding-left:1.6em">${r.exl==='句型'?'造句':'照樣寫'}：</span><span class="blank" style="min-width:16em;text-align:left"><span class="ans">${esc(r.o[r.a])}</span></span></div>`; }); }
+    else if(k==='text'){ its.forEach((it,j)=>{ const q = it.raw; h += `<div class="item">（<span class="ans">${circ[q.a]}</span>）${j+1}. ${star(it)}${esc(q.q).replace(/\n/g,'<br>')} ${tag(it)}<div class="opts">${q.o.map((o,i)=>circ[i]+esc(o)).join('　')}</div></div>`; }); }
+    else if(k==='reading'){
+      const byP = {}; its.forEach(it=>{ (byP[it.ver+it.no+it.ptitle] = byP[it.ver+it.no+it.ptitle] || {it, qs:[]}).qs.push(it); });
+      let j = 0;
+      Object.values(byP).forEach(({it, qs})=>{
+        h += `<div class="pbox"><p class="pt">${esc(it.ptitle)}</p>${it.paras.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`;
+        qs.forEach(x=>{ const q = x.raw; j++; h += `<div class="item">（<span class="ans">${circ[q.a]}</span>）${j}. ${star(x)}${esc(q.q)}<div class="opts">${q.o.map((o,i)=>circ[i]+esc(o)).join('　')}</div></div>`; });
+      });
+    }
+  });
+  return h;
+}
+function openSheet(name, A){
+  const items = buildSheetItems(A);
+  const ov = el('div','ov'); ov.id = 'printRoot';
+  const box = el('div','ov-box');
+  const head = el('div','ov-head'); head.appendChild(el('h3','', `${name} 的紙本練習卷（${items.length} 題）`));
+  const hb = el('div','tt-row');
+  const ansB = el('button','btn sm secondary','顯示解答'); ansB.type='button';
+  const prB = el('button','btn sm','🖨 列印'); prB.type='button';
+  const dlB = el('button','btn sm secondary','⬇ 下載'); dlB.type='button';
+  const xB = el('button','btn sm secondary','關閉'); xB.type='button';
+  hb.append(ansB, prB, dlB, xB); head.appendChild(hb); box.appendChild(head);
+  const sheet = el('div','sheet hide-ans'); sheet.innerHTML = sheetHTML(name, items);
+  box.appendChild(sheet);
+  box.appendChild(el('p','hint','「★」是曾經答錯的題目，其他是同一課同一種題目的加強題。要讓學生用平板作答，請關掉這個視窗，用上方的「出加強練習」。列印鈕沒反應的話，請按「下載」，用瀏覽器打開後再列印。'));
+  ansB.addEventListener('click', ()=>{ const on = sheet.classList.toggle('hide-ans'); ansB.textContent = on ? '顯示解答' : '隱藏解答'; });
+  prB.addEventListener('click', ()=>{ document.body.classList.add('printing'); try{ window.print(); }catch(e){ ttToast('這個畫面不能直接列印，請改按「下載」'); } setTimeout(()=>document.body.classList.remove('printing'), 500); });
+  dlB.addEventListener('click', async ()=>{
+    const css = [...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+    const doc = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${name} 國語練習卷</title><style>${css} body{background:#fff;padding:0} .sheet{border:none;margin:0 auto}</style></head><body><div class="sheet ${sheet.classList.contains('hide-ans')?'hide-ans':''}">${sheet.innerHTML}</div></body></html>`;
+    try{ const dl = await BR.use('downloads'); if(!dl) throw {code:'unavailable'}; await dl.save({filename: `${name}_國語弱點練習卷${sheet.classList.contains('hide-ans')?'':'_解答'}.html`, data: doc}); }
+    catch(e){ ttToast(e && e.code==='cancelled' ? '已取消下載' : '這裡沒辦法下載，請改用列印'); }
+  });
+  xB.addEventListener('click', ()=>ov.remove());
+  ov.appendChild(box); ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+/* ================= AI 新增閱讀題庫（老師） ================= */
+function paintBankStatus(){
+  const s = document.getElementById('aiStatus'); if(!s) return;
+  const n = BANK.length;
+  const base = LESSONS.reduce((t,l)=>t+l.reading.length,0);
+  s.textContent = `目前閱讀短文：內建 ${base} 篇＋AI 新增 ${n} 篇。用設定頁選的版本和課次出題。`;
+  document.getElementById('aiCard').hidden = !canManage || !dbNS;
+}
+function validPassage(x){
+  if(!x || typeof x.t!=='string' || !Array.isArray(x.p) || !Array.isArray(x.qs)) return null;
+  const p = x.p.filter(s=>typeof s==='string' && s.trim()).map(s=>s.trim()).slice(0,3);
+  if(!p.length) return null;
+  const qs = x.qs.filter(q=> q && typeof q.q==='string' && Array.isArray(q.o) && q.o.length===4 && uniq(q.o).length===4
+    && Number.isInteger(q.a) && q.a>=0 && q.a<4 && typeof q.ev==='string' && q.ev.length>=4 && p.some(s=>s.includes(q.ev)))
+    .map(q=>({q:q.q.trim(), o:q.o.map(String), a:q.a, ev:q.ev}));
+  if(qs.length < 2) return null;
+  return {t:x.t.trim().slice(0,20), p, qs:qs.slice(0,4)};
+}
+async function aiGenerate(){
+  const btn = document.getElementById('aiGenBtn'), log = document.getElementById('aiLog');
+  const per = +document.getElementById('aiPer').value || 1;
+  const ls = LESSONS.filter(l=>state.selVer.has(l.ver) && state.selLesson.has(l.no));
+  if(!ls.length){ log.textContent = '請先在設定頁選版本和課次。'; return; }
+  let sample = null;
+  try{ sample = await BR.use('sample'); }catch(e){}
+  if(!sample){ log.textContent = '這個畫面不能使用 AI 出題。'; return; }
+  btn.disabled = true; let ok = 0, fail = 0;
+  for(const l of ls){
+    for(let i=0;i<per;i++){
+      log.textContent = `正在出 ${l.ver}版第${NUM[l.no-1]}課〈${l.title}〉的新短文…（已完成 ${ok} 篇）`;
+      const titles = allReading(l).map(p=>p.t).join('、');
+      const words = l.chars.map(c=>c.w).join('、');
+      const prompt = `你是臺灣國小五年級國語老師。請為「${l.ver}版國語五上 第${NUM[l.no-1]}課〈${l.title}〉」寫一篇全新的原創閱讀短文，並出 3 題選擇題。
+課文重點（只用來決定主題，不可抄寫課文）：${l.sum}
+請自然用到其中幾個生字詞：${words}
+不要和這些已有的短文重複主題或標題：${titles}
+要求：
+1. 短文 2 段，共 160～230 字，繁體中文、臺灣用語，內容是小學生生活中的新故事或知識，和課文主題相關。
+2. 每題 4 個選項，只有 1 個正確，答案必須能從短文中找到，不要考文章以外的知識。
+3. 三題分別考：細節、原因或經過、主旨或心得。
+4. ev 是能證明答案的短文原句，必須和短文「一字不差」的連續片段，8～30 字。
+只輸出 JSON，不要其他文字：{"t":"短文標題","p":["第一段","第二段"],"qs":[{"q":"題目","o":["選項","選項","選項","選項"],"a":正確選項的索引0到3,"ev":"出處原句"}]}`;
+      try{
+        const res = await sample.json(prompt, {modelTier:'default'});
+        const v = validPassage(res);
+        if(!v){ fail++; continue; }
+        await dbNS.collection('bank').add({ver:l.ver, no:l.no, ...v, createdAt: Date.now(), src:'ai'});
+        ok++;
+      }catch(e){
+        fail++;
+        if(e && (e.code==='not_granted' || e.code==='rate_limited' || e.code==='usage_limit')){ log.textContent = e.code==='not_granted' ? '沒有允許 AI 出題，已停止。' : 'AI 使用量暫時到上限，請晚一點再試。'; btn.disabled = false; return; }
+      }
+    }
+  }
+  log.textContent = `完成：新增 ${ok} 篇短文` + (fail ? `（${fail} 篇格式不合格，已自動略過）` : '') + '。新短文會馬上加入學生的閱讀題庫，可以在「看題庫」檢查或刪除。';
+  btn.disabled = false;
+}
+
+/* ================= 老師試玩 ================= */
+function ttToast(msg){ const d = el('div','tt-toast', msg); document.body.appendChild(d); setTimeout(()=>d.remove(), 2200); }
+function ttSelPaint(){
+  const s = document.getElementById('ttSel'); if(!s) return;
+  const vs = VERS.filter(v=>state.selVer.has(v)).map(v=>v+'版').join('、') || '（沒選）';
+  const ls = [1,2,3,4,5,6].filter(n=>state.selLesson.has(n)).map(n=>NUM[n-1]).join('、') || '（沒選）';
+  const ts = state.mode==='mix' ? '全部混合' : (TYPES.filter(t=>state.selType.has(t)).map(t=>TYPE_SHORT[t]).join('、') || '（沒選）');
+  s.textContent = `目前設定：${vs}｜第${ls}課｜${ts}｜${state.count} 題（要改設定請按下面「返回測驗」）`;
+  paintBankStatus();
+}
+async function ttStart(){ TEST = true; state.assign = null; if(!(await startQuiz())){ TEST = false; ttPaint(); } }
+function ttEnd(){ TEST = false; ttPaint(); openDashboard(); }
+function ttPaint(){
+  const box = document.getElementById('ttInline');
+  box.hidden = !TEST; box.innerHTML = '';
+  if(!TEST) return;
+  box.appendChild(el('div','tt-head','🧪 老師試玩中（不記錄成績）'));
+  const row = el('div','tt-row');
+  const mk = (lab, fn, sec)=>{ const b = el('button','btn sm'+(sec?' secondary':''), lab); b.type='button'; b.addEventListener('click', fn); return b; };
+  if(!document.getElementById('quizArea').hidden){
+    row.append(mk('✔ 直接答對',()=>ttAnswer(true)), mk('✘ 直接答錯',()=>ttAnswer(false)), mk('跳過這題',ttSkip,true), mk('直接看結果',ttResult,true));
+  }
+  row.append(mk('📚 題庫',qbOpen,true), mk('結束試玩',ttEnd,true));
+  box.appendChild(row);
+}
+function ttAnswer(ok){
+  if(state.locked) return ttToast('這題已經答完了，按「下一題」');
+  const q = state.queue[state.idx];
+  const i = ok ? q.answer : q.options.findIndex((_,k)=>k!==q.answer);
+  const btn = document.querySelectorAll('#qBody .opt')[i]; if(btn) btn.click();
+}
+function ttSkip(){
+  if(state.locked){ nextQuestion(); return; }
+  state.queue.splice(state.idx, 1);
+  if(!state.queue.length){ ttToast('題目都跳完了'); ttEnd(); return; }
+  if(state.idx >= state.queue.length) showResult(); else { renderQuestion(); ttToast('跳過這題（不計分）'); }
+}
+function ttResult(){
+  if(!state.results.length) return ttToast('至少先答一題');
+  state.queue = state.results.map(r=>r.q); showResult();
+}
+
+/* ---- 題庫 ---- */
+function qbOpen(){
+  const ls = LESSONS.filter(l=>state.selVer.has(l.ver) && state.selLesson.has(l.no));
+  const ov = el('div','ov'); const box = el('div','ov-box'); box.setAttribute('role','dialog'); box.setAttribute('aria-label','題庫');
+  const head = el('div','ov-head'); head.appendChild(el('h3','','📚 題庫（設定頁選的課次）'));
+  const x = el('button','btn sm secondary','關閉'); x.type='button'; x.addEventListener('click', ()=>ov.remove()); head.appendChild(x); box.appendChild(head);
+  if(!ls.length) box.appendChild(el('p','hint','設定頁還沒選版本或課次。'));
+  ls.forEach(l=>{
+    box.appendChild(el('h4','', `${l.ver}版 第${NUM[l.no-1]}課　${l.title}`));
+    const t = el('table','mx'); const hr = el('tr'); ['生字','注音','部首','造詞'].forEach(s=>hr.appendChild(el('th','',s))); t.appendChild(hr);
+    l.chars.forEach(c=>{ const tr = el('tr'); [c.c,c.z,c.r,c.w].forEach(s=>tr.appendChild(el('td','',s))); t.appendChild(tr); });
+    const w = el('div'); w.style.overflowX='auto'; w.appendChild(t); box.appendChild(w);
+    const rs = allReading(l);
+    box.appendChild(el('p','hint', `照樣寫 ${l.phrase.length} 題、課文理解 ${l.text.length} 題、閱讀短文 ${rs.length} 篇（${rs.reduce((s,p)=>s+p.qs.length,0)} 題）`));
+    l.phrase.forEach((p,i)=>box.appendChild(el('div','qa', `照樣${i+1}. ${p.exl==='句型'?'句型':'例'}：${p.ex}　答：${p.o[p.a]}`)));
+    l.text.forEach((q,i)=>box.appendChild(el('div','qa', `課文${i+1}. ${q.q.split('\n')[0]}　答：${q.o[q.a]}`)));
+    rs.forEach(p=>{
+      const hrow = el('div','qa'); hrow.append(document.createTextNode(`【閱讀${p.ai?'・AI 新增':''}】${p.t}`));
+      if(p.ai && canManage && dbNS){ const d = el('button','btn sm danger','刪除這篇'); d.type='button'; d.style.marginLeft='8px'; armButton(d,'刪除這篇', async ()=>{ await dbNS.collection('bank').doc(p._id).delete(); hrow.parentNode && hrow.remove(); }); hrow.appendChild(d); }
+      box.appendChild(hrow);
+      if(p.ai) box.appendChild(el('div','pas', p.p.join('\n')));
+      p.qs.forEach((q,i)=>box.appendChild(el('div','qa', `　${i+1}. ${q.q}　答：${q.o[q.a]}`)));
+    });
+  });
+  ov.appendChild(box); ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+init();
+</script>
+
+<style>
+html,body{background:#0B0710!important}
+input[type=text],input:not([type]),input[type=search],textarea{background:#0F0B12!important;color:#F0E6DA!important;border-color:#3A2C38!important}
+input::placeholder{color:#7A6A70!important}
+body{background:radial-gradient(900px 420px at 50% -140px,rgba(170,24,32,.28),transparent 70%),#0B0710!important;min-height:100vh}
+:root:root:root{--bg:#0B0710;--paper:#17111B;--ink:#F0E6DA;--ink-dim:#A8998F;--rule:#30252F;--accent:#E2513F;--accent-soft:#3A1416;--good:#5FD08A;--good-soft:#12291D;--bad:#FF6B5E;--bad-soft:#3A1416;--gold:#F0B341;color-scheme:dark}.bk-btn,#dashBtn,#dashboard{display:none!important}</style><script>(function(){var pub=window.BR_PUB,pn=0;if(pub){var pt=setInterval(function(){if(++pn>40)return clearInterval(pt);var b=[].slice.call(document.querySelectorAll('button')).find(function(x){var t=x.textContent.trim();return t===pub||t===pub+'版'});if(b){clearInterval(pt);b.click()}},300)}})();(function(){var who=window.BR_WHO;if(!who)return;var n=0;var t=setInterval(function(){if(++n>600)clearInterval(t);
+document.querySelectorAll('input[placeholder*="名字"],input[placeholder*="姓名"]').forEach(function(i){if(i.dataset.brf||/篩選/.test(i.placeholder))return;i.dataset.brf=1;if(!i.value){
+var set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;set.call(i,who);i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}))}})},400)})();</script></body></html>

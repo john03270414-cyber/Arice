@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>搬資料</title>
+<meta name="robots" content="noindex">
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
+<script src="lib/config.js"></script>
+<script src="lib/shim.js" data-app="import" data-prefix=""></script>
+<style>
+body{margin:0;background:#14101a;color:#f3ebe3;font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
+main{max-width:620px;margin:0 auto;padding:32px 16px}
+h1{margin:0 0 8px}p{color:#a99c95;line-height:1.7}
+.box{background:#1f1826;border:1px solid #33283a;border-radius:20px;padding:20px;margin-top:16px}
+input[type=file]{font-size:16px;color:#f3ebe3}
+button{margin-top:14px;min-height:50px;padding:0 22px;border:0;border-radius:14px;background:#f0b341;color:#1a1208;font-size:17px;font-weight:700}
+button:disabled{opacity:.45}
+#log{white-space:pre-wrap;font-size:15px;line-height:1.7;color:#f3ebe3;margin-top:12px}
+</style></head><body><main>
+<h1>從 Claude 版搬資料</h1>
+<p>選 Claude 給你的「搬家資料」檔案（.json），按匯入。只需要做一次。已經有的同名資料會被覆蓋。</p>
+<div class="box">
+  <input type="file" id="f" accept=".json,application/json">
+  <div id="sum"></div>
+  <button id="go" disabled>匯入</button>
+  <div id="log" role="status"></div>
+</div>
+</main>
+<script>
+let DATA=null;
+const $=s=>document.querySelector(s);
+$('#f').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
+  try{DATA=JSON.parse(await file.text());if(!Array.isArray(DATA.docs))throw 0;
+    const c={};DATA.docs.forEach(d=>{const k=d.path.split('/')[0];c[k]=(c[k]||0)+1});
+    $('#sum').innerHTML='<p>檔案裡有 '+DATA.docs.length+' 筆：'+Object.entries(c).map(([k,n])=>k+' '+n+' 筆').join('、')+'</p>';$('#go').disabled=false}
+  catch(x){DATA=null;$('#sum').innerHTML='<p style="color:#ff8a7e">這不是搬家資料檔，請重新選。</p>';$('#go').disabled=true}});
+$('#go').addEventListener('click',async()=>{if(!DATA)return;$('#go').disabled=true;const log=$('#log');log.textContent='登入確認中…';
+  const db=await claude.use('db');if(!db){log.textContent='沒有登入或設定錯誤。';return}
+  const docs=DATA.docs;let done=0;
+  try{for(let i=0;i<docs.length;i+=300){await db.batch(docs.slice(i,i+300).map(d=>({op:'set',path:d.path,data:d.data})));done=Math.min(docs.length,i+300);log.textContent='已匯入 '+done+' / '+docs.length+' 筆…'}
+    log.textContent='完成！已匯入 '+docs.length+' 筆。現在可以打開學習島和勇者衝鋒了。'}
+  catch(x){log.textContent='匯入到第 '+done+' 筆時失敗：'+(x&&x.message||x)+'\n請截圖給 Claude。';$('#go').disabled=false}});
+</script></body></html>

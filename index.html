@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>中正補習班・Arice</title>
+<meta name="theme-color" content="#14101a">
+<link rel="icon" type="image/png" href="island/icon-192.png">
+<style>
+:root{--bg:#14101a;--card:#1f1826;--line:#33283a;--ink:#f3ebe3;--dim:#a99c95;--accent:#f0b341}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
+main{max-width:860px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px 40px}
+.eyebrow{color:var(--accent);font-weight:700;letter-spacing:.08em;font-size:14px}
+h1{font-size:clamp(28px,6vw,40px);margin:6px 0 6px}
+.lead{color:var(--dim);margin:0 0 26px;line-height:1.7}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.app{display:flex;gap:16px;align-items:center;padding:18px;border-radius:24px;background:var(--card);border:1px solid var(--line);color:inherit;text-decoration:none;transition:transform .15s,border-color .15s}
+.app:hover,.app:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
+.app img{width:96px;height:96px;border-radius:22px;flex:none;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.app b{display:block;font-size:22px}.app span{color:var(--dim);font-size:15px;line-height:1.6}
+.how{margin-top:30px;padding:18px 20px;border-radius:20px;border:1px dashed var(--line);color:var(--dim);line-height:1.8;font-size:15px}
+.how b{color:var(--ink)}
+.how ol{margin:6px 0 0;padding-left:22px}
+</style></head><body><main>
+<div class="eyebrow">中正補習班・Arice</div>
+<h1>五年級學習平台</h1>
+<p class="lead">選一個打開。第一次使用要登入：學生輸入老師給的帳號密碼，老師輸入 Email。登入一次之後會記住。</p>
+<div class="apps">
+  <a class="app" href="island/"><img src="island/icon-512.png" alt=""><div><b>學習島</b><span>期末考範圍・五科闖關</span></div></a>
+  <a class="app" href="brave/"><img src="brave/icon-512.png" alt=""><div><b>勇者衝鋒</b><span>單元複習・總複習・雙人決鬥</span></div></a>
+</div>
+<div class="how"><b>放到 iPad 主畫面（全螢幕）</b>
+<ol><li>用 <b>Safari</b> 點進上面其中一個。</li><li>按網址列旁邊的「分享」按鈕 → 「加入主畫面」。</li><li>從主畫面的圖示打開，就是全螢幕，沒有網址列。兩個都要各加一次。</li></ol>也可以用 iPad 的 Safari 點這裡安裝描述檔，裝好到「設定 → 已下載描述檔」按安裝：<a href="profiles/island.mobileconfig" style="color:var(--accent)">學習島</a>・<a href="profiles/brave.mobileconfig" style="color:var(--accent)">勇者衝鋒</a></div>
+<p style="margin-top:22px;color:var(--dim);font-size:14px">老師專用：<a href="accounts.html" style="color:var(--accent)">學生帳號管理</a>・<a href="import.html" style="color:var(--accent)">從 Claude 版搬資料</a></p>
+</main></body></html>

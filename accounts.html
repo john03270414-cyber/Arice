@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>學生帳號</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14101a">
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
+<script src="lib/config.js"></script>
+<script src="lib/shim.js" data-app="accounts" data-prefix=""></script>
+<style>
+:root{--bg:#14101a;--card:#1f1826;--line:#33283a;--ink:#f3ebe3;--dim:#a99c95;--accent:#f0b341;--good:#5fd08a;--bad:#ff7b6e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:max(24px,env(safe-area-inset-top)) 16px 60px}
+a{color:var(--accent)}
+h1{margin:4px 0 6px;font-size:28px}.lead{color:var(--dim);line-height:1.7;margin:0 0 16px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+button{font:inherit;min-height:42px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:#2a2132;color:var(--ink);font-weight:600;cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:#1a1208}
+button.warn{color:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:36px;padding:0 14px;border-radius:999px}.chip.on{background:var(--accent);color:#1a1208;border-color:var(--accent)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--dim);font-size:13px;font-weight:600}
+tr:last-child td{border-bottom:0}
+td input{width:110px;font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#0f0a12;color:var(--ink)}
+.pw{font:700 20px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}
+.st{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.st.ok{background:rgba(95,208,138,.14);color:var(--good)}.st.no{background:rgba(255,255,255,.06);color:var(--dim)}.st.off{background:rgba(255,123,110,.12);color:var(--bad)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{min-height:36px;padding:0 12px;font-size:14px}
+.note{margin-top:16px;color:var(--dim);font-size:14px;line-height:1.8}
+#msg{min-height:24px;color:var(--accent);margin-top:10px}
+.cards{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;color:#000}main>*:not(.cards){display:none!important}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+  .card{border:1.5px dashed #888;border-radius:4mm;padding:5mm 6mm;break-inside:avoid;font-family:"BiauKai","DFKai-SB","標楷體",serif}
+  .card h3{margin:0 0 2mm;font-size:16pt}.card p{margin:1mm 0;font-size:12pt}.card .big{font:700 15pt ui-monospace,Menlo,monospace}
+  .card small{color:#444;font-size:9.5pt}
+}
+</style></head><body><main>
+<a href="./">← 回首頁</a>
+<h1>學生帳號</h1>
+<p class="lead">幫學生建帳號，他們就能在補習班平板或家裡的手機、平板登入學習島和勇者衝鋒。登入後會直接進到自己的頁面，紀錄都會回到你的後台。</p>
+<div id="app"><p class="lead">載入中…</p></div>
+<div id="msg" role="status"></div>
+<div class="note">・帳號預設是學生代號（例如 s10），建立前可以改成好記的英文或數字。<br>・密碼是 6 位數字，學生忘記時按「重設密碼」會換一組新的，舊密碼立刻失效。<br>・「停用」後那個學生就登不進去；要再開放就按「重新開通」。<br>・按「列印帳號卡」可以印成小卡發給學生（只印已經有帳號的人）。</div>
+<div class="cards" id="cards"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A={roster:[],login:{},members:{},secret:{},school:'',busy:false,codes:{}};
+let FS=null;
+const SITE=location.origin+location.pathname.replace(/accounts\.html$/,'');
+async function load(){
+  const ok=await ARICE.boot();if(!ok){$('#app').innerHTML='<p class="lead">還沒有設定好資料庫。</p>';return}
+  if(ARICE.me.role!=='teacher'){$('#app').innerHTML='<p class="lead">這一頁只有老師能用。</p>';return}
+  FS=ARICE.raw();
+  const [a,b]=await Promise.all([FS.doc('isl_cfg/main').get(),FS.doc('brv_cfg/main').get()]);
+  const seen={};A.roster=[];const order=((a.exists&&a.data().schoolOrder)||(b.exists&&b.data().schoolOrder)||[]);
+  [a,b].forEach(s=>{if(s.exists)(s.data().students||[]).forEach(x=>{if(!seen[x.id]){seen[x.id]=1;A.roster.push(x)}})});
+  A.roster.sort((x,y)=>(order.indexOf(x.school)-order.indexOf(y.school))||String(x.id).localeCompare(String(y.id),'en',{numeric:true}));
+  A.schools=order.filter(s=>A.roster.some(x=>x.school===s));
+  FS.collection('secret').onSnapshot(q=>{A.secret={};q.docs.forEach(d=>A.secret[d.id]=d.data());render()});
+  FS.collection('login').onSnapshot(q=>{A.login={};q.docs.forEach(d=>A.login[d.id]=d.data());render()});
+  render()}
+const secOf=sid=>A.secret[sid]||null;
+const active=sid=>{const s=secOf(sid);return !!(s&&!s.off&&A.login[s.code]&&A.login[s.code].sid===sid)};
+const defCode=st=>String(st.id).toLowerCase().replace(/[^a-z0-9_-]/g,'');
+function render(){if(!FS)return;
+  const list=A.roster.filter(s=>!A.school||s.school===A.school);
+  const n=A.roster.filter(s=>active(s.id)).length;
+  $('#app').innerHTML=`<div class="bar"><div class="chips"><button class="chip ${!A.school?'on':''}" data-sch="">全部（${A.roster.length}）</button>${A.schools.map(s=>`<button class="chip ${A.school===s?'on':''}" data-sch="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+   <span style="flex:1"></span><button class="pri" id="mkAll" ${A.busy?'disabled':''}>幫還沒有帳號的人全部建立</button><button id="print" ${n?'':'disabled'}>🖨 列印帳號卡</button></div>
+  <div class="tbl"><table><thead><tr><th>學生</th><th>帳號</th><th>密碼</th><th>狀態</th><th>動作</th></tr></thead><tbody>
+  ${list.map(st=>{const s=secOf(st.id),on=active(st.id);const code=s?s.code:(A.codes[st.id]??defCode(st));
+    return `<tr><td><b>${esc(st.name)}</b><div style="color:var(--dim);font-size:13px">${esc(st.school)}・${esc(st.id)}</div></td>
+     <td>${s?`<span class="pw" style="font-size:17px">${esc(s.code)}</span>`:`<input data-code="${esc(st.id)}" value="${esc(code)}" aria-label="${esc(st.name)} 的帳號" maxlength="20">`}</td>
+     <td>${s&&!s.off?`<span class="pw">${esc(s.pw)}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
+     <td>${on?'<span class="st ok">可以登入</span>':s&&s.off?'<span class="st off">已停用</span>':'<span class="st no">還沒有帳號</span>'}</td>
+     <td><div class="acts">${!s?`<button class="pri" data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>建立</button>`
+       :s.off?`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重新開通</button>`
+       :`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重設密碼</button><button class="warn" data-off="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button>`}</div></td></tr>`}).join('')}
+  </tbody></table></div>`;
+  $('#cards').innerHTML=A.roster.filter(s=>active(s.id)).map(st=>{const s=secOf(st.id);return `<div class="card"><h3>${esc(st.name)}</h3><p>網址：<b>${esc(SITE)}</b></p><p>帳號：<span class="big">${esc(s.code)}</span></p><p>密碼：<span class="big">${esc(s.pw)}</span></p><small>中正補習班・Arice　學習島／勇者衝鋒</small></div>`}).join('')}
+const msg=t=>{$('#msg').textContent=t};
+function creator(){const ex=firebase.apps.find(a=>a.name==='creator');const app=ex||firebase.initializeApp(ARICE.cfg,'creator');return app.auth()}
+async function make(sid){const st=A.roster.find(x=>x.id===sid);if(!st)return;
+  const old=secOf(sid);let code=old?old.code:String(A.codes[sid]??defCode(st)).trim().toLowerCase();
+  if(!/^[a-z0-9_-]{2,20}$/.test(code))throw {friendly:st.name+'：帳號只能用英文小寫、數字、- 或 _，2～20 個字。'};
+  const owner=A.login[code];if(owner&&owner.sid!==sid)throw {friendly:'帳號「'+code+'」已經有人用了，請換一個。'};
+  const v=(old&&old.v||0)+1;const email=code+'.v'+v+'@stu.arice.app';
+  const pw=String(Math.floor(100000+Math.random()*900000));
+  const a2=creator();try{await a2.setPersistence(firebase.auth.Auth.Persistence.NONE)}catch(e){}
+  const cred=await a2.createUserWithEmailAndPassword(email,pw);const uid=cred.user.uid;await a2.signOut();
+  const b=FS.batch();
+  if(old&&old.uid)b.delete(FS.doc('members/'+old.uid));
+  b.set(FS.doc('members/'+uid),{sid,name:st.name,school:st.school||'',code,at:Date.now()});
+  b.set(FS.doc('login/'+code),{email,sid,v});
+  b.set(FS.doc('secret/'+sid),{code,pw,email,uid,v,at:Date.now(),off:false});
+  await b.commit()}
+async function off(sid){const s=secOf(sid);if(!s)return;const b=FS.batch();if(s.uid)b.delete(FS.doc('members/'+s.uid));if(A.login[s.code]&&A.login[s.code].sid===sid)b.delete(FS.doc('login/'+s.code));b.set(FS.doc('secret/'+sid),Object.assign({},s,{off:true,at:Date.now()}));await b.commit()}
+async function run(f,label){if(A.busy)return;A.busy=true;render();try{await f();msg(label||'完成')}catch(e){console.error(e);msg(e&&e.friendly||('沒有成功：'+((e&&e.code)||e&&e.message||e)))}A.busy=false;render()}
+document.addEventListener('input',e=>{const c=e.target.dataset&&e.target.dataset.code;if(c)A.codes[c]=e.target.value});
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.sch!=null){A.school=t.dataset.sch;render();return}
+  if(t.dataset.mk){const sid=t.dataset.mk;const st=A.roster.find(x=>x.id===sid);const s=secOf(sid);
+    if(s&&!s.off&&!confirm('要幫 '+st.name+' 換一組新密碼嗎？舊密碼會立刻失效。'))return;
+    run(()=>make(sid),st.name+(s?(s.off?' 已重新開通。':' 的新密碼好了。'):' 的帳號建立好了。'));return}
+  if(t.dataset.off){const sid=t.dataset.off;const st=A.roster.find(x=>x.id===sid);if(!confirm('要停用 '+st.name+' 的帳號嗎？他會登不進去。'))return;run(()=>off(sid),st.name+' 已停用。');return}
+  if(t.id==='mkAll'){const todo=A.roster.filter(s=>!secOf(s.id));if(!todo.length){msg('每個人都有帳號了。');return}
+    if(!confirm('要幫 '+todo.length+' 位學生建立帳號嗎？'))return;
+    run(async()=>{let k=0;for(const st of todo){msg('建立中… '+(++k)+' / '+todo.length+'（'+st.name+'）');await make(st.id)}},'全部建立好了，共 '+todo.length+' 位。');return}
+  if(t.id==='print'){window.print();return}});
+load();
+</script></body></html>
