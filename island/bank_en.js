@@ -63,7 +63,7 @@ const HL4=[
  M('b23','Tina ______ dogs.',['likes','like','liking','are'],'Tina 是第三人稱單數，like 要加 s。','動詞加 s'),
  M('b24',"A: Run! It's a bear.　B: ______",['Calm down.','Here you are.','I like tigers.','Me, too.'],'Calm down. 冷靜一點。','日常用語'),
  M('b25','They are gray. They are big. They have a long nose and big ears. 牠們是什麼？',['elephants','zebras','turtles','monkeys'],'灰色、很大、長鼻子大耳朵：大象。','閱讀'),
- M('b26','A: I like horses.　B: Me, too.　Me, too. 是什麼意思？',['我也是','我不喜歡','謝謝你','冷靜一點'],'Me, too. 我也是。','日常用語'),
+ M('b26','A: I like horses.　B: Me, too.　——「Me, too.」是什麼意思？',['我也是','我不喜歡','謝謝你','冷靜一點'],'Me, too. 我也是。','日常用語'),
  M('b27','下面哪一個字和 blue 的 ue 唸一樣？',['true','cut','bus','sun'],'ue 唸長音 /u/：blue、true、glue。','長音 u')
 ];
 const HF=[
@@ -155,7 +155,7 @@ const JC=[
  M('f15','「舞獅」的英文是哪一個？',['lion dance','lion','dance party','dragon boat'],'lion dance 舞獅。','中國新年'),
  M('f16','「紅包」的英文是哪一個？',['red envelope','red money','red paper','red bag'],'red envelope 紅包。','中國新年'),
  M('f17',"「Chinese New Year's Eve」是什麼？",['除夕','大年初一','元宵節','端午節'],"New Year's Eve 除夕。",'中國新年'),
- M('f18','You can see red decorations everywhere ______ Chinese New Year.',['during','on','up','color'],'during 在……期間。','閱讀'),
+ M('f18','You can see red decorations everywhere ______ Chinese New Year.',['during','under','up','color'],'during 在……期間。','閱讀'),
  M('f19','「春聯」的英文是哪一個？',['spring couplets','spring rolls','spring days','spring flowers'],'spring couplets 春聯；spring rolls 是春捲。','中國新年')
 ];
 const U=(id,name,badge,items)=>({id,name,badge,items});
