@@ -17,6 +17,36 @@
 <style>html{background:#0B0710}body{margin:0}</style>
 </head><body>
 <title>勇者衝鋒</title>
+<!--MAINT-->
+<div id="maint" role="dialog" aria-modal="true" aria-labelledby="mt-h">
+ <div class="mt-card">
+  <div class="mt-tape" aria-hidden="true"></div>
+  <div class="mt-ic" aria-hidden="true">🚧</div>
+  <h1 id="mt-h">網站維護中</h1>
+  <p class="mt-msg">勇者衝鋒的地城正在整修，暫時不能進入。</p>
+  <p class="mt-sub">升級好之後老師會通知大家，<br>到時候再回來繼續闖關喔！</p>
+  <div class="mt-foot">中正補習班・Arice</div>
+ </div>
+</div>
+<style>
+#maint{position:fixed;inset:0;z-index:200000;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 25%,#3a1424 0%,#14090f 55%,#07040a 100%);font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif;overflow:auto}
+#maint .mt-card{position:relative;width:100%;max-width:440px;background:#17111b;color:#f3ebe3;border:1px solid rgba(240,179,65,.22);border-radius:28px;padding:44px 28px 26px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}
+#maint .mt-tape{position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(-45deg,#f5c430 0 16px,#1d1d1d 16px 32px)}
+#maint .mt-ic{font-size:72px;line-height:1;margin:6px 0 14px;display:inline-block;animation:mt-bob 2.4s ease-in-out infinite;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+#maint h1{margin:0 0 12px;font-size:32px;letter-spacing:.06em}
+#maint .mt-msg{margin:0 0 10px;font-size:19px;font-weight:700;line-height:1.6}
+#maint .mt-sub{margin:0;font-size:16px;line-height:1.8;color:#b3a39b}
+#maint .mt-foot{margin-top:26px;padding-top:14px;border-top:1px solid rgba(240,179,65,.22);font-size:13px;color:#b3a39b;letter-spacing:.08em}
+@keyframes mt-bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){#maint .mt-ic{animation:none}}
+</style>
+<script>(function(){var m=document.getElementById('maint');if(!m)return;
+try{if(sessionStorage.getItem('maint-skip')){m.remove();return}}catch(e){}
+/* 老師：按住 🚧 三秒可以略過維護畫面（只在這個分頁有效） */
+var ic=m.querySelector('.mt-ic'),t=0;ic.addEventListener('pointerdown',function(){t=setTimeout(function(){try{sessionStorage.setItem('maint-skip','1')}catch(e){}m.remove()},3000)});
+['pointerup','pointerleave','pointercancel'].forEach(function(ev){ic.addEventListener(ev,function(){clearTimeout(t)})});})();</script>
+<!--/MAINT-->
+
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Serif+TC:wght@700;900&display=swap">
