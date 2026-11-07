@@ -807,7 +807,7 @@ function home() {
         <span><span class="nm">${k + 1}. ${u.name}</span><br><span class="ds">${u.ds}</span><br><span class="st">${u.id === 'u6' && save.best.exam != null ? `<span style="font-size:16px;color:var(--ink2);text-shadow:none;letter-spacing:0">模擬考最高 ${save.best.exam} 分</span>` : starStr(save.stars[u.id] || 0)}</span></span>
         <span class="go">PLAY</span></button>`).join('')}</div>
     <div class="plan"><div><b>11/2 上課：</b>第 1～4 關（星期、科目、數字、句型）</div><div><b>11/9 上課：</b>第 5～6 關（自然發音、總複習＋模擬考）</div><div>每關拿不到 3 顆星就再玩一次！</div></div>
-    <div class="foot"><a href="https://claude.ai/artifact/D2Pmvu3qXhqWuG37vYaHvF" target="_blank" rel="noopener">🎲 英語大富翁</a></div>`;
+    <div class="foot"></div>`;
   const nm = $('#nm'); nm.oninput = () => { save.name = nm.value.trim(); persist(); };
   app.querySelectorAll('[data-u]').forEach(b => b.onclick = () => {
     if (!(save.name || '').trim()) { nm.focus(); nm.classList.remove('need'); void nm.offsetWidth; nm.classList.add('need'); SFX.ac(); SFX.bad(); return; }
