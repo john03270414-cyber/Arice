@@ -20,6 +20,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
 <style>
 /* Layout: one-column app shell, big tappable cards for iPad; each subject owns a color, the island teal ties them together. */
 :root{
@@ -397,6 +398,31 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @media (max-width:640px){#fsbtn{display:none!important}}
+
+/* ---- 社會科：標楷體、重點卡、時間軸 ---- */
+.z-so .qtext,.z-so .opt,.z-so .fb,.z-so .mitem,.z-so .chip,.z-so .clsrow,.z-so .mchip,.z-so .tok,.z-so .sonote,.z-so .tl,.z-so .ucard h2,.z-so .sbanner h1{font-family:"BiauKai","標楷體","DFKai-SB","Kaiti TC","STKaiti","LXGW WenKai TC",var(--font)}
+.z-so .qtext{font-size:21px}
+.sotabs{display:flex;gap:8px;flex-wrap:wrap}
+.sotab{min-height:40px;padding:0 14px;border-radius:99px;border:2px solid var(--line);background:var(--surface);font-weight:700;color:var(--ink)}
+.sotab.on{background:var(--sc-c);border-color:var(--sc-c);color:#fff}
+.sonotes{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.sonote{background:var(--sunk);border-radius:16px;padding:14px 16px;border-left:6px solid var(--cc,var(--sc-c));animation:soIn .45s both}
+.sonote h3{margin:0 0 6px;font-size:19px}
+.sonote ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:17px;line-height:1.6}
+.sonote .cat{display:inline-block;font-size:13px;font-weight:700;color:#fff;background:var(--cc,var(--sc-c));border-radius:99px;padding:1px 9px;margin-bottom:6px;font-family:var(--font)}
+.cat-歷史{--cc:#B5651D}.cat-公民{--cc:#2E7D5B}.cat-地理{--cc:#2C79C9}
+.tl{position:relative;display:grid;gap:14px;padding:6px 0 6px 34px}
+.tl:before{content:"";position:absolute;left:14px;top:4px;bottom:4px;width:4px;border-radius:4px;background:linear-gradient(var(--sc-c),color-mix(in srgb,var(--sc-c) 30%,#fff))}
+.tl .ev{position:relative;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);opacity:0;transform:translateX(-14px)}
+.tl.play .ev{animation:soSlide .5s forwards}
+.tl .ev .dot{position:absolute;left:-34px;top:8px;width:30px;height:30px;border-radius:50%;background:var(--sc-c);color:#fff;display:grid;place-items:center;font-size:16px;box-shadow:0 0 0 4px var(--surface)}
+.tl .ev b.y{display:inline-block;font-family:var(--font);background:color-mix(in srgb,var(--sc-c) 14%,#fff);color:var(--sc-c);border-radius:8px;padding:0 8px;margin-right:6px;font-variant-numeric:tabular-nums}
+.tl .ev .d{font-size:15px;color:var(--muted);margin-top:2px}
+.socats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.socats .btn{min-height:46px;white-space:nowrap;padding:0 10px}
+@keyframes soSlide{to{opacity:1;transform:none}}
+@keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.tl .ev{opacity:1;transform:none}.tl.play .ev,.sonote{animation:none}}
 </style>
 
 <div id="app"></div>
@@ -409,6 +435,10 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <script src="bank_math.js"></script>
 <script src="bank_en.js"></script>
 <script src="bank_zh.js"></script>
+<script src="so_maps.js"></script>
+<script src="bank_so_hanlin.js"></script>
+<script src="bank_so_kangxuan.js"></script>
+<script src="bank_so_nanyi.js"></script>
 <script src="demo.js"></script>
 <script>
 (function(){
@@ -503,7 +533,9 @@ const students=()=>(S.cfg&&S.cfg.students)||[];
 const stuById=id=>students().find(s=>s.id===id);
 const schoolsList=()=>{const c=S.cfg||{};const o=c.schoolOrder||Object.keys(c.schools||{});students().forEach(s=>{if(s.school&&!o.includes(s.school))o.push(s.school)});return o};
 const pubOf=(sid,subj)=>{const s=stuById(sid);return s&&S.cfg.schools&&S.cfg.schools[s.school]?S.cfg.schools[s.school][subj]||'':''};
-const isOpen=(subj,pub,uid)=>!!(S.cfg&&S.cfg.open&&S.cfg.open[ukey(subj,pub,uid)]);
+/* 社會科預設開放（老師可在後台關掉＝存成 false）；其他科照舊要老師打開 */
+const openVal=(o,subj,pub,uid)=>{const v=o&&o[ukey(subj,pub,uid)];return subj==='社會'?v!==false:!!v};
+const isOpen=(subj,pub,uid)=>openVal(S.cfg&&S.cfg.open,subj,pub,uid);
 function subjState(sid,subj){const pub=pubOf(sid,subj);if(!pub)return {lock:'版本還沒設定'};const us=unitsOf(subj,pub);if(!us.length)return {pub,lock:'題目準備中'};const open=us.filter(u=>isOpen(subj,pub,u.id));if(!open.length)return {pub,lock:'老師還沒開放'};return {pub,units:open}}
 const stuDoc=sid=>S.stu[sid]||{m:{},pass:{},best:{},days:{}};
 
@@ -631,7 +663,7 @@ function sceneSVG(){
 function vHome(){
   const ready=S.cfgState==='ok'&&S.dbState==='ok'&&students().length;
   const today=ready?students().filter(s=>(stuDoc(s.id).days||{})[ymd()]):[];
-  const openN=S.cfg&&S.cfg.open?Object.keys(S.cfg.open).length:0;
+  const openN=(()=>{const o=(S.cfg&&S.cfg.open)||{};let n=Object.keys(o).filter(k=>o[k]===true).length;const pubs=new Set(Object.values((S.cfg&&S.cfg.schools)||{}).map(x=>x&&x['社會']).filter(Boolean));pubs.forEach(p=>unitsOf('社會',p).forEach(u=>{if(isOpen('社會',p,u.id))n++}));return n})();
   const hero=`<section class="hero">${sceneSVG()}<div class="hero-card"><div class="eyebrow">${dateLabel()}</div><h1 class="hero-title">Arice 學習島</h1><p class="hero-sub">五年級上學期・期末考衝刺，國語 數學 社會 自然 英語一起闖關！</p>
     ${ready?`<div class="hero-stats"><div><b>${today.length}</b><span>今天已上島</span></div><div><b>${students().length}</b><span>島民</span></div><div><b>${openN}</b><span>開放單元</span></div></div>`:''}</div>
     <button class="scene-mute" data-act="mute" aria-label="音效開關">${SFX.label}</button></section>`;
@@ -705,12 +737,28 @@ function vUnit(v){
   return `<div class="z-${z}"><section class="sbanner"><span class="wm">${SM[subj].g}</span><button class="back light" data-act="backSubj">← ${subj}島</button><div class="grow"><div class="eyebrow">${esc(pub)}版・${esc(subj)}</div><h1>${esc(un.name)}</h1></div>${ring(s.tot?s.c.done/s.tot:0,null,72)}</section>
   <div class="ucard"><div class="spread"><div><h2>✏️ 練習</h2><div class="muted small">每次 10 題，還沒學會的題目會優先出現${s.acc!=null?`・目前答對率 ${Math.round(s.acc*100)}%`:''}</div></div>${pill(s.st)}</div>${barHTML(s.c,s.tot)}
   <div class="legend"><span><b style="background:var(--good)"></b>已學會 ${s.c.done}</span><span><b style="background:var(--warn)"></b>還在練 ${s.c.learn}</span><span><b style="background:var(--bad)"></b>錯很多 ${s.c.weak}</span><span>尚未做 ${s.c.new}</span></div>
-  <button class="btn big" data-act="startPractice" data-u="${esc(uid)}">開始練習</button></div>
-  ${subj==='國語'?charBlock(sid,subj,pub,[un]):''}
+  <button class="btn big" data-act="startPractice" data-u="${esc(uid)}">開始練習</button>${subj==='社會'?soCatBtns(un,uid):''}</div>
+  ${subj==='國語'?charBlock(sid,subj,pub,[un]):''}${subj==='社會'?soBlocks(un):''}
   <div class="sec-h" style="margin-top:22px"><h2>🎮 遊戲</h2><span class="muted">${passed?'遊戲已開放，挑戰 3 顆星！':'練習答對 85%（10 題對 9 題）就會解鎖'}</span></div>
   <div class="gtiles">${gb||'<p class="muted">這個單元沒有遊戲題。</p>'}</div></div>`;
 }
 
+
+/* ---------- 社會科：重點卡、時間軸、分類練習 ---------- */
+const SO_CATS=['歷史','公民','地理'];const SO_IC={歷史:'📜',公民:'⚖️',地理:'🗺️'};
+function soCatBtns(un,uid){const c=SO_CATS.map(k=>[k,un.items.filter(it=>it.cat===k).length]).filter(x=>x[1]>=3);if(c.length<2)return '';
+  return `<div class="small muted" style="margin-top:4px">只想練某一類？</div><div class="socats">${c.map(([k,n])=>`<button class="btn ghost" data-act="startPractice" data-u="${esc(uid)}" data-cat="${k}">${SO_IC[k]} ${k}題 <span class="small muted">（${n}）</span></button>`).join('')}</div>`}
+function soBlocks(un){
+  const notes=un.notes||[];const tab=S.soTab&&(S.soTab==='all'||notes.some(n=>n.cat===S.soTab))?S.soTab:'all';
+  const cats=SO_CATS.filter(k=>notes.some(n=>n.cat===k));
+  const shown=notes.filter(n=>tab==='all'||n.cat===tab);
+  const nb=notes.length?`<div class="sec-h" style="margin-top:22px"><h2>📖 重點卡</h2><span class="muted">先讀重點再練習，記得更牢</span></div>
+  <div class="ucard">${cats.length>1?`<div class="sotabs"><button class="sotab ${tab==='all'?'on':''}" data-act="soTab" data-k="all">全部</button>${cats.map(k=>`<button class="sotab ${tab===k?'on':''}" data-act="soTab" data-k="${k}">${SO_IC[k]} ${k}</button>`).join('')}</div>`:''}
+  <div class="sonotes">${shown.map((n,i)=>`<div class="sonote cat-${esc(n.cat)}" style="animation-delay:${i*.06}s"><span class="cat">${SO_IC[n.cat]||''} ${esc(n.cat)}</span><h3>${esc(n.t)}</h3><ul>${(n.pts||[]).map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('')}</div></div>`:'';
+  const tl=un.timeline||[];
+  const tb=tl.length?`<div class="sec-h" style="margin-top:22px"><h2>⏳ 時間軸</h2><button class="btn ghost sm" data-act="soPlay">▶ 再播一次</button></div>
+  <div class="ucard"><div class="tl play" id="soTL" data-n="${S.soPlay||0}">${tl.map((e,i)=>`<div class="ev" style="animation-delay:${.15+i*.45}s"><span class="dot">${esc(e.ic||'•')}</span><div><b class="y">${esc(e.y)}</b><b>${esc(e.t)}</b></div>${e.d?`<div class="d">${esc(e.d)}</div>`:''}</div>`).join('')}</div><div class="small muted">小訣竅：先記住順序，再記年代。玩「時間軸排序」遊戲可以練習。</div></div>`:'';
+  return nb+tb}
 /* ---------- sessions ---------- */
 function newSession(o){resetPads();const s=Object.assign({i:0,res:[],score:0,combo:0,lives:null,pos:0,stickers:0,phase:'q',qs:null,fb:null},o);s.qts=Date.now();s.qs=initQ(s.items[0].it);S.sess=s;if(s.items[0].it.type==='listen')s.autoSay=true;if(!s.demo&&!s.trial){S.tOK=false;loadLog(s.sid)}if(s.game){s.autoSay=false;go('cover')}else{go('play')}pushLive()}
 function vCover(){
@@ -848,7 +896,7 @@ function finish(){
   const s=S.sess;s.done=true;const ok=s.res.filter(r=>r.ok).length,n=s.res.length;const acc=n?ok/n:0;
   s.stars=acc>=.9?3:acc>=.7?2:acc>=.5?1:0;
   if(!s.demo&&!s.trial){const d=stuDoc(s.sid);const k=ukey(s.subj,s.pub,s.uid);
-    if(s.mode==='practice'&&acc>=.85){d.pass=d.pass||{};if(!d.pass[k]){d.pass[k]=Date.now();s.newPass=true}}
+    if(s.mode==='practice'&&!s.cat&&acc>=.85){d.pass=d.pass||{};if(!d.pass[k]){d.pass[k]=Date.now();s.newPass=true}}
     if(s.game){d.best=d.best||{};const bk=k+'|'+s.game.k;if((d.best[bk]||0)<s.stars)d.best[bk]=s.stars}
     S.stu[s.sid]=d;saveStu(s.sid)}
   pushLive();go('result');
@@ -947,7 +995,7 @@ function tSet(){
   const ros=`<div class="tbl"><table><thead><tr><th>姓名</th><th>學校</th><th></th></tr></thead><tbody>${d.students.map((st,i)=>`<tr><td><input id="stn-${st.id}" value="${esc(st.name)}" data-f="stuName" data-i="${i}" style="width:120px"></td><td><select id="sts-${st.id}" data-f="stuSchool" data-i="${i}">${sch.map(s=>`<option ${st.school===s?'selected':''}>${esc(s)}</option>`).join('')}</select></td><td><button class="btn ghost sm" data-act="delStu" data-i="${i}">刪除</button></td></tr>`).join('')}</tbody></table></div><button class="btn ghost sm" data-act="addStu" style="margin-top:8px">＋ 新增學生</button>`;
   const used={};sch.forEach(s=>SUBJS.forEach(subj=>{const p=d.schools[s]&&d.schools[s][subj];if(p)(used[subj+'|'+p]=used[subj+'|'+p]||[]).push(s)}));
   const opens=SUBJS.map(subj=>{const pubs=[...new Set(Object.keys(used).filter(k=>k.startsWith(subj+'|')).map(k=>k.split('|')[1]))];if(!pubs.length)return `<div class="card"><h3>${subj}</h3><div class="small muted">還沒有學校設定這科的版本。</div></div>`;
-    return `<div class="card stack z-${SM[subj].z}" style="gap:8px;border-top:6px solid var(--sc-c)"><h3>${subj}</h3>${pubs.map(p=>{const us=unitsOf(subj,p);return `<div class="stack" style="gap:6px"><div class="spread"><b>${esc(p)}版</b><span class="small muted">${used[subj+'|'+p].map(esc).join('、')}</span></div>${us.length?us.map(u=>{const k=ukey(subj,p,u.id);return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>${esc(u.name)} <span class="small muted">${u.items.length} 題</span></span><span class="sw ${d.open[k]?'on':''}"></span></button>`}).join('')+(()=>{const k=ukey(subj,p,'__final');return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>🏆 總複習 <span class="small muted">開放單元混合 20 題</span></span><span class="sw ${d.open[k]?'on':''}"></span></button>`})():'<div class="pill p-none" style="justify-self:start">🔒 題目準備中，學生端已上鎖</div>'}</div>`}).join('')}</div>`}).join('');
+    return `<div class="card stack z-${SM[subj].z}" style="gap:8px;border-top:6px solid var(--sc-c)"><h3>${subj}</h3>${pubs.map(p=>{const us=unitsOf(subj,p);return `<div class="stack" style="gap:6px"><div class="spread"><b>${esc(p)}版</b><span class="small muted">${used[subj+'|'+p].map(esc).join('、')}</span></div>${us.length?us.map(u=>{const k=ukey(subj,p,u.id);return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>${esc(u.name)} <span class="small muted">${u.items.length} 題</span></span><span class="sw ${openVal(d.open,subj,p,u.id)?'on':''}"></span></button>`}).join('')+(()=>{const k=ukey(subj,p,'__final');return `<button class="toggle" data-act="toggleOpen" data-k="${esc(k)}"><span>🏆 總複習 <span class="small muted">開放單元混合 20 題</span></span><span class="sw ${openVal(d.open,subj,p,'__final')?'on':''}"></span></button>`})():'<div class="pill p-none" style="justify-self:start">🔒 題目準備中，學生端已上鎖</div>'}</div>`}).join('')}</div>`}).join('');
   const dirty=JSON.stringify(d)!==JSON.stringify(Object.assign({schools:{},schoolOrder:[],students:[],open:{}},S.cfg||{}));
   return `<div class="stack"><div class="spread"><span class="small muted">改完按「儲存設定」才會生效。</span><div class="row"><button class="btn ghost sm" data-act="resetDraft">放棄修改</button><button class="btn" data-act="saveCfg" ${dirty?'':'disabled'}>儲存設定</button></div></div>
   <h2>各校版本</h2>${ver}<h2>學生名單</h2>${ros}<h2>開放單元</h2><p class="small muted">題庫放進來後，這裡會出現單元。打開開關，學生才看得到那一課；沒有題目的科目一律鎖著。</p><div class="grid2">${opens}</div>
@@ -996,7 +1044,9 @@ const A={
     const all=[].concat(...us.map(u=>u.items.map(it=>wrap(subj,pub,u,it,m))));const items=shuffle(all.sort((a,b)=>sc(a)-sc(b)).slice(0,20));
     newSession({sid,subj,pub,uid:'__final',mode:'final',items,back:{n:'subj',sid,subj}})},
   profile:e=>go('profile',{sid:e.dataset.id}),
-  startPractice:e=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);const un=unitsOf(subj,pub).find(u=>u.id===e.dataset.u);newSession({sid,subj,pub,uid:un.id,mode:'practice',items:pickPractice(sid,subj,pub,un),back:{n:'unit',sid,subj,uid:un.id}})},
+  startPractice:e=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);let un=unitsOf(subj,pub).find(u=>u.id===e.dataset.u);if(!un)return;const cat=e.dataset.cat;const full=un;if(cat){const its=un.items.filter(it=>it.cat===cat);if(its.length)un=Object.assign({},un,{items:its})}newSession({sid,subj,pub,uid:full.id,mode:'practice',cat:cat||null,items:pickPractice(sid,subj,pub,un),back:{n:'unit',sid,subj,uid:full.id}})},
+  soTab:e=>{SFX.tap();S.soTab=e.dataset.k;render()},
+  soPlay:()=>{SFX.tap();const el=document.getElementById('soTL');if(el){el.classList.remove('play');void el.offsetWidth;el.classList.add('play')}},
   startGame:e=>{const {sid,subj}=S.view;const pub=pubOf(sid,subj);const un=unitsOf(subj,pub).find(u=>u.id===e.dataset.u);const g=GAMES[subj].find(x=>x.k===e.dataset.g);newSession({sid,subj,pub,uid:un.id,mode:'game',game:g,lives:3,items:pickGame(sid,subj,pub,un,g),back:{n:'unit',sid,subj,uid:un.id}})},
   startReview:e=>{const sid=e.dataset.id;const due=shuffle(dueList(sid)).slice(0,10);if(!due.length)return toast('沒有要複習的題目');const m=stuDoc(sid).m;const items=due.map(d=>wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,m));newSession({sid,subj:items[0].subj,pub:items[0].pub,uid:items[0].uid,mode:'review',items,back:{n:'stu',sid}})},
   pick:e=>{const s=S.sess;if(s.phase!=='q')return;s.qs.pick=+e.dataset.i;answer()},
@@ -1039,7 +1089,7 @@ const A={
   delSchool:e=>{const d=ensureDraft();const s=d.schoolOrder[+e.dataset.i];if(d.students.some(x=>x.school===s))return toast('這間學校還有學生，先把學生移走或刪除');d.schoolOrder.splice(+e.dataset.i,1);delete d.schools[s];render()},
   addStu:()=>{const d=ensureDraft();d.students.push({id:'s'+Date.now().toString(36),name:'',school:d.schoolOrder[0]||''});render();setTimeout(()=>{const ins=document.querySelectorAll('[data-f="stuName"]');ins[ins.length-1]&&ins[ins.length-1].focus()},50)},
   delStu:e=>{const d=ensureDraft();const i=+e.dataset.i;if(S.delArm!==i){S.delArm=i;return toast('再按一次「刪除」確認（成績紀錄會保留）')}S.delArm=null;d.students.splice(i,1);render()},
-  toggleOpen:e=>{const d=ensureDraft();const k=e.dataset.k;if(d.open[k])delete d.open[k];else d.open[k]=true;render()},
+  toggleOpen:e=>{const d=ensureDraft();const k=e.dataset.k;const [subj]=k.split('|');if(subj==='社會'){if(d.open[k]===false)delete d.open[k];else d.open[k]=false}else if(d.open[k])delete d.open[k];else d.open[k]=true;render()},
   resetDraft:()=>{S.draft=null;render()},
   saveCfg:async()=>{const d=ensureDraft();if(d.students.some(s=>!s.name.trim()))return toast('有學生沒填名字');d.students.forEach(s=>s.name=s.name.trim());const c=Object.assign({},d,{pin:(S.cfg&&S.cfg.pin)||d.pin||null});try{await S.db.doc('cfg/main').set(c);S.cfg=JSON.parse(JSON.stringify(c));S.draft=null;toast('設定已儲存');render()}catch(err){toast('存不進去：'+(err&&err.code||'請再試一次'))}},
   changePin:()=>{S.pinBuf='';S.pinMode='set';go('pin')},
