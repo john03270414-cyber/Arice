@@ -14,6 +14,7 @@
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
 <script src="../lib/shim.js?v=1794384737" data-app="brave" data-prefix="brv_"></script>
+<script src="../lib/avatar.js?v=1794450000"></script>
 <style>html{background:#0B0710}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
@@ -169,6 +170,7 @@ body.ingame .tlock,body.ingame .fsbtn{display:none}
 .avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px}
 .avc{height:60px;border-radius:16px;font-size:32px;background:var(--sunk);border:2px solid transparent}
 .avc.on{border-color:#FF8A5A;box-shadow:0 0 14px -2px #FF6A3A}
+.avc .arav{width:54px;height:54px;margin:auto}
 .pinbox{max-width:400px;margin:20px auto;text-align:center;display:grid;gap:10px;justify-items:center}
 .pinbox.fx-no{animation:shake .42s}
 .pdots{display:flex;gap:14px;margin:6px 0}
@@ -309,6 +311,7 @@ button.itm:active{transform:scale(.92)}
 .cell.own.o1{box-shadow:inset 0 0 0 2.5px var(--p1);background:color-mix(in srgb,var(--p1) 18%,#1A121D)}
 .cell .lv{position:absolute;right:1px;top:0;font-size:clamp(9px,1.4vw,14px)}
 .tok{position:absolute;bottom:1px;font-size:clamp(14px,2.6vw,24px);line-height:1;filter:drop-shadow(0 2px 3px #000);animation:popin .2s}
+.tok .arav{width:clamp(18px,3.4vw,32px);height:clamp(18px,3.4vw,32px)}
 .tok.t0{left:1px;filter:drop-shadow(0 0 4px var(--p0)) drop-shadow(0 2px 2px #000)}.tok.t1{right:1px;filter:drop-shadow(0 0 4px var(--p1)) drop-shadow(0 2px 2px #000)}
 .dcenter{grid-row:2/7;grid-column:2/7;display:grid;align-content:center;justify-items:center;gap:8px;padding:10px;text-align:center}
 .dc-t{font-family:var(--serif);font-weight:900;font-size:clamp(18px,3vw,28px);color:#FFB070;text-shadow:0 0 16px rgba(255,90,40,.6)}
@@ -486,7 +489,9 @@ const students=()=>(S.cfg&&S.cfg.students)||[];
 const stuById=id=>students().find(s=>s.id===id);
 const schoolsList=()=>{const o=(S.cfg&&S.cfg.schoolOrder)||[];const all=[...new Set(students().map(s=>s.school))];return o.filter(x=>all.includes(x)).concat(all.filter(x=>!o.includes(x)))};
 const pubOf=(school,subj)=>(((S.cfg||{}).schools||{})[school]||{})[subj]||'';
-const avOf=sid=>(S.hst[sid]&&AVS.includes(S.hst[sid].av))?S.hst[sid].av:AVS[(parseInt(String(sid).replace(/\D/g,''))||0)%AVS.length];
+const avOk=v=>AVS.includes(v)||!!(window.ARAV&&ARAV.ok(v));
+const avH=v=>(window.ARAV&&ARAV.ok(v))?ARAV.html(v):esc(v||'');
+const avOf=sid=>(S.hst[sid]&&avOk(S.hst[sid].av))?S.hst[sid].av:AVS[(parseInt(String(sid).replace(/\D/g,''))||0)%AVS.length];
 function gameFor(sid,subj){const st=stuById(sid);if(!st)return null;const pub=pubOf(st.school,subj);const g=(GAMEMAP[subj]||{})[pub];return {pub,g}}
 
 /* ---------- db ---------- */
@@ -571,7 +576,7 @@ function vHome(){
   else{
     const sch=schoolsList();if(!S.school||!sch.includes(S.school))S.school=sch[0];
     const seg=sch.map(s=>`<button class="seg ${s===S.school?'on':''}" data-act="school" data-s="${esc(s)}"><span>${esc(s)}</span><i>${students().filter(x=>x.school===s).length}</i></button>`).join('');
-    const names=students().filter(s=>s.school===S.school).map((s,i)=>`<button class="name" data-act="pickStu" data-id="${esc(s.id)}" style="animation-delay:${i*40}ms"><span class="av">${avOf(s.id)}</span><span class="nm"><b>${esc(s.name)}</b><small>${esc(s.school)}</small></span><span class="chev">›</span></button>`).join('');
+    const names=students().filter(s=>s.school===S.school).map((s,i)=>`<button class="name" data-act="pickStu" data-id="${esc(s.id)}" style="animation-delay:${i*40}ms"><span class="av">${avH(avOf(s.id))}</span><span class="nm"><b>${esc(s.name)}</b><small>${esc(s.school)}</small></span><span class="chev">›</span></button>`).join('');
     body=`<div class="home-grid"><section><div class="sec-h"><h2>你是哪位勇者？</h2><span class="muted">先選學校，再點你的名字</span></div><div class="segs">${seg}</div><div class="names">${names}</div></section>
       <aside class="side"><div class="panel tip"><b>勇者守則</b><ul><li>每座地城都有單元複習和總複習，跟以前的闖關、大富翁一樣玩</li><li>決鬥場可以兩台平板連線（一個人開房間，另一個人輸入 4 位數代碼），也可以兩個人用同一台平板一起玩</li><li>決鬥時答錯不能前進，亂猜只會讓對手拿分</li></ul></div>
       <div class="panel"><b>🏆 最近的決鬥</b>${S.dres.length?`<div style="display:grid;gap:6px;margin-top:8px">${S.dres.slice(0,5).map(r=>`<div class="small">${esc(r.win||'平手')} ${r.win?'勝':''}<span class="muted">・${esc((r.P||[]).map(p=>p.name).join(' vs '))}・${esc(r.subj)}</span></div>`).join('')}</div>`:'<p class="muted small" style="margin:6px 0 0">還沒有人決鬥過，第一場等你來開！</p>'}</div></aside></div>`;
@@ -583,13 +588,13 @@ function vStu(v){
   const gates=SUBJS.map(s=>{const r=gameFor(v.sid,s.k);
     if(!r||!r.g)return `<button class="gate locked z-${s.z}" data-act="lockedGate" data-s="${s.k}" data-p="${esc(r&&r.pub||'')}"><span class="wm">${s.g}</span><span class="glyph">${s.g}</span><div><h3>${s.k}</h3><small>${r&&r.pub?esc(r.pub)+'版':'版本未設定'}</small></div><small>🔒 地城還在建造中</small></button>`;
     const gi=GAMEINFO[r.g];return `<button class="gate z-${s.z}" data-act="openGame" data-g="${r.g}" data-p="${esc(r.pub)}"><span class="wm">${s.g}</span><span class="glyph">${s.g}</span><div><h3>${s.k}</h3><small>${esc(r.pub)}版・${esc(gi.n)}</small></div><span class="go">推門 ›</span></button>`}).join('');
-  return `<section class="me"><span class="av big" data-act="avOpen" role="button" aria-label="換頭像">${avOf(v.sid)}</span><div class="me-t"><div class="eyebrow">${esc(st.school)}</div><h1>勇者 ${esc(st.name)}</h1><p>選一座地城推門進去，或到決鬥場找同學挑戰！</p></div><button class="btn ghost" data-act="home">換人</button></section>
+  return `<section class="me"><span class="av big" data-act="avOpen" role="button" aria-label="換頭像">${avH(avOf(v.sid))}</span><div class="me-t"><div class="eyebrow">${esc(st.school)}</div><h1>勇者 ${esc(st.name)}</h1><p>選一座地城推門進去，或到決鬥場找同學挑戰！</p></div><button class="btn ghost" data-act="home">換人</button></section>
   <div class="sec-h"><h2>地城大門</h2><span class="muted">門後面是單元複習和總複習</span></div>
   <div class="gates">${gates}</div>
   <button class="arena" data-act="duel"><span class="ic">⚔️</span><span><h3>雙人決鬥場</h3><p>雙人大富翁，兩台平板連線或同一台平板一起玩：搶答、佔地蓋城堡、打魔王、買道具，還有血月和地震！</p><span class="tags"><span>🏰 地盤升級</span><span>👹 魔王與寶箱</span><span>🛒 道具商店</span><span>🩸 隨機事件</span></span></span><span class="btn gold">進場</span></button>
   ${S.avPick?avPicker(v.sid):''}`;
 }
-function avPicker(sid){const cur=avOf(sid);return `<div class="modal" data-act="avClose"><div class="sheet" data-stop="1"><div class="spread"><h2>選一個勇者頭像</h2><button class="btn ghost sm" data-act="avClose">關閉</button></div><div class="avgrid">${AVS.map(a=>`<button class="avc ${a===cur?'on':''}" data-act="avSet" data-v="${a}">${a}</button>`).join('')}</div></div></div>`}
+function avPicker(sid){const cur=avOf(sid);return `<div class="modal" data-act="avClose"><div class="sheet" data-stop="1"><div class="spread"><h2>選一個勇者頭像</h2><button class="btn ghost sm" data-act="avClose">關閉</button></div>${window.ARAV?`<div class="spread" style="margin-top:6px"><h3 style="margin:0">🎖️ 特戰隊員</h3><button class="btn sm" data-act="avMake">🛠️ 自己做一個</button></div><div class="avgrid">${(ARAV.ok(cur)&&!ARAV.presets.includes(cur)?[cur]:[]).concat(ARAV.presets).map(a=>`<button class="avc ${a===cur?'on':''}" data-act="avSet" data-v="${a}">${ARAV.html(a)}</button>`).join('')}</div><h3 style="margin:14px 0 8px">🗡️ 勇者</h3>`:''}<div class="avgrid">${AVS.map(a=>`<button class="avc ${a===cur?'on':''}" data-act="avSet" data-v="${a}">${a}</button>`).join('')}</div></div></div>`}
 
 /* ---------- game frame ---------- */
 let liveT=0;function livePing(on){clearInterval(liveT);const v=S.view;if(!S.db||!v.sid)return;const path='hlive/'+v.sid;
@@ -620,7 +625,7 @@ function vTeacher(){
   if(S.tTab==='prog'){b=PROG.view()}
   else if(S.tTab==='duel'){
     const live=S.duels.filter(d=>d.status==='play'||d.status==='wait').sort((a,b)=>(b.at||0)-(a.at||0));
-    const lv=live.length?`<div class="livec">${live.map(d=>{const P=d.P||[];return `<div class="panel"><div class="spread"><b>${esc(d.subj)}・${esc(d.mixed?'跨版本（'+(d.P||[]).filter(Boolean).map(p=>p.pub).join(' vs ')+'）':d.pub+'版')}</b><span class="small muted">${d.local?'同一台平板':'代碼 '+esc(d.id)}・${d.status==='wait'?'等待加入':'第 '+((d.r&&d.r.n)||0)+' 回合'}</span></div>${P.map((p,i)=>p?`<div class="row" style="margin-top:8px"><span class="av sm">${esc(p.av||'')}</span><b style="flex:1">${esc(p.name)}</b><span>${p.score} 分</span><span class="small muted">答對 ${p.ok}/${p.n}</span></div>`:'<div class="small muted" style="margin-top:8px">等待對手…</div>').join('')}</div>`}).join('')}</div>`:'<p class="muted">現在沒有進行中的決鬥。</p>';
+    const lv=live.length?`<div class="livec">${live.map(d=>{const P=d.P||[];return `<div class="panel"><div class="spread"><b>${esc(d.subj)}・${esc(d.mixed?'跨版本（'+(d.P||[]).filter(Boolean).map(p=>p.pub).join(' vs ')+'）':d.pub+'版')}</b><span class="small muted">${d.local?'同一台平板':'代碼 '+esc(d.id)}・${d.status==='wait'?'等待加入':'第 '+((d.r&&d.r.n)||0)+' 回合'}</span></div>${P.map((p,i)=>p?`<div class="row" style="margin-top:8px"><span class="av sm">${avH(p.av)}</span><b style="flex:1">${esc(p.name)}</b><span>${p.score} 分</span><span class="small muted">答對 ${p.ok}/${p.n}</span></div>`:'<div class="small muted" style="margin-top:8px">等待對手…</div>').join('')}</div>`}).join('')}</div>`:'<p class="muted">現在沒有進行中的決鬥。</p>';
     const rows=S.dres.slice(0,60).map(r=>{const P=r.P||[];return `<tr class="click" data-act="dresOpen" data-id="${esc(r.id)}"><td>${new Date(r.at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td><td>${esc(r.subj)}・${esc(r.mixed?(r.P||[]).map(p=>p.pub).join(' vs '):r.pub)}</td><td>${P.map(p=>`${esc(p.name)} <b>${p.total}</b>`).join(' vs ')}</td><td>${esc(r.win||'平手')}</td><td>${P.map(p=>Math.round((p.ok/Math.max(1,p.n))*100)+'%').join(' / ')}</td></tr>`}).join('');
     const open=S.view.dres?S.dres.find(r=>r.id===S.view.dres):null;
     const det=open?`<div class="panel" style="margin-top:14px"><div class="spread"><h3>${esc((open.P||[]).map(p=>p.name).join(' vs '))}</h3><button class="btn ghost sm" data-act="dresClose">收起</button></div>${(open.P||[]).map(p=>`<div style="margin-top:10px"><b>${esc(p.name)}</b>${open.mixed?` <span class="small">（${esc(p.pub||'')}版）</span>`:''} <span class="muted small">分數 ${p.score}＋地產 ${p.land}＝${p.total}・答對 ${p.ok}/${p.n}・最長連對 ${p.best||0}</span>${(p.wrong||[]).length?`<ul class="small">${p.wrong.map(w=>`<li>${esc(w.q)}<br><span style="color:var(--bad)">答：${esc(w.a||'沒作答')}</span>　<span style="color:var(--good)">正解：${esc(w.r)}</span></li>`).join('')}</ul>`:'<p class="small muted">全部答對！</p>'}</div>`).join('')}</div>`:'';
@@ -642,6 +647,7 @@ const A={
   pickStu:e=>{SFX.door();S.tOK=false;go('stu',{sid:e.dataset.id})},
   avOpen:()=>{SFX.tap();S.avPick=true;render()},
   avClose:(e,ev)=>{if(ev&&ev.target.closest('[data-stop]')&&!ev.target.closest('[data-act="avClose"].btn'))return;S.avPick=false;render()},
+  avMake:()=>{if(!window.ARAV)return;const sid=S.view.sid;const cur=avOf(sid);S.avPick=false;render();ARAV.editor(ARAV.ok(cur)?cur:null,v=>{const d=Object.assign({},S.hst[sid]||{},{av:v});S.hst[sid]=d;save('hstu/'+sid,d);SFX.sticker();render()})},
   avSet:e=>{const sid=S.view.sid;const d=Object.assign({},S.hst[sid]||{},{av:e.dataset.v});S.hst[sid]=d;save('hstu/'+sid,d);S.avPick=false;SFX.sticker();render()},
   lockedGate:e=>{SFX.no();toast(e.dataset.p?`${e.dataset.p}版的${e.dataset.s}地城還在建造中`:'這個科目還沒設定版本')},
   openGame:e=>{const st=stuById(S.view.sid);openGame(e.dataset.g,st?st.name:'',e.dataset.p,st&&st.id)},
@@ -791,7 +797,7 @@ function vWait(){const R=C.R;if(!R)return '<p class="muted">連線中…</p>';co
   ${C.role==='h'?`<p>請對手在另一台平板按「加入房間」，輸入這組代碼：</p><div class="bigcode">${esc(C.code)}</div>`:`<p>已加入房間 <b>${esc(C.code)}</b>，等房主按「開始決鬥」。</p>`}
   <div class="vs">${pc(P[0],0)}<span class="vsx">VS</span>${P[1]?pc(P[1],1):'<div class="pc empty"><span class="av">❔</span><b>等待對手…</b></div>'}</div>
   ${C.role==='h'?`<button class="btn gold" data-act="dStart" ${P[1]?'':'disabled'}>⚔️ 開始決鬥</button>`:''}</div>`}
-function pc(p,i){const mx=C.R&&C.R.mixed&&p.pub;return `<div class="pc p${i}"><span class="av">${esc(p.av)}</span><b>${esc(p.name)}</b><small>${esc(p.school||'')}</small>${mx?`<small>${esc(p.pub)}版・${(p.units||[]).length} 個單元</small>`:''}</div>`}
+function pc(p,i){const mx=C.R&&C.R.mixed&&p.pub;return `<div class="pc p${i}"><span class="av">${avH(p.av)}</span><b>${esc(p.name)}</b><small>${esc(p.school||'')}</small>${mx?`<small>${esc(p.pub)}版・${(p.units||[]).length} 個單元</small>`:''}</div>`}
 
 /* ---------- host: room lifecycle ---------- */
 function pInit(m){return {name:m.name,sid:m.sid,av:m.av,school:m.school,pub:m.pub||'',units:(m.units||[]).slice(),pos:0,score:0,items:[],shop:0,boss:null,stuck:0,dbl:false,frozenUntil:0,freezeNext:false,ok:0,n:0,streak:0,best:0,wrong:[]}}
@@ -948,7 +954,7 @@ function qPanelL(){const R=C.R,r=R.r;
   if(r.done&&r.res){const rs=r.res;return `<div class="qbox"><h3>第 ${r.n} 回合結果${r.mult>1?' <span class="evb hot">得分 ×2</span>':''}</h3>${[0,1].map(i=>`<div class="rres ${rs[i].ok?'ok':'no'}"><b>${esc(R.P[i].name)}</b><div>${rs[i].msgs.map(esc).join('<br>')}</div></div>`).join('')}<button class="btn next" data-act="dNext2">下一回合 ▶</button></div>`}
   const t=r.turn,p=R.P[t],o=R.P[1-t];const it=itemFor(t);if(!it)return '<div class="qbox">題目載入中…</div>';
   const qk=qkey(r.n,t);const q=C.qs[qk]||(C.qs[qk]={t0:Date.now(),order:shuffle(it.opts?it.opts.map((_,i)=>i):[]),s:'',n:'',d:'',f:'n',sel:[],done:null});
-  const ban=`<div class="turnb p${t}"><span class="av">${esc(p.av)}</span><span>輪到 ${esc(p.name)} 作答</span></div>`;
+  const ban=`<div class="turnb p${t}"><span class="av">${avH(p.av)}</span><span>輪到 ${esc(p.name)} 作答</span></div>`;
   if(q.done||r.fbAt){const ok=q.done&&q.done.ok;const nx=r.step===1?'看這回合結果 ▶':'換 '+esc(o.name)+' 作答 ▶';
     return `${ban}<div class="qbox"><div class="qt">${qHTML(it)}</div><div class="fb ${ok?'ok':'no'}"><b>${ok?'答對了！':q.done?'答錯了':'⏰ 時間到，沒有作答'}</b>${ok?'':`<div>正確答案：${esc(rightText(it))}</div>`}${it.exp?`<div class="small">${esc(it.exp)}</div>`:''}</div><button class="btn next" data-act="dNext">${nx}</button></div>`}
   const frozen=hnow()<p.frozenUntil;const fog=R.ev&&R.ev.k==='fog'&&r.n<=R.ev.until&&hnow()<r.at+2000;
@@ -956,9 +962,9 @@ function qPanelL(){const R=C.R,r=R.r;
 function evBadge(){const R=C.R;const n=R.r?R.r.n:0;const on=[];if(R.ev&&n<=R.ev.until&&(R.ev.k==='blood'||R.ev.k==='fog'))on.push(`<span class="evb">${R.ev.ic} ${R.ev.n}</span>`);if(hnow()>=R.endAt-60000&&R.status==='play')on.push('<span class="evb hot">🔥 最後衝刺 ×2</span>');return on.join('')}
 function pcard(p,i,me){if(!p)return '<div class="dpc"></div>';const st=[];if(p.boss)st.push(`<span class="st boss">👹 魔王 ${'❤️'.repeat(p.boss.hp)}</span>`);if(p.stuck)st.push('<span class="st">🕸️ 黏住</span>');if(p.dbl)st.push('<span class="st">🎲×2</span>');if(hnow()<p.frozenUntil)st.push('<span class="st ice">❄️ 冰凍</span>');if(p.shop)st.push('<span class="st">🛒 商店</span>');
   const items=p.items.map((k,j)=>{const I=ITEMS[k];const usable=(C.local||i===me)&&k!=='shield'&&C.R.status==='play';return usable?`<button class="itm" data-act="dUse" data-k="${k}" title="${esc(I.n)}：${esc(I.d)}">${I.ic}<small>${I.n}</small></button>`:`<span class="itm" title="${esc(I.n)}">${I.ic}</span>`}).join('');
-  return `<div class="dpc p${i} ${i===me?'me':''}"><div class="row"><span class="av">${esc(p.av)}</span><div style="min-width:0;flex:1"><b>${esc(p.name)}${i===me?(C.local?'<em>作答中</em>':'<em>你</em>'):''}</b><div class="sc">${p.score}<small> 分</small></div></div></div><div class="sts">${st.join('')}</div><div class="itms">${items||'<span class="small muted">沒有道具</span>'}</div></div>`}
+  return `<div class="dpc p${i} ${i===me?'me':''}"><div class="row"><span class="av">${avH(p.av)}</span><div style="min-width:0;flex:1"><b>${esc(p.name)}${i===me?(C.local?'<em>作答中</em>':'<em>你</em>'):''}</b><div class="sc">${p.score}<small> 分</small></div></div></div><div class="sts">${st.join('')}</div><div class="itms">${items||'<span class="small muted">沒有道具</span>'}</div></div>`}
 function cellRC(i){if(i<=6)return [7-i,1];if(i<=12)return [1,i-5];if(i<=18)return [i-11,7];return [7,25-i]}
-function boardInner(){const R=C.R;let h='';CELLS.forEach((c,i)=>{const [r,col]=cellRC(i);const L=R.land[i];const tok=[0,1].filter(k=>R.P[k]&&C.disp[k]===i).map(k=>`<span class="tok t${k}">${esc(R.P[k].av)}</span>`).join('');
+function boardInner(){const R=C.R;let h='';CELLS.forEach((c,i)=>{const [r,col]=cellRC(i);const L=R.land[i];const tok=[0,1].filter(k=>R.P[k]&&C.disp[k]===i).map(k=>`<span class="tok t${k}">${avH(R.P[k].av)}</span>`).join('');
   h+=`<div class="cell c-${c.t} ${L?'own o'+L.o:''}" style="grid-row:${r};grid-column:${col}"><span class="ci">${c.ic}</span><span class="cn">${esc(c.n)}</span>${L?`<span class="lv">${LV[L.lv]}</span>`:''}${tok}</div>`});
   const R2=C.R.r;h+=`<div class="dcenter"><div class="dc-t">${R.ev&&R2&&R2.n<=R.ev.until?`${R.ev.ic} ${esc(R.ev.n)}`:'⚔️ 決鬥中'}</div><div class="dc-l">${(R.log||[]).slice(-3).map(l=>`<div>${esc(l)}</div>`).join('')}</div></div>`;return h}
 function qPanel(mi){const R=C.R,r=R.r,me=mi==null?myIdx():mi;
@@ -1047,13 +1053,13 @@ function vEnd(){const R=C.R;const F=R.final;if(!F)return '<p class="muted">結�
   if(C.local){if(!C.saved){C.saved=true;SFX.win();setTimeout(()=>typeof confetti==='function'&&confetti(),200)}
     return `<div class="dend"><div class="dhead"><button class="btn ghost sm" data-act="dHome">← 地城大門</button></div>
   <div class="panel dres"><div class="crown">${F.win?'👑':'🤝'}</div><h1>${F.win?esc(F.win)+' 獲勝！':'平手！'}</h1>
-  <div class="vs">${F.P.map((p,i)=>p?`<div class="pc p${i} ${F.win===p.name?'win':''}"><span class="av">${esc(p.av)}</span><b>${esc(p.name)}</b><div class="tot">${p.total}</div><small>分數 ${p.score}＋地產 ${p.land}</small><small>答對 ${p.ok}/${p.n}・最長連對 ${p.best}</small></div>`:'').join('<span class="vsx">VS</span>')}</div>
+  <div class="vs">${F.P.map((p,i)=>p?`<div class="pc p${i} ${F.win===p.name?'win':''}"><span class="av">${avH(p.av)}</span><b>${esc(p.name)}</b><div class="tot">${p.total}</div><small>分數 ${p.score}＋地產 ${p.land}</small><small>答對 ${p.ok}/${p.n}・最長連對 ${p.best}</small></div>`:'').join('<span class="vsx">VS</span>')}</div>
   <button class="btn gold" data-act="dAgain">🔄 再比一場</button></div>
   <div class="dl-wr">${F.P.filter(Boolean).map(p=>`<div class="panel"><h3>${esc(p.name)} 答錯的題目</h3>${p.wrong.length?`<ul class="wl">${p.wrong.map(w=>`<li>${esc(w.q)}<br><span style="color:var(--bad)">你的答案：${esc(w.a||'沒作答')}</span>　<span style="color:var(--good)">正確答案：${esc(w.r)}</span></li>`).join('')}</ul>`:'<p><b>這場全部答對，太強了！</b></p>'}</div>`).join('')}</div></div>`}
   if(!C.saved){C.saved=true;if(iWin){SFX.win();setTimeout(()=>typeof confetti==='function'&&confetti(),200)}else if(F.win)SFX.lose();else SFX.ok(1)}
   return `<div class="dend"><div class="dhead"><button class="btn ghost sm" data-act="dHome">← 地城大門</button></div>
   <div class="panel dres"><div class="crown">${iWin?'👑':F.win?'⚔️':'🤝'}</div><h1>${F.win?(iWin?'你贏了！':esc(F.win)+' 獲勝！'):'平手！'}</h1>
-  <div class="vs">${F.P.map((p,i)=>p?`<div class="pc p${i} ${F.win===p.name?'win':''}"><span class="av">${esc(p.av)}</span><b>${esc(p.name)}</b><div class="tot">${p.total}</div><small>分數 ${p.score}＋地產 ${p.land}</small><small>答對 ${p.ok}/${p.n}・最長連對 ${p.best}</small></div>`:'').join('<span class="vsx">VS</span>')}</div></div>
+  <div class="vs">${F.P.map((p,i)=>p?`<div class="pc p${i} ${F.win===p.name?'win':''}"><span class="av">${avH(p.av)}</span><b>${esc(p.name)}</b><div class="tot">${p.total}</div><small>分數 ${p.score}＋地產 ${p.land}</small><small>答對 ${p.ok}/${p.n}・最長連對 ${p.best}</small></div>`:'').join('<span class="vsx">VS</span>')}</div></div>
   ${mine&&mine.wrong.length?`<div class="panel"><h3>你這場答錯的題目</h3><ul class="wl">${mine.wrong.map(w=>`<li>${esc(w.q)}<br><span style="color:var(--bad)">你的答案：${esc(w.a||'沒作答')}</span>　<span style="color:var(--good)">正確答案：${esc(w.r)}</span></li>`).join('')}</ul></div>`:mine?'<div class="panel"><b>這場全部答對，太強了！</b></div>':''}</div>`}
 
 return {enter,render:()=>{render()},A:DA,_host:()=>C,onHostChange:()=>{}};
@@ -1139,10 +1145,10 @@ function cell(b){if(!b||!b.n)return '<td class="pg-none">—</td>';const p=pct(b
 function vList(){const A=agg();const sch=schoolsList();const list=students().filter(s=>!P.school||s.school===P.school);
   const loading=SRC.some(s=>!P.raw[s.g]&&!P.err[s.g]);
   const rows=list.map(s=>{const o=A.st[s.id]||{subj:{},last:0};const open=SUBS.reduce((a,k)=>a+(o.subj[k]?Object.values(o.subj[k].wq).filter(w=>w.miss&&w.lastOk<w.lastW).length:0),0);
-    return `<tr class="click" data-act="pgOpen" data-id="${esc(s.id)}"><td><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="av sm">${esc(avOf(s.id))}</span><div><b>${esc(s.name)}</b><div class="small muted">${esc(s.school)}</div></div></div></td>${SUBS.map(k=>cell(o.subj[k])).join('')}<td>${open?`<span class="pg-badge">${open} 題</span>`:'<span class="small muted">—</span>'}</td><td class="small muted">${liveOf(s.id)?`<span class="pg-on">🟢 ${esc(gname(liveOf(s.id).g))}</span>`:o.last?ago(o.last):'還沒玩'}</td></tr>`}).join('');
+    return `<tr class="click" data-act="pgOpen" data-id="${esc(s.id)}"><td><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="av sm">${avH(avOf(s.id))}</span><div><b>${esc(s.name)}</b><div class="small muted">${esc(s.school)}</div></div></div></td>${SUBS.map(k=>cell(o.subj[k])).join('')}<td>${open?`<span class="pg-badge">${open} 題</span>`:'<span class="small muted">—</span>'}</td><td class="small muted">${liveOf(s.id)?`<span class="pg-on">🟢 ${esc(gname(liveOf(s.id).g))}</span>`:o.last?ago(o.last):'還沒玩'}</td></tr>`}).join('');
   const oth=Object.keys(A.other);
   const L=liveNow();
-  const liveBox=`<div class="panel pg-live"><b>🟢 現在在地城裡</b>${L.length?L.map(x=>`<button class="pg-lv" data-act="pgOpen" data-id="${esc(x.sid)}">${esc(avOf(x.sid))} ${esc(x.name)}<small>${esc(gname(x.g))}・${mins(x.since)}</small></button>`).join(''):'<span class="small muted">目前沒有人在玩。</span>'}</div>`;
+  const liveBox=`<div class="panel pg-live"><b>🟢 現在在地城裡</b>${L.length?L.map(x=>`<button class="pg-lv" data-act="pgOpen" data-id="${esc(x.sid)}">${esc(window.ARAV&&ARAV.ok(avOf(x.sid))?'🎖️':avOf(x.sid))} ${esc(x.name)}<small>${esc(gname(x.g))}・${mins(x.since)}</small></button>`).join(''):'<span class="small muted">目前沒有人在玩。</span>'}</div>`;
   return `${liveBox}<p class="muted small">學生在各地城玩過的關卡和決鬥，會自動整理在這裡。點學生看他每個單元的掌握度和錯題本。${loading?'（紀錄載入中…）':''}</p>
   <div class="chips" style="margin:10px 0 12px"><button class="chip ${!P.school?'on':''}" data-act="pgSchool" data-v="">全部學校</button>${sch.map(x=>`<button class="chip ${P.school===x?'on':''}" data-act="pgSchool" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   <div class="tbl"><table class="pg-tbl"><thead><tr><th>學生</th>${SUBS.map(k=>`<th>${k}</th>`).join('')}<th>待訂正錯題</th><th>最近</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">沒有學生</td></tr>'}</tbody></table></div>
@@ -1151,7 +1157,7 @@ function vList(){const A=agg();const sch=schoolsList();const list=students().fil
 function vStu(){const s=stuById(P.sid);if(!s){P.sid=null;return vList()}const o=agg().st[s.id]||{subj:{},sess:[],last:0};
   const have=SUBS.filter(k=>o.subj[k]&&o.subj[k].n);const subj=have.includes(P.subj)?P.subj:'';
   const head=`<div class="row" style="margin-bottom:10px"><button class="btn ghost sm" data-act="pgBack">← 全部學生</button></div>
-  <div class="panel pg-head"><span class="av">${esc(avOf(s.id))}</span><div><h2>${esc(s.name)}</h2><div class="small muted">${esc(s.school)}・${liveOf(s.id)?`<span class="pg-on">🟢 正在玩${esc(gname(liveOf(s.id).g))}（${mins(liveOf(s.id).since)}）</span>`:'最近：'+(o.last?ago(o.last):'還沒玩')}</div></div></div>`;
+  <div class="panel pg-head"><span class="av">${avH(avOf(s.id))}</span><div><h2>${esc(s.name)}</h2><div class="small muted">${esc(s.school)}・${liveOf(s.id)?`<span class="pg-on">🟢 正在玩${esc(gname(liveOf(s.id).g))}（${mins(liveOf(s.id).since)}）</span>`:'最近：'+(o.last?ago(o.last):'還沒玩')}</div></div></div>`;
   if(!have.length)return head+'<div class="panel" style="margin-top:12px"><p class="muted">這位學生還沒有任何紀錄。在地城闖關或決鬥之後，這裡就會出現他的學習狀況。</p></div>';
   const cards=have.map(k=>{const b=o.subj[k];const p=pct(b.c,b.n);const open=Object.values(b.wq).filter(w=>w.miss&&w.lastOk<w.lastW).length;
     return `<button class="pg-card ${lvl(p)} ${subj===k?'on':''}" data-act="pgSubj" data-v="${k}"><span class="small muted">${k}${b.pub?'・'+esc(b.pub):''}</span><b>${p}%</b><i style="--w:${p}%"></i><small>答對 ${b.c}/${b.n} 題・${b.sess} 次${open?`・待訂正 ${open}`:''}</small></button>`}).join('');

@@ -29,6 +29,8 @@ a{color:var(--accent)}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.08em;font-size:14px}
 h1{font-size:clamp(28px,6vw,40px);margin:6px 0 6px;text-wrap:balance}
+.hi{display:flex;align-items:center;gap:14px}
+#meav{flex:none;width:76px;height:76px;border-radius:22px;background:#DCE6D2;display:grid;place-items:center;overflow:hidden}
 .lead{color:var(--dim);margin:0 0 22px;line-height:1.7;font-size:17px}
 .out{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--dim);font-size:15px}
 .stats{display:flex;gap:10px;margin:0 0 22px;flex-wrap:wrap}
@@ -56,7 +58,7 @@ summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-he
 @media (prefers-reduced-motion:reduce){.app{transition:none}}
 </style></head><body class="loading"><main>
 <div class="top"><div class="eyebrow">中正補習班・Arice</div><button class="out" id="out" type="button" hidden>登出</button></div>
-<h1 id="hello">五年級學習平台</h1>
+<div class="hi"><span id="meav" hidden></span><h1 id="hello">五年級學習平台</h1></div>
 <p class="lead" id="lead">先登入，再選一個遊戲開始。在這裡登入一次，兩個遊戲都可以玩。</p>
 <div class="stats" id="stats" hidden></div>
 <div id="ar-login-slot"></div>
@@ -83,6 +85,7 @@ summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-he
 <script src="lib/firebase-firestore-compat.js" defer></script>
 <script src="lib/config.js" defer></script>
 <script src="lib/shim.js" data-app="home" data-prefix="" defer></script>
+<script src="lib/avatar.js?v=1794450000" defer></script>
 <script>
 /* 從這一頁進遊戲時，遊戲裡會出現「🏠 首頁」可以回來 */
 try{sessionStorage.setItem('ar-hub','1')}catch(e){}
@@ -108,7 +111,9 @@ window.addEventListener('DOMContentLoaded',function(){
     $('hello').textContent=(me.name||'同學')+'，歡迎回來！';
     if(me.role==='student'){
       $('lead').textContent='選一個遊戲開始吧。';
+      var showAv=function(v){if(!window.ARAV||!ARAV.ok(v))return false;var el=$('meav');el.innerHTML=ARAV.html(v);el.hidden=false;return true};
       if(me.sid)fs.doc('isl_stu/'+me.sid).get().then(function(s){
+        if(!showAv(s.exists&&s.data().av))fs.doc('brv_hstu/'+me.sid).get().then(function(b){showAv(b.exists&&b.data().av)}).catch(function(){});
         var d=(s.exists&&s.data().days)||{};
         var i=d[ymd()]?0:1,st=0;while(d[ymd(Date.now()-i*DAY)]){st++;i++}
         var wk=0;for(var k=0;k<7;k++)wk+=+d[ymd(Date.now()-k*DAY)]||0;
