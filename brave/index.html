@@ -252,6 +252,7 @@ body.inteach .tlock{display:none}
 .dcard span{color:var(--muted)}
 .dcard.host{background:radial-gradient(80% 120% at 0% 0%,rgba(240,179,65,.3),transparent 70%),linear-gradient(160deg,#2A1A08,#151018);border-color:#8A5A12}
 .dcard.join{background:radial-gradient(80% 120% at 0% 0%,rgba(92,200,255,.25),transparent 70%),linear-gradient(160deg,#0E1A2A,#151018);border-color:#2A5A8A}
+.dcard.local{background:radial-gradient(80% 120% at 0% 0%,rgba(110,220,140,.25),transparent 70%),linear-gradient(160deg,#0E2216,#151018);border-color:#2A7A4A}
 .dcard:hover{transform:translateY(-3px)}
 .drules ul{margin:8px 0 0;padding-left:20px;display:grid;gap:6px;color:#D8C8BC;font-size:15px}
 .drules b{color:#FFB070}
@@ -356,6 +357,29 @@ button.itm:active{transform:scale(.92)}
 @media (max-width:560px){.dtop{grid-template-columns:1fr 1fr}.dmid{grid-column:1/-1;grid-row:1;grid-auto-flow:column;justify-content:center;gap:10px}.dtimer{font-size:26px}.dpc .sc{font-size:22px}.bigcode{font-size:60px}.keypad{grid-template-columns:repeat(3,56px)}}
 
 body.induel .fsbtn,body.induel .tlock{display:none}
+/* 同一台平板雙人 */
+body.dlocal #app{max-width:1500px}
+.dl-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.86fr) minmax(0,1fr);gap:10px;align-items:start}
+.dl-side{display:grid;gap:8px;min-width:0;padding:8px;border-radius:20px;border:2px solid var(--line);align-content:start}
+.dl-side.p0{border-color:color-mix(in srgb,var(--p0) 65%,transparent);box-shadow:0 0 24px -12px var(--p0)}
+.dl-side.p1{border-color:color-mix(in srgb,var(--p1) 65%,transparent);box-shadow:0 0 24px -12px var(--p1)}
+.dl-c{display:grid;gap:8px;justify-items:center;min-width:0}
+.dl-c .dboardw{max-width:none}
+.dl .dmid{grid-auto-flow:column;gap:12px;align-items:center}
+.dl .dpc{border:0;padding:2px 4px;background:none}
+.dl .qbox{padding:12px;gap:10px}
+.dl .qt{font-size:18px}
+.dl .dopts{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.dl .dopt{font-size:17px;min-height:52px}.dl .dopt.big{font-size:24px}
+.dl .cell .ci{font-size:clamp(11px,1.5vw,20px)}
+.dl .cell .cn{font-size:clamp(7px,.72vw,10px)}
+.dl .cell .lv{font-size:clamp(8px,1vw,13px)}
+.dl .tok{font-size:clamp(12px,1.7vw,22px)}
+.dl .dc-t{font-size:clamp(14px,1.9vw,24px)}
+.dl .dc-l{font-size:clamp(10px,1vw,13px)}
+.dl .shopg{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.dl-wr{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+@media (max-width:820px){.dl-grid{grid-template-columns:1fr 1fr}.dl-c{grid-column:1/-1;grid-row:1}.dl-c .dboardw{max-width:380px}.dl .cell .ci{font-size:clamp(11px,3vw,20px)}.dl .cell .cn{font-size:clamp(7px,1.5vw,10px)}.dl .tok{font-size:clamp(12px,3.2vw,22px)}.dl .keypad{grid-template-columns:repeat(3,minmax(0,56px))}}
 
 </style>
 <div id="app"></div>
@@ -563,7 +587,7 @@ function vHome(){
     const seg=sch.map(s=>`<button class="seg ${s===S.school?'on':''}" data-act="school" data-s="${esc(s)}"><span>${esc(s)}</span><i>${students().filter(x=>x.school===s).length}</i></button>`).join('');
     const names=students().filter(s=>s.school===S.school).map((s,i)=>`<button class="name" data-act="pickStu" data-id="${esc(s.id)}" style="animation-delay:${i*40}ms"><span class="av">${avOf(s.id)}</span><span class="nm"><b>${esc(s.name)}</b><small>${esc(s.school)}</small></span><span class="chev">›</span></button>`).join('');
     body=`<div class="home-grid"><section><div class="sec-h"><h2>你是哪位勇者？</h2><span class="muted">先選學校，再點你的名字</span></div><div class="segs">${seg}</div><div class="names">${names}</div></section>
-      <aside class="side"><div class="panel tip"><b>勇者守則</b><ul><li>每座地城都有單元複習和總複習，跟以前的闖關、大富翁一樣玩</li><li>決鬥場要兩台平板：一個人開房間，另一個人輸入 4 位數代碼</li><li>決鬥時答錯不能前進，亂猜只會讓對手拿分</li></ul></div>
+      <aside class="side"><div class="panel tip"><b>勇者守則</b><ul><li>每座地城都有單元複習和總複習，跟以前的闖關、大富翁一樣玩</li><li>決鬥場可以兩台平板連線（一個人開房間，另一個人輸入 4 位數代碼），也可以兩個人用同一台平板一起玩</li><li>決鬥時答錯不能前進，亂猜只會讓對手拿分</li></ul></div>
       <div class="panel"><b>🏆 最近的決鬥</b>${S.dres.length?`<div style="display:grid;gap:6px;margin-top:8px">${S.dres.slice(0,5).map(r=>`<div class="small">${esc(r.win||'平手')} ${r.win?'勝':''}<span class="muted">・${esc((r.P||[]).map(p=>p.name).join(' vs '))}・${esc(r.subj)}</span></div>`).join('')}</div>`:'<p class="muted small" style="margin:6px 0 0">還沒有人決鬥過，第一場等你來開！</p>'}</div></aside></div>`;
   }
   return hero+body;
@@ -576,7 +600,7 @@ function vStu(v){
   return `<section class="me"><span class="av big" data-act="avOpen" role="button" aria-label="換頭像">${avOf(v.sid)}</span><div class="me-t"><div class="eyebrow">${esc(st.school)}</div><h1>勇者 ${esc(st.name)}</h1><p>選一座地城推門進去，或到決鬥場找同學挑戰！</p></div><button class="btn ghost" data-act="home">換人</button></section>
   <div class="sec-h"><h2>地城大門</h2><span class="muted">門後面是單元複習和總複習</span></div>
   <div class="gates">${gates}</div>
-  <button class="arena" data-act="duel"><span class="ic">⚔️</span><span><h3>雙人決鬥場</h3><p>兩台平板連線大富翁：搶答、佔地蓋城堡、打魔王、買道具，還有血月和地震！</p><span class="tags"><span>🏰 地盤升級</span><span>👹 魔王與寶箱</span><span>🛒 道具商店</span><span>🩸 隨機事件</span></span></span><span class="btn gold">進場</span></button>
+  <button class="arena" data-act="duel"><span class="ic">⚔️</span><span><h3>雙人決鬥場</h3><p>雙人大富翁，兩台平板連線或同一台平板一起玩：搶答、佔地蓋城堡、打魔王、買道具，還有血月和地震！</p><span class="tags"><span>🏰 地盤升級</span><span>👹 魔王與寶箱</span><span>🛒 道具商店</span><span>🩸 隨機事件</span></span></span><span class="btn gold">進場</span></button>
   ${S.avPick?avPicker(v.sid):''}`;
 }
 function avPicker(sid){const cur=avOf(sid);return `<div class="modal" data-act="avClose"><div class="sheet" data-stop="1"><div class="spread"><h2>選一個勇者頭像</h2><button class="btn ghost sm" data-act="avClose">關閉</button></div><div class="avgrid">${AVS.map(a=>`<button class="avc ${a===cur?'on':''}" data-act="avSet" data-v="${a}">${a}</button>`).join('')}</div></div></div>`}
@@ -610,7 +634,7 @@ function vTeacher(){
   if(S.tTab==='prog'){b=PROG.view()}
   else if(S.tTab==='duel'){
     const live=S.duels.filter(d=>d.status==='play'||d.status==='wait').sort((a,b)=>(b.at||0)-(a.at||0));
-    const lv=live.length?`<div class="livec">${live.map(d=>{const P=d.P||[];return `<div class="panel"><div class="spread"><b>${esc(d.subj)}・${esc(d.mixed?'跨版本（'+(d.P||[]).filter(Boolean).map(p=>p.pub).join(' vs ')+'）':d.pub+'版')}</b><span class="small muted">代碼 ${esc(d.id)}・${d.status==='wait'?'等待加入':'第 '+((d.r&&d.r.n)||0)+' 回合'}</span></div>${P.map((p,i)=>p?`<div class="row" style="margin-top:8px"><span class="av sm">${esc(p.av||'')}</span><b style="flex:1">${esc(p.name)}</b><span>${p.score} 分</span><span class="small muted">答對 ${p.ok}/${p.n}</span></div>`:'<div class="small muted" style="margin-top:8px">等待對手…</div>').join('')}</div>`}).join('')}</div>`:'<p class="muted">現在沒有進行中的決鬥。</p>';
+    const lv=live.length?`<div class="livec">${live.map(d=>{const P=d.P||[];return `<div class="panel"><div class="spread"><b>${esc(d.subj)}・${esc(d.mixed?'跨版本（'+(d.P||[]).filter(Boolean).map(p=>p.pub).join(' vs ')+'）':d.pub+'版')}</b><span class="small muted">${d.local?'同一台平板':'代碼 '+esc(d.id)}・${d.status==='wait'?'等待加入':'第 '+((d.r&&d.r.n)||0)+' 回合'}</span></div>${P.map((p,i)=>p?`<div class="row" style="margin-top:8px"><span class="av sm">${esc(p.av||'')}</span><b style="flex:1">${esc(p.name)}</b><span>${p.score} 分</span><span class="small muted">答對 ${p.ok}/${p.n}</span></div>`:'<div class="small muted" style="margin-top:8px">等待對手…</div>').join('')}</div>`}).join('')}</div>`:'<p class="muted">現在沒有進行中的決鬥。</p>';
     const rows=S.dres.slice(0,60).map(r=>{const P=r.P||[];return `<tr class="click" data-act="dresOpen" data-id="${esc(r.id)}"><td>${new Date(r.at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td><td>${esc(r.subj)}・${esc(r.mixed?(r.P||[]).map(p=>p.pub).join(' vs '):r.pub)}</td><td>${P.map(p=>`${esc(p.name)} <b>${p.total}</b>`).join(' vs ')}</td><td>${esc(r.win||'平手')}</td><td>${P.map(p=>Math.round((p.ok/Math.max(1,p.n))*100)+'%').join(' / ')}</td></tr>`}).join('');
     const open=S.view.dres?S.dres.find(r=>r.id===S.view.dres):null;
     const det=open?`<div class="panel" style="margin-top:14px"><div class="spread"><h3>${esc((open.P||[]).map(p=>p.name).join(' vs '))}</h3><button class="btn ghost sm" data-act="dresClose">收起</button></div>${(open.P||[]).map(p=>`<div style="margin-top:10px"><b>${esc(p.name)}</b>${open.mixed?` <span class="small">（${esc(p.pub||'')}版）</span>`:''} <span class="muted small">分數 ${p.score}＋地產 ${p.land}＝${p.total}・答對 ${p.ok}/${p.n}・最長連對 ${p.best||0}</span>${(p.wrong||[]).length?`<ul class="small">${p.wrong.map(w=>`<li>${esc(w.q)}<br><span style="color:var(--bad)">答：${esc(w.a||'沒作答')}</span>　<span style="color:var(--good)">正解：${esc(w.r)}</span></li>`).join('')}</ul>`:'<p class="small muted">全部答對！</p>'}</div>`).join('')}</div>`:'';
@@ -712,22 +736,28 @@ const db=()=>S.db;
 function push(){if(C.role==='h'&&!C.rq){C.rq=true;requestAnimationFrame(()=>{C.rq=false;onState();if(S.view.n==='duel')render()})}C.dirty=true;if(C.pushing)return;C.pushing=true;(async()=>{while(C.dirty){C.dirty=false;const R=Object.assign({},C.R,{hostNow:Date.now()});try{await db().doc('duel/'+C.code).set(R)}catch(e){console.warn('push',e)}}C.pushing=false})()}
 let inPending=false,inBusy=false;
 function pushIn(){inPending=true;if(inBusy)return;inBusy=true;(async()=>{while(inPending){inPending=false;try{await db().doc('duelin/'+C.code).set({name:C.me.name,sid:C.me.sid,av:C.me.av,school:C.me.school,pub:C.me.pub||'',units:C.me.units||[],acts:C.acts.slice(-30),at:Date.now()})}catch(e){console.warn('in',e)}}inBusy=false})()}
-function act(a){a.s=++C.seq;if(C.role==='h'){applyAct(0,a);push()}else{C.acts.push(a);pushIn()}}
-function cleanup(){C.unsub.forEach(f=>{try{f()}catch(e){}});C.unsub=[];clearInterval(C.tick);C.tick=null;clearInterval(C.animT);C.animT=null}
+function act(a,i){a.s=++C.seq;if(C.role==='h'){applyAct(i||0,a);push()}else{C.acts.push(a);pushIn()}}
+const qkey=(n,i)=>C.local?n+'_'+i:n;
+const who=e=>{if(!C.local)return myIdx();const x=e&&e.closest?e.closest('[data-p]'):null;return x?+x.dataset.p:0};
+function reset0(){Object.assign(C,{code:null,role:null,R:null,local:false,lh:null,acts:[],seq:0,lastSeq:-1,off:-1e15,qs:{},deck:[],joinBuf:'',disp:[0,0],flashSeen:0,lastRes:0,lastEv:0,lastQn:0,saved:false})}
+function cleanup(){document.body.classList.remove('dlocal');C.unsub.forEach(f=>{try{f()}catch(e){}});C.unsub=[];clearInterval(C.tick);C.tick=null;clearInterval(C.animT);C.animT=null}
 
 /* ---------- enter / lobby ---------- */
-function enter(st){cleanup();document.body.classList.add('induel');Object.assign(C,{phase:'lobby',code:null,role:null,R:null,acts:[],seq:0,lastSeq:-1,off:-1e15,qs:{},deck:[],joinBuf:'',disp:[0,0],flashSeen:0,lastRes:0,lastEv:0,saved:false});
+function enter(st){cleanup();document.body.classList.add('induel');reset0();C.phase='lobby';
   C.me={sid:st?st.id:'t',name:st?st.name:'老師',school:st?st.school:'',av:st?avOf(st.id):'🧙‍♂️'};render()}
 function resetMe(){delete C.me.pub;delete C.me.units}
 function render(){
   const el=$('#app');let h='';
+  if(C.local&&C.phase==='play'&&C.R){tickUI();return}
   if(C.phase==='lobby')h=vLobby();else if(C.phase==='setup')h=vSetup();else if(C.phase==='join')h=vJoin();else if(C.phase==='gsetup')h=vGSetup();else if(C.phase==='wait')h=vWait();else if(C.phase==='play')h=vPlay();else if(C.phase==='end')h=vEnd();
   el.innerHTML=h;tickUI();
 }
 function vLobby(){return `<div class="dhead"><button class="btn ghost sm" data-act="dLeave">← 地城大門</button><h1>⚔️ 雙人決鬥場</h1></div>
   <div class="dlobby"><button class="dcard host" data-act="dHost"><span class="ic">🏰</span><b>開一個房間</b><span>選科目和單元，拿到 4 位數代碼給對手</span></button>
-  <button class="dcard join" data-act="dJoinView"><span class="ic">🗝️</span><b>加入房間</b><span>輸入對手平板上的 4 位數代碼</span></button></div>
+  <button class="dcard join" data-act="dJoinView"><span class="ic">🗝️</span><b>加入房間</b><span>輸入對手平板上的 4 位數代碼</span></button>
+  <button class="dcard local" data-act="dLocal"><span class="ic">🤝</span><b>同一台平板雙人</b><span>兩個人坐在一起，左右各答各的，不用代碼</span></button></div>
   <div class="panel drules"><b>決鬥規則</b><ul>
+  <li><b>同一台平板雙人</b>：平板橫放在兩人中間，房主坐左邊、對手坐右邊，棋盤在中間，兩邊同時作答。送出後先不公布對錯，等兩個人都答完才一起揭曉。</li>
   <li><b>同版本</b>：兩台同時出同一題，<b>答對才能擲骰前進</b>，比對手快再 +5。每題只能答一次。</li><li><b>跨版本</b>：不同學校也能比！每個人用自己的版本和範圍出題，只看答對答錯，不比快。</li>
   <li><b>🚩 佔地</b>：踩到空地就插旗。再踩到自己的地會升級 🏠→🏰，對手踩到要付過路費 8／16／30。</li>
   <li><b>👹 魔王格</b>：接下來答對 3 題才打得倒，打倒開寶箱；答錯會被打 −5。</li>
@@ -739,13 +769,18 @@ function vSetup(){const s=C.setup;if(s.loading)return `<div class="dhead"><butto
   const subs=['國語','數學','英語','社會'];
   const pubs=s.subj?pubsOf(s.subj):[];const units=s.subj&&s.pub?unitsOf(s.subj,s.pub):[];
   const n=units.filter(u=>s.units.includes(u.id)).reduce((a,u)=>a+okItems(u).length,0);
-  return `<div class="dhead"><button class="btn ghost sm" data-act="dBack">← 返回</button><h1>開房間</h1></div>
-  <div class="panel dset"><div><h3>科目</h3><div class="chips">${subs.map(x=>`<button class="chip ${s.subj===x?'on':''}" data-act="dSubj" data-v="${x}">${x}</button>`).join('')}</div></div>
+  const L=!!s.local,g=s.g,others=L?students().filter(x=>x.id!==C.me.sid):[];
+  const gunits=L&&s.mixed&&s.subj&&g?unitsOf(s.subj,g.pub):[];const n2=L&&s.mixed&&g?cntOf(s.subj,g.pub,g.units):0;
+  const ready=n>=8&&(!L||(s.p2&&(!s.mixed||n2>=8)));
+  return `<div class="dhead"><button class="btn ghost sm" data-act="dBack">← 返回</button><h1>${L?'同一台平板雙人':'開房間'}</h1></div>
+  <div class="panel dset">${L?`<div><h3>誰坐右邊？（${esc(C.me.name)} 坐左邊）</h3><div class="chips">${others.map(x=>`<button class="chip ${s.p2&&s.p2.sid===x.id?'on':''}" data-act="dP2" data-v="${esc(x.id)}">${esc(x.name)}</button>`).join('')}<button class="chip ${s.p2&&s.p2.sid==='guest'?'on':''}" data-act="dP2" data-v="guest">訪客（不留紀錄）</button></div><p class="small muted">選了名字，這場的答題紀錄和錯題也會記到他的學習狀況裡。</p></div>`:''}<div><h3>科目</h3><div class="chips">${subs.map(x=>`<button class="chip ${s.subj===x?'on':''}" data-act="dSubj" data-v="${x}">${x}</button>`).join('')}</div></div>
   <div><h3>對戰方式</h3><div class="chips"><button class="chip ${!s.mixed?'on':''}" data-act="dMode" data-v="0">同版本・同一題</button><button class="chip ${s.mixed?'on':''}" data-act="dMode" data-v="1">跨版本・各考各的</button></div></div>
-  ${s.subj?`<div><h3>版本</h3><div class="chips">${pubs.map(x=>`<button class="chip ${s.pub===x?'on':''}" data-act="dPub" data-v="${x}">${x}</button>`).join('')}</div><p class="small muted">${s.mixed?'這是<b>你自己</b>的版本。對手加入時，會在他的平板上選他自己的版本和範圍。':'兩個人要比同一個版本，不同學校的話選你們都學過的。'}</p></div>`:''}
-  ${units.length?`<div><div class="spread"><h3>${s.mixed?'你的範圍':'範圍'}</h3><button class="btn ghost sm" data-act="dAllU">${s.units.length===units.length?'全部取消':'全選（總複習）'}</button></div><div class="chips">${units.map(u=>`<button class="chip ${s.units.includes(u.id)?'on':''}" data-act="dUnit" data-v="${esc(u.id)}">${esc(u.name)}</button>`).join('')}</div><p class="small muted">選一個單元就是單元決鬥，全選就是總複習決鬥。目前 ${n} 題可以出。</p></div>`:''}
+  ${s.subj?`<div><h3>版本</h3><div class="chips">${pubs.map(x=>`<button class="chip ${s.pub===x?'on':''}" data-act="dPub" data-v="${x}">${x}</button>`).join('')}</div><p class="small muted">${s.mixed?(L?'這是<b>左邊</b>（'+esc(C.me.name)+'）的版本，右邊的版本在下面選。':'這是<b>你自己</b>的版本。對手加入時，會在他的平板上選他自己的版本和範圍。'):'兩個人要比同一個版本，不同學校的話選你們都學過的。'}</p></div>`:''}
+  ${units.length?`<div><div class="spread"><h3>${s.mixed?(L?'左邊的範圍':'你的範圍'):'範圍'}</h3><button class="btn ghost sm" data-act="dAllU">${s.units.length===units.length?'全部取消':'全選（總複習）'}</button></div><div class="chips">${units.map(u=>`<button class="chip ${s.units.includes(u.id)?'on':''}" data-act="dUnit" data-v="${esc(u.id)}">${esc(u.name)}</button>`).join('')}</div><p class="small muted">選一個單元就是單元決鬥，全選就是總複習決鬥。目前 ${n} 題可以出。</p></div>`:''}
+  ${L&&s.mixed&&s.subj&&g?`<div><h3>右邊${s.p2?'（'+esc(s.p2.name)+'）':''}的版本</h3><div class="chips">${pubs.map(x=>`<button class="chip ${g.pub===x?'on':''}" data-act="dLPub" data-v="${x}">${x}</button>`).join('')}</div></div>
+  <div><div class="spread"><h3>右邊的範圍</h3><button class="btn ghost sm" data-act="dLAll">${g.units.length===gunits.length?'全部取消':'全選（總複習）'}</button></div><div class="chips">${gunits.map(u=>`<button class="chip ${g.units.includes(u.id)?'on':''}" data-act="dLUnit" data-v="${esc(u.id)}">${esc(u.name)}</button>`).join('')}</div><p class="small muted">目前 ${n2} 題可以出。</p></div>`:''}
   <div><h3>比賽時間</h3><div class="chips">${[6,8,10,12].map(m=>`<button class="chip ${s.mins===m?'on':''}" data-act="dMins" data-v="${m}">${m} 分鐘</button>`).join('')}</div></div>
-  <button class="btn gold" data-act="dCreate" ${n>=8?'':'disabled'}>🏰 建立房間</button>${n<8&&s.units.length?'<p class="small muted">至少要 8 題才能開房，再多選一些單元。</p>':''}</div>`}
+  <button class="btn gold" data-act="dCreate" ${ready?'':'disabled'}>${L?'⚔️ 開始決鬥':'🏰 建立房間'}</button>${n<8&&s.units.length?'<p class="small muted">至少要 8 題才能開房，再多選一些單元。</p>':L&&!s.p2?'<p class="small muted">先選坐右邊的人。</p>':L&&s.mixed&&n2<8?'<p class="small muted">右邊的範圍至少要 8 題。</p>':''}</div>`}
 function vJoin(){return `<div class="dhead"><button class="btn ghost sm" data-act="dBack">← 返回</button><h1>加入房間</h1></div>
   <div class="pinbox"><p class="muted">輸入房主平板上的 4 位數代碼</p><div class="jcode">${[0,1,2,3].map(i=>`<i>${esc(C.joinBuf[i]||'')}</i>`).join('')}</div><div class="pinpad">${['1','2','3','4','5','6','7','8','9','清除','0','⌫'].map(k=>`<button data-act="dJKey" data-k="${k}">${k}</button>`).join('')}</div></div>`}
 function vGSetup(){const R=C.R,g=C.gset;const pubs=pubsOf(R.subj);const units=unitsOf(R.subj,g.pub);const n=cntOf(R.subj,g.pub,g.units);
@@ -772,6 +807,10 @@ function pInit(m){return {name:m.name,sid:m.sid,av:m.av,school:m.school,pub:m.pu
 async function create(){const s=C.setup;const used=new Set(S.duels.filter(d=>d.status!=='end'&&Date.now()-(d.at||0)<3*3600e3).map(d=>d.id));let code;do{code=String(1000+rnd(9000))}while(used.has(code));
   C.code=code;C.role='h';
   if(s.mixed)Object.assign(C.me,{pub:s.pub,units:s.units.slice()});else{delete C.me.pub;delete C.me.units}
+  if(s.local){const p2=Object.assign({},s.p2,s.mixed?{pub:s.g.pub,units:s.g.units.slice()}:{pub:'',units:[]});
+    C.local=true;C.lh=null;document.body.classList.add('dlocal');
+    C.R={code,at:Date.now(),status:'wait',local:true,subj:s.subj,pub:s.pub,mixed:!!s.mixed,units:s.units.slice(),mins:s.mins,P:[pInit(C.me),pInit(p2)],land:{},r:null,ev:null,log:[],flash:null,startAt:0,endAt:0};
+    C.tick=setInterval(hostTick,250);startGame();render();return}
   C.R={code,at:Date.now(),status:'wait',subj:s.subj,pub:s.pub,mixed:!!s.mixed,units:s.units.slice(),mins:s.mins,P:[pInit(C.me),null],land:{},r:null,ev:null,log:[],flash:null,startAt:0,endAt:0};
   try{await db().doc('duelin/'+code).delete().catch(()=>{});await db().doc('duel/'+code).set(Object.assign({},C.R,{hostNow:Date.now()}))}catch(e){toast('建立房間失敗，請再試一次');return}
   C.unsub.push(db().doc('duelin/'+code).onSnapshot(sn=>{if(!sn.exists)return;const d=sn.data();if(!C.R)return;
@@ -782,6 +821,7 @@ async function create(){const s=C.setup;const used=new Set(S.duels.filter(d=>d.s
 }
 function startGame(){const R=C.R;if(!R.P[1])return;
   if(R.mixed)C.pools=[0,1].map(i=>poolOf(R.subj,R.P[i].pub,R.P[i].units));else{const items=poolOf(R.subj,R.pub,R.units);C.pools=[items,items]}
+  if(C.local&&R.mixed)C.pools=C.pools.map((x,i)=>{const y=x.filter(k=>{const it=itemBy(R.subj,R.P[i].pub,k);return it&&it.type!=='listen'});return y.length>=4?y:x});
   C.decks=C.pools.map(x=>shuffle(x));const now=Date.now();R.status='play';R.startAt=now+START_MS;R.endAt=R.startAt+R.mins*60000;R.log=['決鬥開始！'];C.phase='play';push();SFX.start()}
 function hostTick(){const R=C.R;if(!R||R.status!=='play')return tickUI();const now=Date.now();
   if(!R.r){if(now>=R.startAt)nextRound();}
@@ -863,7 +903,7 @@ async function finish(){const R=C.R;if(R.status==='end')return;R.status='end';
   const F=R.P.map((p,i)=>{if(!p)return null;let land=0;for(const k in R.land)if(R.land[k].o===i)land+=LANDV[R.land[k].lv];return {name:p.name,sid:p.sid,av:p.av,school:p.school,pub:p.pub||R.pub,us:p.us||{},score:p.score,land,total:p.score+land,ok:p.ok,n:p.n,best:p.best,wrong:p.wrong||[]}});
   let win='';if(F[1]){const a=F[0],b=F[1];const k=x=>x.total*1e4+Math.round(x.ok/Math.max(1,x.n)*1000);win=k(a)>k(b)?a.name:k(b)>k(a)?b.name:''}
   R.final={P:F,win};push();clearInterval(C.tick);C.tick=null;
-  try{await db().doc('duelres/'+R.code+'_'+R.at).set({at:Date.now(),code:R.code,subj:R.subj,pub:R.pub,mixed:!!R.mixed,units:R.units,mins:R.mins,P:F.filter(Boolean),win})}catch(e){}
+  try{await db().doc('duelres/'+R.code+'_'+R.at).set({at:Date.now(),code:R.code,subj:R.subj,pub:R.pub,mixed:!!R.mixed,units:R.units,mins:R.mins,local:!!R.local,P:F.filter(Boolean),win})}catch(e){}
   C.phase='end';render()}
 
 /* ---------- guest ---------- */
@@ -883,12 +923,12 @@ function onRoom(d){C.R=d;if(typeof d.hostNow==='number'){const est=d.hostNow-Dat
 /* ---------- shared: reacting to state ---------- */
 function onState(){const R=C.R;if(!R)return;
   if(R.flash&&R.flash.id>C.flashSeen){C.flashSeen=R.flash.id;bigFlash(R.flash.t,R.flash.ic);if(R.flash.ic==='❄️')SFX.freeze();else SFX.event()}
-  const r=R.r;if(r&&r.done&&r.res&&C.lastRes!==r.n){C.lastRes=r.n;const me=myIdx();const m=r.res[me];if(m){if(m.boss==='win'){SFX.chest();}else if(m.boss==='hit')SFX.roar();else if(m.roll){SFX.dice()}}animate()}
+  const r=R.r;if(r&&r.done&&r.res&&C.lastRes!==r.n){C.lastRes=r.n;const me=myIdx();const ms=C.local?r.res.filter(Boolean):[r.res[me]].filter(Boolean);if(ms.some(m=>m.boss==='win'))SFX.chest();else if(ms.some(m=>m.boss==='hit'))SFX.roar();else if(ms.some(m=>m.roll))SFX.dice();animate()}
   if(r&&!r.done&&C.lastQn!==r.n){C.lastQn=r.n;const it=itemFor(myIdx());if(it&&it.type==='listen')setTimeout(()=>say(it.say),400)}}
 function myIdx(){return C.role==='h'?0:1}
 function animate(){const R=C.R;clearInterval(C.animT);const tgt=R.P.map(p=>p?p.pos:0);
   C.animT=setInterval(()=>{let moving=false;for(let i=0;i<2;i++){if(!R.P[i])continue;const d=(tgt[i]-C.disp[i]+24)%24;if(d>0&&d<=12){C.disp[i]=(C.disp[i]+1)%24;moving=true}else if(d!==0){C.disp[i]=tgt[i]}}
-    const b=$('#dboard');if(b)b.innerHTML=boardInner();if(moving)SFX.tap();else{clearInterval(C.animT);C.animT=null}},190)}
+    const b=$('#dboard');if(b){const bh=boardInner();b.innerHTML=bh;if(C.lh)C.lh.dboard=bh}if(moving)SFX.tap();else{clearInterval(C.animT);C.animT=null}},190)}
 function bigFlash(t,ic){const f=document.createElement('div');f.className='dflash';f.innerHTML=`<span>${esc(ic||'⚡')}</span><b>${esc(t)}</b>`;document.body.appendChild(f);setTimeout(()=>f.remove(),2600)}
 
 /* ---------- play view ---------- */
@@ -898,23 +938,32 @@ function vPlay(){const R=C.R;if(!R)return '';const me=myIdx();const P=R.P;
    <div class="dtop">${pcard(P[0],0,me)}<div class="dmid"><div class="dtimer" data-tick="timer">--:--</div><div class="small muted">第 ${R.r?R.r.n:0} 回合</div>${evBadge()}</div>${pcard(P[1],1,me)}</div>
    <div class="dgrid"><div class="dboardw"><div class="dboard" id="dboard">${boardInner()}</div></div><div class="dside">${qPanel()}${shopPanel()}${logPanel()}</div></div>
    <div class="row" style="justify-content:center;margin-top:10px">${C.role==='h'?'<button class="btn ghost sm" data-act="dEndNow">提前結束</button>':''}</div></div>`}
+function sideL(i){return pcard(C.R.P[i],i,i)+qPanel(i)+shopPanel(i)}
+function renderLocal(){const R=C.R,P=R.P;
+  if(!$('#dl')){$('#app').innerHTML=`<div class="dplay dl" id="dl"><div class="dl-grid"><div class="dl-side p0" data-p="0" id="dl-s0"></div>
+   <div class="dl-c"><div class="dmid"><div class="dtimer" data-tick="timer">--:--</div><div id="dl-mid"></div></div><div class="dboardw"><div class="dboard" id="dboard"></div></div><button class="btn ghost sm" data-act="dEndNow">提前結束</button></div>
+   <div class="dl-side p1" data-p="1" id="dl-s1"></div></div></div>`;C.lh={}}
+  if(!C.animT&&!(R.r&&R.r.done&&C.lastRes!==R.r.n))C.disp=P.map(p=>p?p.pos:0);
+  const parts={'dl-mid':`<div class="small muted">第 ${R.r?R.r.n:0} 回合</div>${evBadge()}`,'dboard':boardInner(),'dl-s0':sideL(0),'dl-s1':sideL(1)};
+  for(const k in parts)if(C.lh[k]!==parts[k]){C.lh[k]=parts[k];const x=$('#'+k);if(x)x.innerHTML=parts[k]}}
 function evBadge(){const R=C.R;const n=R.r?R.r.n:0;const on=[];if(R.ev&&n<=R.ev.until&&(R.ev.k==='blood'||R.ev.k==='fog'))on.push(`<span class="evb">${R.ev.ic} ${R.ev.n}</span>`);if(hnow()>=R.endAt-60000&&R.status==='play')on.push('<span class="evb hot">🔥 最後衝刺 ×2</span>');return on.join('')}
 function pcard(p,i,me){if(!p)return '<div class="dpc"></div>';const st=[];if(p.boss)st.push(`<span class="st boss">👹 魔王 ${'❤️'.repeat(p.boss.hp)}</span>`);if(p.stuck)st.push('<span class="st">🕸️ 黏住</span>');if(p.dbl)st.push('<span class="st">🎲×2</span>');if(hnow()<p.frozenUntil)st.push('<span class="st ice">❄️ 冰凍</span>');if(p.shop)st.push('<span class="st">🛒 商店</span>');
   const items=p.items.map((k,j)=>{const I=ITEMS[k];const usable=i===me&&k!=='shield'&&C.R.status==='play';return usable?`<button class="itm" data-act="dUse" data-k="${k}" title="${esc(I.n)}：${esc(I.d)}">${I.ic}<small>${I.n}</small></button>`:`<span class="itm" title="${esc(I.n)}">${I.ic}</span>`}).join('');
-  return `<div class="dpc p${i} ${i===me?'me':''}"><div class="row"><span class="av">${esc(p.av)}</span><div style="min-width:0;flex:1"><b>${esc(p.name)}${i===me?'<em>你</em>':''}</b><div class="sc">${p.score}<small> 分</small></div></div></div><div class="sts">${st.join('')}</div><div class="itms">${items||'<span class="small muted">沒有道具</span>'}</div></div>`}
+  return `<div class="dpc p${i} ${i===me&&!C.local?'me':''}"><div class="row"><span class="av">${esc(p.av)}</span><div style="min-width:0;flex:1"><b>${esc(p.name)}${i===me&&!C.local?'<em>你</em>':''}</b><div class="sc">${p.score}<small> 分</small></div></div></div><div class="sts">${st.join('')}</div><div class="itms">${items||'<span class="small muted">沒有道具</span>'}</div></div>`}
 function cellRC(i){if(i<=6)return [7-i,1];if(i<=12)return [1,i-5];if(i<=18)return [i-11,7];return [7,25-i]}
 function boardInner(){const R=C.R;let h='';CELLS.forEach((c,i)=>{const [r,col]=cellRC(i);const L=R.land[i];const tok=[0,1].filter(k=>R.P[k]&&C.disp[k]===i).map(k=>`<span class="tok t${k}">${esc(R.P[k].av)}</span>`).join('');
   h+=`<div class="cell c-${c.t} ${L?'own o'+L.o:''}" style="grid-row:${r};grid-column:${col}"><span class="ci">${c.ic}</span><span class="cn">${esc(c.n)}</span>${L?`<span class="lv">${LV[L.lv]}</span>`:''}${tok}</div>`});
   const R2=C.R.r;h+=`<div class="dcenter"><div class="dc-t">${R.ev&&R2&&R2.n<=R.ev.until?`${R.ev.ic} ${esc(R.ev.n)}`:'⚔️ 決鬥中'}</div><div class="dc-l">${(R.log||[]).slice(-3).map(l=>`<div>${esc(l)}</div>`).join('')}</div></div>`;return h}
-function qPanel(){const R=C.R,r=R.r,me=myIdx();
+function qPanel(mi){const R=C.R,r=R.r,me=mi==null?myIdx():mi;
   if(!r){return `<div class="qbox center"><div class="cd" data-tick="cd">準備…</div><p class="muted">${R.mixed?'兩台會同時出題，各考各的版本':'兩台會同時出題'}</p></div>`}
-  if(r.done&&r.res){const rs=r.res;return `<div class="qbox"><h3>第 ${r.n} 回合結果${r.mult>1?' <span class="evb hot">得分 ×2</span>':''}</h3>${[me,1-me].filter(i=>R.P[i]&&rs[i]).map(i=>`<div class="rres ${rs[i].ok?'ok':'no'}"><b>${esc(R.P[i].name)}${i===me?'（你）':''}</b><div>${rs[i].msgs.map(esc).join('<br>')}</div></div>`).join('')}${ansExplain(r)}<p class="small muted" data-tick="next">下一題準備中…</p></div>`}
+  if(r.done&&r.res){const rs=r.res;return `<div class="qbox"><h3>第 ${r.n} 回合結果${r.mult>1?' <span class="evb hot">得分 ×2</span>':''}</h3>${(C.local?[me]:[me,1-me]).filter(i=>R.P[i]&&rs[i]).map(i=>`<div class="rres ${rs[i].ok?'ok':'no'}"><b>${esc(R.P[i].name)}${i===me&&!C.local?'（你）':''}</b><div>${rs[i].msgs.map(esc).join('<br>')}</div></div>`).join('')}${ansExplain(r,me)}<p class="small muted" data-tick="next">下一題準備中…</p></div>`}
   const it=itemFor(me);if(!it)return '<div class="qbox">題目載入中…</div>';
-  const q=C.qs[r.n]||(C.qs[r.n]={t0:Date.now(),order:shuffle(it.opts?it.opts.map((_,i)=>i):[]),s:'',n:'',d:'',f:'n',sel:[],done:null});
+  const qk=qkey(r.n,me);const q=C.qs[qk]||(C.qs[qk]={t0:Date.now(),order:shuffle(it.opts?it.opts.map((_,i)=>i):[]),s:'',n:'',d:'',f:'n',sel:[],done:null});
   const P=R.P[me];const opp=R.P[1-me];const oppAns=r.ans[1-me];
+  if(q.done&&C.local){return `<div class="qbox"><div class="qt">${qHTML(it)}</div><div class="fb" style="background:var(--sunk)"><b>✋ 已經送出</b><div class="small">${oppAns?'兩個人都答完了，馬上結算…':'等對手作答，答案等一下一起公布'}</div></div></div>`}
   if(q.done){return `<div class="qbox"><div class="qt">${qHTML(it)}</div><div class="fb ${q.done.ok?'ok':'no'}"><b>${q.done.ok?'答對了！':'答錯了'}</b>${q.done.ok?'':`<div>正確答案：${esc(rightText(it))}</div>`}${it.exp?`<div class="small">${esc(it.exp)}</div>`:''}</div><p class="muted small">${opp?(oppAns?'對手也答完了，馬上結算…':'等對手作答…'):''}</p></div>`}
   const frozen=hnow()<P.frozenUntil;const fog=R.ev&&R.ev.k==='fog'&&r.n<=R.ev.until&&hnow()<r.at+2000;
-  return `<div class="qbox ${frozen?'frozen':''}"><div class="spread"><span class="small muted">${oppAns?'⚡ 對手已經答了！':R.mixed?'你的版本：'+esc(pubFor(R,me))+'・答對才能走':'同一題，比誰快又準'}</span><span class="qtime" data-tick="qt"></span></div><div class="qt">${qHTML(it)}</div>${frozen?'<div class="ice">❄️ 你被冰凍了！<span data-tick="ice"></span></div>':fog?'<div class="ice fog">🌫️ 濃霧中…選項馬上出現</div>':aHTML(it,q)}</div>`}
+  return `<div class="qbox ${frozen?'frozen':''}"><div class="spread"><span class="small muted">${C.local?(R.mixed?esc(pubFor(R,me))+'版・答對才能走':'同一題，比誰快又準'):oppAns?'⚡ 對手已經答了！':R.mixed?'你的版本：'+esc(pubFor(R,me))+'・答對才能走':'同一題，比誰快又準'}</span><span class="qtime" data-tick="qt"></span></div><div class="qt">${qHTML(it)}</div>${frozen?'<div class="ice">❄️ 你被冰凍了！<span data-tick="ice" data-p="${me}"></span></div>':fog?'<div class="ice fog">🌫️ 濃霧中…選項馬上出現</div>':aHTML(it,q)}</div>`}
 function qHTML(it){if(it.type==='listen')return `<div class="row"><button class="btn ghost" data-act="dSay">🔊 再聽一次</button><span>聽聽看，選出你聽到的</span></div>`;return `<div>${esc(it.q)}</div>${it.img?`<div class="fig">${it.img}</div>`:''}`}
 function aHTML(it,q){
   if(it.type==='mc'||it.type==='listen'){const big=it.opts.every(o=>String(o).length<=3);return `<div class="dopts">${q.order.map(i=>`<button class="dopt ${big?'big':''}" data-act="dPick" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div>`}
@@ -923,29 +972,37 @@ function aHTML(it,q){
     const box=fr?`<div class="frac"><button class="nbox ${q.f==='n'?'on':''}" data-act="dNF" data-f="n">${esc(q.n)||'&nbsp;'}</button><i></i><button class="nbox ${q.f==='d'?'on':''}" data-act="dNF" data-f="d">${esc(q.d)||'&nbsp;'}</button></div>`:`<div class="row"><span class="nbox on wide">${esc(q.s)||'&nbsp;'}</span>${it.ans.u?`<b>${esc(it.ans.u)}</b>`:''}</div>`;
     return `<div class="numw">${box}<div class="keypad">${keys.map(k=>k?`<button data-act="dKey" data-k="${k}">${k}</button>`:'<span></span>').join('')}</div><button class="btn" data-act="dCheck" ${(fr?q.n&&q.d:q.s)?'':'disabled'}>送出</button></div>`}
   return ''}
-function ansExplain(r){const it=itemFor(myIdx());if(!it)return '';return `<div class="small muted" style="margin-top:6px">正確答案：<b style="color:var(--good)">${esc(rightText(it))}</b>${it.exp?'・'+esc(it.exp):''}</div>`}
-function shopPanel(){const R=C.R;const p=R.P[myIdx()];if(!p||!p.shop)return '';return `<div class="shop"><div class="spread"><b>🛒 地城商店</b><span class="small muted">你有 ${p.score} 分・道具 ${p.items.length}/4</span></div><div class="shopg">${Object.entries(ITEMS).map(([k,I])=>`<button class="si" data-act="dBuy" data-k="${k}" ${p.score>=I.cost&&p.items.length<4?'':'disabled'}><span>${I.ic}</span><b>${I.n}</b><small>${I.d}</small><em>${I.cost} 分</em></button>`).join('')}</div></div>`}
+function ansExplain(r,mi){const it=itemFor(mi==null?myIdx():mi);if(!it)return '';return `<div class="small muted" style="margin-top:6px">正確答案：<b style="color:var(--good)">${esc(rightText(it))}</b>${it.exp?'・'+esc(it.exp):''}</div>`}
+function shopPanel(mi){const R=C.R;const p=R.P[mi==null?myIdx():mi];if(!p||!p.shop)return '';return `<div class="shop"><div class="spread"><b>🛒 地城商店</b><span class="small muted">你有 ${p.score} 分・道具 ${p.items.length}/4</span></div><div class="shopg">${Object.entries(ITEMS).map(([k,I])=>`<button class="si" data-act="dBuy" data-k="${k}" ${p.score>=I.cost&&p.items.length<4?'':'disabled'}><span>${I.ic}</span><b>${I.n}</b><small>${I.d}</small><em>${I.cost} 分</em></button>`).join('')}</div></div>`}
 function logPanel(){return ''}
-function tickUI(){const R=C.R;if(!R||C.phase!=='play')return;const now=hnow();
+function tickUI(){const R=C.R;if(!R||C.phase!=='play')return;const now=hnow();if(C.local)renderLocal();
   const t=document.querySelector('[data-tick="timer"]');if(t){const left=Math.max(0,(R.status==='play'&&now<R.startAt?R.mins*60000:R.endAt-now));const m=Math.floor(left/60000),s=Math.floor(left/1000)%60;t.textContent=m+':'+String(s).padStart(2,'0');t.classList.toggle('hot',left<60000)}
-  const cd=document.querySelector('[data-tick="cd"]');if(cd){const l=Math.ceil((R.startAt-now)/1000);cd.textContent=l>0?l:'開始！'}
-  if(R.r&&!R.r.done){const qt=document.querySelector('[data-tick="qt"]');if(qt){const l=Math.max(0,Math.ceil((R.r.at+Q_MS-now)/1000));qt.textContent='⏱ '+l;qt.classList.toggle('hot',l<=5)}
+  document.querySelectorAll('[data-tick="cd"]').forEach(cd=>{const l=Math.ceil((R.startAt-now)/1000);cd.textContent=l>0?l:'開始！'});
+  if(R.r&&!R.r.done){document.querySelectorAll('[data-tick="qt"]').forEach(qt=>{const l=Math.max(0,Math.ceil((R.r.at+Q_MS-now)/1000));qt.textContent='⏱ '+l;qt.classList.toggle('hot',l<=5)});
+    if(C.local){document.querySelectorAll('[data-tick="ice"]').forEach(x=>{const p=R.P[+x.dataset.p];if(p&&now<p.frozenUntil)x.textContent=' 還有 '+Math.ceil((p.frozenUntil-now)/1000)+' 秒'});return}
     const me=R.P[myIdx()];const ice=document.querySelector('[data-tick="ice"]');const box=document.querySelector('.qbox');
     const frozen=now<me.frozenUntil;const fog=R.ev&&R.ev.k==='fog'&&R.r.n<=R.ev.until&&now<R.r.at+2000;
     if(ice&&frozen)ice.textContent=' 還有 '+Math.ceil((me.frozenUntil-now)/1000)+' 秒';
     if(box&&((box.classList.contains('frozen')&&!frozen)||(box.querySelector('.fog')&&!fog)))render()}}
 
 /* ---------- answering ---------- */
-function submit(ok,a){const R=C.R,r=R.r;const q=C.qs[r.n];if(!q||q.done)return;q.done={ok,a};const ms=Date.now()-q.t0;
-  if(ok)SFX.ok(1);else SFX.no();act({t:'ans',n:r.n,ok,a,ms});render()}
-function curItem(){return itemFor(myIdx())}
-function canAnswer(){const R=C.R;if(!R||!R.r||R.r.done)return false;const p=R.P[myIdx()];return hnow()>=p.frozenUntil}
+function submit(ok,a,i){const R=C.R,r=R.r;const q=C.qs[qkey(r.n,i)];if(!q||q.done)return;q.done={ok,a};const ms=Date.now()-q.t0;
+  if(C.local)SFX.tap();else if(ok)SFX.ok(1);else SFX.no();act({t:'ans',n:r.n,ok,a,ms},i);render()}
+function curItem(i){return itemFor(i==null?myIdx():i)}
+function myQ(i){return C.qs[qkey(C.R.r.n,i)]}
+function canAnswer(i){const R=C.R;if(!R||!R.r||R.r.done)return false;const p=R.P[i==null?myIdx():i];return hnow()>=p.frozenUntil}
 const DA={
   dLeave:()=>{cleanup();document.body.classList.remove('induel');const sid=S.view.sid;go(sid?'stu':'home',{sid})},
   dBack:()=>{C.phase='lobby';render()},
-  dHost:async()=>{SFX.tap();C.phase='setup';const st=stuById(S.view.sid);C.setup={subj:null,pub:null,units:[],mins:8,mixed:false,loading:true,school:st?st.school:''};render();
+  dHost:async(e,ev,local)=>{SFX.tap();C.phase='setup';const st=stuById(S.view.sid);C.setup={subj:null,pub:null,units:[],mins:8,mixed:false,loading:true,school:st?st.school:'',local:!!local,p2:null,g:null};render();
     await Promise.all(Object.keys(BANKF).map(s=>loadBank(s).catch(()=>{})));C.setup.loading=false;render()},
-  dSubj:e=>{SFX.tap();const s=C.setup;s.subj=e.dataset.v;const pubs=pubsOf(s.subj);const mine=pubOf(s.school,s.subj);s.pub=pubs.includes(mine)?mine:pubs[0];s.units=unitsOf(s.subj,s.pub).map(u=>u.id);render()},
+  dLocal:e=>DA.dHost(e,null,true),
+  dP2:e=>{SFX.tap();const s=C.setup,v=e.dataset.v;const st=v==='guest'?null:stuById(v);s.p2=st?{sid:st.id,name:st.name,school:st.school,av:avOf(st.id)}:{sid:'guest',name:'訪客',school:'',av:'🧝'};gDef();render()},
+  dLPub:e=>{SFX.tap();const s=C.setup;s.g={pub:e.dataset.v,units:unitsOf(s.subj,e.dataset.v).map(u=>u.id)};render()},
+  dLUnit:e=>{SFX.tap();const g=C.setup.g,v=e.dataset.v;g.units=g.units.includes(v)?g.units.filter(x=>x!==v):g.units.concat(v);render()},
+  dLAll:()=>{const s=C.setup,g=s.g;const all=unitsOf(s.subj,g.pub).map(u=>u.id);g.units=g.units.length===all.length?[]:all;render()},
+  dAgain:()=>{const s=C.setup;cleanup();reset0();C.setup=s;C.phase=s?'setup':'lobby';render()},
+  dSubj:e=>{SFX.tap();const s=C.setup;s.subj=e.dataset.v;const pubs=pubsOf(s.subj);const mine=pubOf(s.school,s.subj);s.pub=pubs.includes(mine)?mine:pubs[0];s.units=unitsOf(s.subj,s.pub).map(u=>u.id);gDef();render()},
   dPub:e=>{SFX.tap();const s=C.setup;s.pub=e.dataset.v;s.units=unitsOf(s.subj,s.pub).map(u=>u.id);render()},
   dUnit:e=>{SFX.tap();const s=C.setup,v=e.dataset.v;s.units=s.units.includes(v)?s.units.filter(x=>x!==v):s.units.concat(v);render()},
   dAllU:()=>{const s=C.setup;const all=unitsOf(s.subj,s.pub).map(u=>u.id);s.units=s.units.length===all.length?[]:all;render()},
@@ -962,22 +1019,29 @@ const DA={
   dStart:()=>startGame(),
   dQuit:()=>{if(C.role==='h'&&C.R&&C.R.status==='wait'){C.R.status='end';push()}cleanup();C.phase='lobby';C.R=null;render()},
   dEndNow:()=>{if(C.role==='h'&&confirmEnd())finish()},
-  dPick:e=>{if(!canAnswer())return;const it=curItem();const i=+e.dataset.i;submit(i===it.a,it.opts[i])},
-  dTog:e=>{const q=C.qs[C.R.r.n];const i=+e.dataset.i;SFX.tap();q.sel=q.sel.includes(i)?q.sel.filter(x=>x!==i):q.sel.concat(i);render()},
-  dNF:e=>{C.qs[C.R.r.n].f=e.dataset.f;render()},
-  dKey:e=>{const it=curItem();const q=C.qs[C.R.r.n];SFX.tap();const fr=it.ans.t==='frac';const f=fr?q.f:'s';let v=q[f];const k=e.dataset.k;if(k==='⌫')v=v.slice(0,-1);else if(k==='.'){if(!v.includes('.'))v=(v||'0')+'.'}else if(v.length<10)v=(v==='0'?'':v)+k;q[f]=v;render()},
-  dCheck:()=>{if(!canAnswer())return;const it=curItem();const q=C.qs[C.R.r.n];
-    if(it.type==='multi'){const a=q.sel.slice().sort((x,y)=>x-y),b=it.ans.slice().sort((x,y)=>x-y);submit(a.length===b.length&&a.every((x,i)=>x===b[i]),q.sel.map(i=>it.items[i]).join('、'))}
-    else if(it.ans.t==='frac'){const n=+q.n,d=+q.d;const g=(a,b)=>b?g(b,a%b):a;submit(d>0&&n*it.ans.d===d*it.ans.n&&(!it.ans.simp||g(n,d)===1),q.n+'/'+q.d)}
-    else{const x=parseFloat(q.s);submit(isFinite(x)&&Math.abs(x-it.ans.v)<1e-9,q.s+(it.ans.u||''))}},
-  dSay:()=>{const it=curItem();if(it)say(it.say)},
-  dBuy:e=>{SFX.coin();act({t:'buy',k:e.dataset.k});toast('買了 '+ITEMS[e.dataset.k].ic+ITEMS[e.dataset.k].n)},
-  dUse:e=>{const k=e.dataset.k;act({t:'use',k})},
+  dPick:e=>{const w=who(e);if(!canAnswer(w))return;const it=curItem(w);const i=+e.dataset.i;submit(i===it.a,it.opts[i],w)},
+  dTog:e=>{const q=myQ(who(e));const i=+e.dataset.i;SFX.tap();q.sel=q.sel.includes(i)?q.sel.filter(x=>x!==i):q.sel.concat(i);render()},
+  dNF:e=>{myQ(who(e)).f=e.dataset.f;render()},
+  dKey:e=>{const w=who(e);const it=curItem(w);const q=myQ(w);SFX.tap();const fr=it.ans.t==='frac';const f=fr?q.f:'s';let v=q[f];const k=e.dataset.k;if(k==='⌫')v=v.slice(0,-1);else if(k==='.'){if(!v.includes('.'))v=(v||'0')+'.'}else if(v.length<10)v=(v==='0'?'':v)+k;q[f]=v;render()},
+  dCheck:e=>{const w=who(e);if(!canAnswer(w))return;const it=curItem(w);const q=myQ(w);
+    if(it.type==='multi'){const a=q.sel.slice().sort((x,y)=>x-y),b=it.ans.slice().sort((x,y)=>x-y);submit(a.length===b.length&&a.every((x,i)=>x===b[i]),q.sel.map(i=>it.items[i]).join('、'),w)}
+    else if(it.ans.t==='frac'){const n=+q.n,d=+q.d;const g=(a,b)=>b?g(b,a%b):a;submit(d>0&&n*it.ans.d===d*it.ans.n&&(!it.ans.simp||g(n,d)===1),q.n+'/'+q.d,w)}
+    else{const x=parseFloat(q.s);submit(isFinite(x)&&Math.abs(x-it.ans.v)<1e-9,q.s+(it.ans.u||''),w)}},
+  dSay:e=>{const it=curItem(who(e));if(it)say(it.say)},
+  dBuy:e=>{SFX.coin();act({t:'buy',k:e.dataset.k},who(e));toast('買了 '+ITEMS[e.dataset.k].ic+ITEMS[e.dataset.k].n)},
+  dUse:e=>{const k=e.dataset.k;act({t:'use',k},who(e))},
   dHome:()=>{cleanup();document.body.classList.remove('induel');const sid=S.view.sid;go(sid?'stu':'home',{sid})},
 };
+function gDef(){const s=C.setup;if(!s||!s.local||!s.subj)return;const pubs=pubsOf(s.subj);const mine=s.p2?pubOf(s.p2.school,s.subj):'';const pb=pubs.includes(mine)?mine:(pubs.includes(s.pub)?s.pub:pubs[0]);s.g={pub:pb,units:unitsOf(s.subj,pb).map(u=>u.id)}}
 let endAsk=0;function confirmEnd(){if(Date.now()-endAsk<3000)return true;endAsk=Date.now();toast('再按一次「提前結束」就結算');return false}
 
 function vEnd(){const R=C.R;const F=R.final;if(!F)return '<p class="muted">結算中…</p>';const me=myIdx();const mine=F.P[me];const iWin=F.win&&mine&&F.win===mine.name;
+  if(C.local){if(!C.saved){C.saved=true;SFX.win();setTimeout(()=>typeof confetti==='function'&&confetti(),200)}
+    return `<div class="dend"><div class="dhead"><button class="btn ghost sm" data-act="dHome">← 地城大門</button></div>
+  <div class="panel dres"><div class="crown">${F.win?'👑':'🤝'}</div><h1>${F.win?esc(F.win)+' 獲勝！':'平手！'}</h1>
+  <div class="vs">${F.P.map((p,i)=>p?`<div class="pc p${i} ${F.win===p.name?'win':''}"><span class="av">${esc(p.av)}</span><b>${esc(p.name)}</b><div class="tot">${p.total}</div><small>分數 ${p.score}＋地產 ${p.land}</small><small>答對 ${p.ok}/${p.n}・最長連對 ${p.best}</small></div>`:'').join('<span class="vsx">VS</span>')}</div>
+  <button class="btn gold" data-act="dAgain">🔄 再比一場</button></div>
+  <div class="dl-wr">${F.P.filter(Boolean).map(p=>`<div class="panel"><h3>${esc(p.name)} 答錯的題目</h3>${p.wrong.length?`<ul class="wl">${p.wrong.map(w=>`<li>${esc(w.q)}<br><span style="color:var(--bad)">你的答案：${esc(w.a||'沒作答')}</span>　<span style="color:var(--good)">正確答案：${esc(w.r)}</span></li>`).join('')}</ul>`:'<p><b>這場全部答對，太強了！</b></p>'}</div>`).join('')}</div></div>`}
   if(!C.saved){C.saved=true;if(iWin){SFX.win();setTimeout(()=>typeof confetti==='function'&&confetti(),200)}else if(F.win)SFX.lose();else SFX.ok(1)}
   return `<div class="dend"><div class="dhead"><button class="btn ghost sm" data-act="dHome">← 地城大門</button></div>
   <div class="panel dres"><div class="crown">${iWin?'👑':F.win?'⚔️':'🤝'}</div><h1>${F.win?(iWin?'你贏了！':esc(F.win)+' 獲勝！'):'平手！'}</h1>
