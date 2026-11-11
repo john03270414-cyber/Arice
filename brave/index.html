@@ -12,8 +12,8 @@
 <script src="../lib/firebase-app-compat.js"></script>
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
-<script src="../lib/config.js?v=1794376901"></script>
-<script src="../lib/shim.js?v=1794376901" data-app="brave" data-prefix="brv_"></script>
+<script src="../lib/config.js?v=1794384737"></script>
+<script src="../lib/shim.js?v=1794384737" data-app="brave" data-prefix="brv_"></script>
 <style>html{background:#0B0710}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
@@ -377,7 +377,7 @@ body.induel .fsbtn,body.induel .tlock{display:none}
 const SFX=(()=>{
   const PACKS=[['crypt','🕯️ 地城'],['bell','🔔 魔法鈴'],['arcade','👾 電玩'],['marimba','🎵 木琴'],['off','🔇 靜音']];
   let ctx=null,pack='crypt';try{const v=localStorage.getItem('brave-sound');if(v&&PACKS.some(p=>p[0]===v))pack=v}catch(e){}
-  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}catch(e){return null}}
+  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}}if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
   const N=n=>440*Math.pow(2,(n-69)/12); /* midi -> Hz */
   function env(c,g,n,a,d,v){g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+a);g.gain.exponentialRampToValueAtTime(.0001,n+a+d)}
   function out(c){if(!c._bus){const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);c._bus=comp;const dl=c.createDelay(1),fb=c.createGain(),wet=c.createGain();dl.delayTime.value=.23;fb.gain.value=.32;wet.gain.value=.28;dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(comp);c._echo=dl}return c._bus}
@@ -605,7 +605,7 @@ async function openGame(g,who,pub,sid){
   if(S.view.n!=='game'||S.view.g!==g)return;
   const f=document.createElement('iframe');f.className='gframe';f.title=gi.n;f.setAttribute('allow','autoplay; fullscreen');
   f.onload=()=>{const l=$('#gload');if(l)l.remove()};
-  f.srcdoc=txt;$('#app').appendChild(f);
+  f.srcdoc=txt.replace(/<head[^>]*>/i,m=>m+"<script>try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}<\/script>");$('#app').appendChild(f);
 }
 function leaveGame(){livePing(false);document.body.classList.remove('ingame');const v=S.view;window.__brWho='';if(v.who&&v.sid)go('stu',{sid:v.sid});else if(S.tOK)go('teacher');else go(v.sid?'stu':'home',{sid:v.sid})}
 
@@ -699,7 +699,12 @@ const C={phase:'lobby',me:null,code:null,role:null,R:null,unsub:[],acts:[],seq:0
 const rnd=n=>Math.random()*n|0;
 const hnow=()=>C.role==='h'?Date.now():Date.now()+(C.off>-1e14?C.off:0);
 const slug=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-let curAudio=null;function say(t){try{if(curAudio)curAudio.pause();const a=new Audio('audio/en-'+slug(t)+'.mp3');curAudio=a;a.onerror=()=>{try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}catch(e){}};const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+let sayA=null,sayOK=false;
+function sayEl(){if(!sayA){sayA=new Audio();sayA.preload='auto'}return sayA}
+function sayUnlock(){if(sayOK)return;sayOK=true;try{const a=sayEl();a.muted=true;a.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';const p=a.play();const done=()=>{if(String(a.src).indexOf('data:')===0){try{a.pause()}catch(e){}}a.muted=false};if(p&&p.then)p.then(done,done);else done()}catch(e){}}
+document.addEventListener('pointerdown',sayUnlock,true);
+function sayTTS(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
+function say(t){try{const a=sayEl();try{a.pause()}catch(e){}a.muted=false;let fell=false;const fb=()=>{if(fell)return;fell=true;sayTTS(t)};a.onerror=fb;a.src='audio/en-'+slug(t)+'.mp3';const p=a.play();if(p&&p.catch)p.catch(fb)}catch(e){sayTTS(t)}}
 
 /* ---------- bank ---------- */
 const loaded={};

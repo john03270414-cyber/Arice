@@ -12,8 +12,8 @@
 <script src="../lib/firebase-app-compat.js"></script>
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
-<script src="../lib/config.js?v=1794376901"></script>
-<script src="../lib/shim.js?v=1794376901" data-app="island" data-prefix="isl_"></script>
+<script src="../lib/config.js?v=1794384737"></script>
+<script src="../lib/shim.js?v=1794384737" data-app="island" data-prefix="isl_"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
@@ -479,7 +479,7 @@ const COVER={
 const SFX=(()=>{
   const PACKS=[['marimba','🎵 木琴'],['bell','🔔 魔法鈴'],['arcade','👾 電玩'],['off','🔇 靜音']];
   let ctx=null,pack='marimba';try{const v=localStorage.getItem('island-sound');if(v&&PACKS.some(p=>p[0]===v))pack=v}catch(e){}
-  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}catch(e){return null}}
+  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}}if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
   const N=n=>440*Math.pow(2,(n-69)/12); /* midi -> Hz */
   function env(c,g,n,a,d,v){g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+a);g.gain.exponentialRampToValueAtTime(.0001,n+a+d)}
   function out(c){if(!c._bus){const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);c._bus=comp}return c._bus}
