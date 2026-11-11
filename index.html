@@ -2,33 +2,127 @@
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>中正補習班・Arice</title>
+<meta name="description" content="五年級學習平台：學習島（期末考五科闖關）和勇者衝鋒（單元複習、雙人決鬥）。用老師給的帳號登入就能玩。">
 <meta name="theme-color" content="#14101a">
-<link rel="icon" type="image/png" href="island/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arice">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="中正補習班・Arice">
+<meta property="og:title" content="Arice 五年級學習平台">
+<meta property="og:description" content="學習島・勇者衝鋒：國語、數學、社會、自然、英語一起闖關。用老師給的帳號登入就能玩。">
+<meta property="og:url" content="https://john03270414-cyber.github.io/Arice/">
+<meta property="og:image" content="https://john03270414-cyber.github.io/Arice/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root{--bg:#14101a;--card:#1f1826;--line:#33283a;--ink:#f3ebe3;--dim:#a99c95;--accent:#f0b341}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
 main{max-width:860px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px 40px}
+a{color:var(--accent)}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.08em;font-size:14px}
-h1{font-size:clamp(28px,6vw,40px);margin:6px 0 6px}
-.lead{color:var(--dim);margin:0 0 26px;line-height:1.7}
+h1{font-size:clamp(28px,6vw,40px);margin:6px 0 6px;text-wrap:balance}
+.lead{color:var(--dim);margin:0 0 22px;line-height:1.7;font-size:17px}
+.out{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--dim);font-size:15px}
+.stats{display:flex;gap:10px;margin:0 0 22px;flex-wrap:wrap}
+.stats div{flex:1;min-width:96px;padding:12px 10px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:center}
+.stats b{display:block;font-size:26px;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.stats span{font-size:13px;color:var(--dim)}
+#ar-login-slot{margin:0 0 22px}
+#ar-login-slot:empty{display:none}
 .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 .app{display:flex;gap:16px;align-items:center;padding:18px;border-radius:24px;background:var(--card);border:1px solid var(--line);color:inherit;text-decoration:none;transition:transform .15s,border-color .15s}
 .app:hover,.app:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
 .app img{width:96px;height:96px;border-radius:22px;flex:none;box-shadow:0 10px 24px rgba(0,0,0,.35)}
 .app b{display:block;font-size:22px}.app span{color:var(--dim);font-size:15px;line-height:1.6}
-.how{margin-top:30px;padding:18px 20px;border-radius:20px;border:1px dashed var(--line);color:var(--dim);line-height:1.8;font-size:15px}
+.app i{margin-left:auto;font-style:normal;font-size:28px;color:var(--dim)}
+body.signedout .apps{opacity:.55}
+.tools{display:none;gap:10px;flex-wrap:wrap;margin-top:18px}
+body.teacher .tools{display:flex}
+.tools a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none;font-size:15px}
+details{margin-top:30px;border-radius:20px;border:1px dashed var(--line);color:var(--dim);line-height:1.8;font-size:15px}
+summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-height:48px}
+.how{padding:0 20px 18px}
+.how h2{font-size:16px;color:var(--ink);margin:14px 0 2px}
+.how ol{margin:4px 0 0;padding-left:22px}
 .how b{color:var(--ink)}
-.how ol{margin:6px 0 0;padding-left:22px}
-</style></head><body><main>
-<div class="eyebrow">中正補習班・Arice</div>
-<h1>五年級學習平台</h1>
-<p class="lead">選一個打開。第一次使用要登入：學生輸入老師給的帳號密碼，老師輸入 Email。登入一次之後會記住。</p>
+@media (prefers-reduced-motion:reduce){.app{transition:none}}
+</style></head><body class="loading"><main>
+<div class="top"><div class="eyebrow">中正補習班・Arice</div><button class="out" id="out" type="button" hidden>登出</button></div>
+<h1 id="hello">五年級學習平台</h1>
+<p class="lead" id="lead">先登入，再選一個遊戲開始。在這裡登入一次，兩個遊戲都可以玩。</p>
+<div class="stats" id="stats" hidden></div>
+<div id="ar-login-slot"></div>
 <div class="apps">
-  <a class="app" href="island/"><img src="island/icon-512.png" alt=""><div><b>學習島</b><span>期末考範圍・五科闖關</span></div></a>
-  <a class="app" href="brave/"><img src="brave/icon-512.png" alt=""><div><b>勇者衝鋒</b><span>單元複習・總複習・雙人決鬥</span></div></a>
+  <a class="app" href="island/"><img src="island/icon-512.png" alt="" width="96" height="96"><div><b>學習島</b><span>期末考範圍・五科闖關</span></div><i aria-hidden="true">›</i></a>
+  <a class="app" href="brave/"><img src="brave/icon-512.png" alt="" width="96" height="96"><div><b>勇者衝鋒</b><span>單元複習・總複習・雙人決鬥</span></div><i aria-hidden="true">›</i></a>
 </div>
-<div class="how"><b>放到 iPad 主畫面（全螢幕）</b>
-<ol><li>用 <b>Safari</b> 點進上面其中一個。</li><li>按網址列旁邊的「分享」按鈕 → 「加入主畫面」。</li><li>從主畫面的圖示打開，就是全螢幕，沒有網址列。兩個都要各加一次。</li></ol>也可以用 iPad 的 Safari 點這裡安裝描述檔，裝好到「設定 → 已下載描述檔」按安裝：<a href="profiles/island.mobileconfig" style="color:var(--accent)">學習島</a>・<a href="profiles/brave.mobileconfig" style="color:var(--accent)">勇者衝鋒</a></div>
-<p style="margin-top:22px;color:var(--dim);font-size:14px">老師專用：<a href="accounts.html" style="color:var(--accent)">學生帳號管理</a>・<a href="import.html" style="color:var(--accent)">從 Claude 版搬資料</a></p>
-</main></body></html>
+<div class="tools"><a href="accounts.html">👥 學生帳號管理</a><a href="import.html">📦 從 Claude 版搬資料</a></div>
+<details><summary>老師／家長：怎麼放到主畫面</summary><div class="how">
+<p style="margin:0">把<b>這一頁</b>加到主畫面一次就好：兩個遊戲都在裡面，全螢幕、只要登入一次。</p>
+<h2>iPad／iPhone</h2>
+<ol><li>用 <b>Safari</b> 打開這一頁。</li><li>按「分享」按鈕 → 「加入主畫面」。</li><li>從主畫面的 Arice 圖示打開，登入後選遊戲。</li></ol>
+<h2>Android 手機／平板</h2>
+<ol><li>用 <b>Chrome</b> 打開這一頁。</li><li>按右上角「⋮」→「加到主畫面」或「安裝應用程式」。</li></ol>
+<h2>電腦</h2>
+<ol><li>用 Chrome 或 Edge 打開，按網址列右邊的「安裝」圖示；或直接加到書籤。</li></ol>
+<h2>想要兩個遊戲各一個圖示（iPad）</h2>
+<p style="margin:0">用 Safari 點這裡安裝描述檔，裝好到「設定 → 已下載描述檔」按安裝：<a href="profiles/island.mobileconfig">學習島</a>・<a href="profiles/brave.mobileconfig">勇者衝鋒</a>。這樣每個圖示要各登入一次。</p>
+<p style="margin:10px 0 0">老師專用：<a href="accounts.html">學生帳號管理</a>・<a href="import.html">從 Claude 版搬資料</a></p>
+</div></details>
+</main>
+<script src="lib/firebase-app-compat.js" defer></script>
+<script src="lib/firebase-auth-compat.js" defer></script>
+<script src="lib/firebase-firestore-compat.js" defer></script>
+<script src="lib/config.js" defer></script>
+<script src="lib/shim.js" data-app="home" data-prefix="" defer></script>
+<script>
+/* 從這一頁進遊戲時，遊戲裡會出現「🏠 首頁」可以回來 */
+try{sessionStorage.setItem('ar-hub','1')}catch(e){}
+window.addEventListener('DOMContentLoaded',function(){
+  var $=function(id){return document.getElementById(id)};
+  if(!window.ARICE||!ARICE.cfg||!window.firebase){document.body.className='';$('lead').textContent='選一個打開。學生輸入老師給的帳號密碼，老師輸入 Email。';return}
+  var DAY=864e5;
+  var ymd=function(t){var d=new Date(t==null?Date.now():t);return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
+  var stat=function(list){var el=$('stats');el.textContent='';list.forEach(function(x){var d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span');b.textContent=x[0];s.textContent=x[1];d.appendChild(b);d.appendChild(s);el.appendChild(d)});el.hidden=!list.length};
+  /* 還沒登入時，登入框會出現在上面；按遊戲卡片就先把人帶到登入框 */
+  document.body.className='signedout';
+  document.querySelector('.apps').addEventListener('click',function(e){
+    if(!document.body.classList.contains('signedout'))return;
+    var f=document.querySelector('#ar-login-slot form');if(!f)return;
+    e.preventDefault();f.scrollIntoView({behavior:'smooth',block:'center'});var i=f.querySelector('input');if(i)i.focus({preventScroll:true});
+  });
+  $('out').addEventListener('click',function(){if(confirm('要登出嗎？登出後要重新輸入帳號密碼。'))ARICE.signOut()});
+  ARICE.boot().then(function(ok){
+    if(!ok)return;
+    var me=ARICE.me,fs=ARICE.raw();
+    document.body.className=me.role==='teacher'?'teacher':'student';
+    $('out').hidden=false;
+    $('hello').textContent=(me.name||'同學')+'，歡迎回來！';
+    if(me.role==='student'){
+      $('lead').textContent='選一個遊戲開始吧。';
+      if(me.sid)fs.doc('isl_stu/'+me.sid).get().then(function(s){
+        var d=(s.exists&&s.data().days)||{};
+        var i=d[ymd()]?0:1,st=0;while(d[ymd(Date.now()-i*DAY)]){st++;i++}
+        var wk=0;for(var k=0;k<7;k++)wk+=+d[ymd(Date.now()-k*DAY)]||0;
+        $('lead').textContent=d[ymd()]?'今天已經練習過了，繼續加油！':(st?'已經連續 '+st+' 天了，今天也來練習，不要斷掉！':'選一個遊戲，今天開始第一天！');
+        stat([[st,'連續天數'],[wk,'本週題數（學習島）'],[+d[ymd()]||0,'今天題數（學習島）']]);
+      }).catch(function(){});
+    }else{
+      $('lead').textContent='選一個遊戲進去，按左下角「🔒 老師」開後台。';
+      fs.collection('isl_stu').get().then(function(q){
+        var today=0,week=0,qs=0;q.forEach(function(s){var d=s.data().days||{};if(d[ymd()]){today++;qs+=+d[ymd()]||0}for(var k=0;k<7;k++)if(d[ymd(Date.now()-k*DAY)]){week++;break}});
+        stat([[today,'今天練習的學生'],[qs,'今天總題數'],[week,'本週有練習的學生']]);
+      }).catch(function(){});
+    }
+  });
+});
+</script>
+</body></html>

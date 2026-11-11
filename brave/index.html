@@ -12,9 +12,10 @@
 <script src="../lib/firebase-app-compat.js"></script>
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
-<script src="../lib/config.js?v=1794014971"></script>
-<script src="../lib/shim.js?v=1794014971" data-app="brave" data-prefix="brv_"></script>
+<script src="../lib/config.js?v=1794376901"></script>
+<script src="../lib/shim.js?v=1794376901" data-app="brave" data-prefix="brv_"></script>
 <style>html{background:#0B0710}body{margin:0}</style>
+<style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
 <title>勇者衝鋒</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -553,8 +554,8 @@ function vHome(){
     ${ready?`<div class="hero-stats"><div><b>${students().length}</b><span>勇者</span></div><div><b>4</b><span>座地城</span></div><div><b>${live}</b><span>場決鬥進行中</span></div></div>`:''}</div>
     <button class="scene-mute" data-act="mute" aria-label="音效">${SFX.label}</button></section>`;
   let body='';
-  if(S.cfgState==='wait')body='<div class="panel muted">正在打開城門…</div>';
-  else if(S.cfgState==='slow')body='<div class="panel">連不到雲端資料，請確認網路後重新打開這一頁。</div>';
+  if(S.cfgState==='wait')body='<div class="panel muted"><span class="ar-spin" aria-hidden="true"></span>正在打開城門…</div>';
+  else if(S.cfgState==='slow')body='<div class="panel">連不到雲端資料，請確認 Wi-Fi 有連上，再按下面的按鈕。<br><button class="ar-retry" type="button" onclick="location.reload()">重新整理</button></div>';
   else if(S.dbState==='none')body='<div class="panel"><h3>這台平板沒有登入老師的帳號</h3><p class="muted">名單和紀錄都存在老師的帳號裡，請用老師登入的平板打開。</p></div>';
   else if(!students().length)body='<div class="panel">還沒有學生名單，請老師聯絡設定。</div>';
   else{
