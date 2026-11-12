@@ -632,11 +632,11 @@ function vSPin(v){const st=stuById(v.sid);if(!st)return vHome();const a=avatar(v
 function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&(!n.school||n.school===school)).sort((a,b)=>(b.at||0)-(a.at||0))}
 function noticeHTML(school){const L=noticesFor(school).slice(0,3);if(!L.length)return '';
   return `<section class="noticebd" aria-label="公告欄">${L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>老師公告・${esc(new Date(n.at||Date.now()).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}))}${n.school?'・'+esc(n.school):''}</small></div></div>`).join('')}</section>`}
-function starsHTML(school,meId){const pool=students().filter(s=>s.school===school);
+function starsHTML(school,meId){const pool=students(); /* 全部五年級一起排，不分學校 */
   const all=pool.map(s=>({s,n:weekCount(s.id)})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const top=all.slice(0,5);const medals=['🥇','🥈','🥉','4','5'];
   const mi=meId?all.findIndex(x=>x.s.id===meId):-1;
   const mine=meId?(mi>=5?`<div class="myrank">你這週排第 <b>${mi+1}</b> 名，做了 <b>${all[mi].n}</b> 題，再加油就能上榜！</div>`:mi<0?'<div class="myrank">你這週還沒做題，做一題就能上榜！</div>':''):'';
-  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">近 7 天題數</span></div>${school?`<div class="muted small" style="margin:-4px 0 8px">${esc(school)}</div>`:''}${top.length?`<ol class="rank">${top.map((x,i)=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}</span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}${mine}</div>`}
+  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">近 7 天題數</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級</div>${top.length?`<ol class="rank">${top.map((x,i)=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${esc(x.s.school||'')}</small></span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}${mine}</div>`}
 function weekCount(sid){const d=stuDoc(sid).days||{};let n=0;for(let i=0;i<7;i++)n+=d[ymd(Date.now()-i*DAY)]||0;return n}
 function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
