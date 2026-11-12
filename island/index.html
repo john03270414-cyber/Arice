@@ -12,11 +12,9 @@
 <script src="../lib/firebase-app-compat.js"></script>
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
-<script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794384737" data-app="island" data-prefix="isl_"></script>
-<script src="../lib/avatar.js?v=1794450000"></script>
+<script src="../lib/config.js?v=1794014971"></script>
+<script src="../lib/shim.js?v=1794014971" data-app="island" data-prefix="isl_"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
-<style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
 <title>Arice 學習島</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -412,7 +410,9 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 .sonote h3{margin:0 0 6px;font-size:19px}
 .sonote ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:17px;line-height:1.6}
 .sonote .cat{display:inline-block;font-size:13px;font-weight:700;color:#fff;background:var(--cc,var(--sc-c));border-radius:99px;padding:1px 9px;margin-bottom:6px;font-family:var(--font)}
-.cat-歷史{--cc:#B5651D}.cat-公民{--cc:#2E7D5B}.cat-地理{--cc:#2C79C9}
+.cat-歷史{--cc:#B5651D}.cat-公民{--cc:#2E7D5B}.cat-地理{--cc:#2C79C9}.cat-觀念{--cc:#7656BE}.cat-實驗{--cc:#0E7C77}.cat-應用{--cc:#C2417A}
+.qfig{max-width:460px;width:100%;margin:2px auto 4px;justify-self:center}
+.qfig svg{max-height:360px}
 .tl{position:relative;display:grid;gap:14px;padding:6px 0 6px 34px}
 .tl:before{content:"";position:absolute;left:14px;top:4px;bottom:4px;width:4px;border-radius:4px;background:linear-gradient(var(--sc-c),color-mix(in srgb,var(--sc-c) 30%,#fff))}
 .tl .ev{position:relative;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);opacity:0;transform:translateX(-14px)}
@@ -441,6 +441,9 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <script src="bank_so_hanlin.js"></script>
 <script src="bank_so_kangxuan.js"></script>
 <script src="bank_so_nanyi.js"></script>
+<script src="sc_figs.js"></script>
+<script src="bank_sc_hanlin.js"></script>
+<script src="bank_sc_kangxuan.js"></script>
 <script src="demo.js"></script>
 <script>
 (function(){
@@ -480,7 +483,7 @@ const COVER={
 const SFX=(()=>{
   const PACKS=[['marimba','🎵 木琴'],['bell','🔔 魔法鈴'],['arcade','👾 電玩'],['off','🔇 靜音']];
   let ctx=null,pack='marimba';try{const v=localStorage.getItem('island-sound');if(v&&PACKS.some(p=>p[0]===v))pack=v}catch(e){}
-  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}}if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
+  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}catch(e){return null}}
   const N=n=>440*Math.pow(2,(n-69)/12); /* midi -> Hz */
   function env(c,g,n,a,d,v){g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+a);g.gain.exponentialRampToValueAtTime(.0001,n+a+d)}
   function out(c){if(!c._bus){const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);c._bus=comp}return c._bus}
@@ -600,12 +603,11 @@ const AVC=['#FFD9D2','#D6E8FF','#FFF0C2','#D5F2DF','#E7DEFF','#CFF1EE','#FFE0EE'
 const FUN=['🤪','😜','🤡','👽','🤖','💩','👻','🥸','😎','🤠','🧟','🥷','🧙','🦸','🐲','🦈','🍕','🍩','🌮','🥑'];
 const JERSEY=[['梅西',10,'#75AADB','#FFFFFF','#1B2A5C',1],['C羅',7,'#C8102E','#0B6E3B','#FFD447',0],['姆巴佩',10,'#1B2A5C','#C8102E','#FFFFFF',0],['哈蘭德',9,'#6CABDD','#FFFFFF','#FFFFFF',0],['內馬爾',10,'#FFDC02','#1E8C45','#1E5AA8',0],['孫興慜',7,'#E30613','#1B2A5C','#FFFFFF',0],['亞馬爾',19,'#A50044','#004D98','#FFD447',1],['貝林漢',5,'#FFFFFF','#C9A227','#1B2A5C',0],['凱恩',9,'#C8102E','#FFFFFF','#FFFFFF',0],['薩拉赫',11,'#B5121B','#E8C547','#FFFFFF',0]];
 function jerseySVG(k){const [n,no,c1,c2,c3,st]=JERSEY[k%JERSEY.length];return `<svg class="jsy" viewBox="0 0 60 60" aria-label="${n} ${no} 號球衣"><path d="M18 8 L24 5 Q30 11 36 5 L42 8 L54 18 L47 27 L42 23 L42 55 L18 55 L18 23 L13 27 L6 18Z" fill="${c1}" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-linejoin="round"/>${st?`<path d="M25 7 V55 M35 7 V55" stroke="${c2}" stroke-width="5"/>`:''}<path d="M24 5 Q30 12 36 5" fill="none" stroke="${c2}" stroke-width="2.4"/><path d="M6 18 L13 27 M54 18 L47 27" stroke="${c2}" stroke-width="2.4"/><text x="30" y="24.5" text-anchor="middle" font-size="7" font-weight="700" fill="${c3}" stroke="${c1}" stroke-width="1.6" paint-order="stroke" font-family="Huninn,PingFang TC,sans-serif">${n}</text><text x="30" y="47" text-anchor="middle" font-size="20" font-weight="800" fill="${c3}" stroke="${c1}" stroke-width="2.4" paint-order="stroke" font-family="Arial Black,Arial,sans-serif">${no}</text></svg>`}
-function avById(v){if(window.ARAV&&ARAV.ok(v))return {e:ARAV.html(v),c:'#DCE6D2'};const [t,i]=String(v).split(':');const k=+i||0;if(t==='f')return {e:FUN[k%FUN.length],c:AVC[(k+3)%AVC.length]};if(t==='j')return {e:jerseySVG(k),c:'#E9F2F5'};return {e:AVS[k%AVS.length],c:AVC[k%AVC.length]}}
+function avById(v){const [t,i]=String(v).split(':');const k=+i||0;if(t==='f')return {e:FUN[k%FUN.length],c:AVC[(k+3)%AVC.length]};if(t==='j')return {e:jerseySVG(k),c:'#E9F2F5'};return {e:AVS[k%AVS.length],c:AVC[k%AVC.length]}}
 function defaultAv(id){let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;const i=students().findIndex(s=>s.id===id);return 'a:'+(i>=0?i:h)%AVS.length}
 function avatar(id){const v=(S.stu[id]||{}).av;return avById(v||defaultAv(id))}
 function avPicker(sid){const cur=(S.stu[sid]||{}).av||defaultAv(sid);const cell=v=>{const a=avById(v);const j=v[0]==='j'?JERSEY[+v.slice(2)]:null;return `<button class="avc ${cur===v?'on':''}" data-act="avSet" data-v="${v}"><span class="av" style="--av:${a.c}">${a.e}</span>${j?`<small class="jn">${j[0]}</small>`:''}</button>`};
   return `<div class="modal" data-act="avClose"><div class="sheet" data-act="noop" role="dialog" aria-label="選頭像"><div class="spread"><h2>選一個你喜歡的頭像</h2><button class="btn ghost sm" data-act="avClose">關閉</button></div>
-  ${window.ARAV?`<div class="spread"><h3>🎖️ 特戰隊員</h3><button class="btn sm" data-act="avMake">🛠️ 自己做一個</button></div><div class="avgrid">${(cur&&ARAV.ok(cur)&&!ARAV.presets.includes(cur)?[cur]:[]).concat(ARAV.presets).map(cell).join('')}</div>`:''}
   <h3>⚽ 足球明星</h3><div class="avgrid">${JERSEY.map((_,i)=>cell('j:'+i)).join('')}</div>
   <h3>🤪 搞怪</h3><div class="avgrid">${FUN.map((_,i)=>cell('f:'+i)).join('')}</div>
   <h3>🐾 動物</h3><div class="avgrid">${AVS.map((_,i)=>cell('a:'+i)).join('')}</div></div></div>`}
@@ -671,8 +673,8 @@ function vHome(){
     ${ready?`<div class="hero-stats"><div><b>${today.length}</b><span>今天已上島</span></div><div><b>${students().length}</b><span>島民</span></div><div><b>${openN}</b><span>開放單元</span></div></div>`:''}</div>
     <button class="scene-mute" data-act="mute" aria-label="音效開關">${SFX.label}</button></section>`;
   let body='';
-  if(S.cfgState==='wait')body='<div class="panel muted"><span class="ar-spin" aria-hidden="true"></span>正在讀取學生名單…</div>';
-  else if(S.cfgState==='slow')body='<div class="panel">連不到雲端資料，請確認 Wi-Fi 有連上，再按下面的按鈕。<br><button class="ar-retry" type="button" onclick="location.reload()">重新整理</button></div>';
+  if(S.cfgState==='wait')body='<div class="panel muted">正在讀取學生名單…</div>';
+  else if(S.cfgState==='slow')body='<div class="panel">連不到雲端資料，請確認網路後重新打開這一頁。</div>';
   else if(S.dbState==='none')body='<div class="panel stack"><h3>這台平板沒有登入老師的帳號</h3><p class="muted">學生名單和成績都存在老師的帳號裡。請用老師登入的平板打開，或請老師幫你登入。</p></div>';
   else if(!students().length)body='<div class="panel stack"><h3>還沒有學生名單</h3><p class="muted">請老師按左下角「老師」→「設定」新增學生和學校版本。</p></div>';
   else{
@@ -740,15 +742,15 @@ function vUnit(v){
   return `<div class="z-${z}"><section class="sbanner"><span class="wm">${SM[subj].g}</span><button class="back light" data-act="backSubj">← ${subj}島</button><div class="grow"><div class="eyebrow">${esc(pub)}版・${esc(subj)}</div><h1>${esc(un.name)}</h1></div>${ring(s.tot?s.c.done/s.tot:0,null,72)}</section>
   <div class="ucard"><div class="spread"><div><h2>✏️ 練習</h2><div class="muted small">每次 10 題，還沒學會的題目會優先出現${s.acc!=null?`・目前答對率 ${Math.round(s.acc*100)}%`:''}</div></div>${pill(s.st)}</div>${barHTML(s.c,s.tot)}
   <div class="legend"><span><b style="background:var(--good)"></b>已學會 ${s.c.done}</span><span><b style="background:var(--warn)"></b>還在練 ${s.c.learn}</span><span><b style="background:var(--bad)"></b>錯很多 ${s.c.weak}</span><span>尚未做 ${s.c.new}</span></div>
-  <button class="btn big" data-act="startPractice" data-u="${esc(uid)}">開始練習</button>${subj==='社會'?soCatBtns(un,uid):''}</div>
-  ${subj==='國語'?charBlock(sid,subj,pub,[un]):''}${subj==='社會'?soBlocks(un):''}
+  <button class="btn big" data-act="startPractice" data-u="${esc(uid)}">開始練習</button>${(subj==='社會'||subj==='自然')?soCatBtns(un,uid):''}</div>
+  ${subj==='國語'?charBlock(sid,subj,pub,[un]):''}${(subj==='社會'||subj==='自然')?soBlocks(un):''}
   <div class="sec-h" style="margin-top:22px"><h2>🎮 遊戲</h2><span class="muted">${passed?'遊戲已開放，挑戰 3 顆星！':'練習答對 85%（10 題對 9 題）就會解鎖'}</span></div>
   <div class="gtiles">${gb||'<p class="muted">這個單元沒有遊戲題。</p>'}</div></div>`;
 }
 
 
 /* ---------- 社會科：重點卡、時間軸、分類練習 ---------- */
-const SO_CATS=['歷史','公民','地理'];const SO_IC={歷史:'📜',公民:'⚖️',地理:'🗺️'};
+const SO_CATS=['歷史','公民','地理','觀念','實驗','應用'];const SO_IC={歷史:'📜',公民:'⚖️',地理:'🗺️',觀念:'💡',實驗:'🧪',應用:'🏠'};
 function soCatBtns(un,uid){const c=SO_CATS.map(k=>[k,un.items.filter(it=>it.cat===k).length]).filter(x=>x[1]>=3);if(c.length<2)return '';
   return `<div class="small muted" style="margin-top:4px">只想練某一類？</div><div class="socats">${c.map(([k,n])=>`<button class="btn ghost" data-act="startPractice" data-u="${esc(uid)}" data-cat="${k}">${SO_IC[k]} ${k}題 <span class="small muted">（${n}）</span></button>`).join('')}</div>`}
 function soBlocks(un){
@@ -801,9 +803,9 @@ function tokens(pool,lane,act,col){const byK=k=>pool.find(p=>String(p.k)===Strin
 function qBody(it,q,locked){
   const dis=locked?'disabled':'';
   switch(it.type){
-    case 'mc':{const big=it.opts.every(o=>String(o).length<=2);return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig">${it.img}</div>`:''}<div class="opts">${q.order.map(i=>`<button class="opt ${big?'big':''} ${optCls(it,q,i,locked)}" ${dis} data-act="pick" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div>`}
+    case 'mc':{const big=it.opts.every(o=>String(o).length<=2);return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="opts">${q.order.map(i=>`<button class="opt ${big?'big':''} ${optCls(it,q,i,locked)}" ${dis} data-act="pick" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div>`}
     case 'listen':return `<div class="qtext">聽聽看，是哪一個字？</div><button class="speak" data-act="say" aria-label="再聽一次">🔊</button><div class="opts">${q.order.map(i=>`<button class="opt big ${optCls(it,q,i,locked)}" ${dis} data-act="pick" data-i="${i}" style="font-size:26px">${esc(it.opts[i])}</button>`).join('')}</div>`;
-    case 'order':return `<div class="qtext">${esc(it.q)}</div><div class="hint">依照順序一張一張點</div>${tokens(q.pool,q.lane,'ord',true)}${locked?'':`<button class="btn" data-act="check" ${q.lane.length===q.pool.length?'':'disabled'}>檢查</button>`}`;
+    case 'order':return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="hint">依照順序一張一張點</div>${tokens(q.pool,q.lane,'ord',true)}${locked?'':`<button class="btn" data-act="check" ${q.lane.length===q.pool.length?'':'disabled'}>檢查</button>`}`;
     case 'tiles':return `<div class="qtext">${esc(it.q)}</div>${it.model?`<div class="model">例句：${esc(it.model)}</div>`:''}${tokens(q.pool,q.lane,'ord')}${locked?'':`<button class="btn" data-act="check" ${q.lane.length?'':'disabled'}>檢查</button>`}`;
     case 'spell':return `<div class="qtext">拼出「${esc(it.zh)}」</div><button class="btn ghost sm" data-act="sayWord" style="justify-self:start">🔊 聽發音</button>${tokens(q.pool,q.lane,'ord')}<div class="qtext" style="font-size:30px;letter-spacing:.06em;min-height:40px">${esc(q.lane.map(k=>q.pool.find(p=>String(p.k)===String(k)).t).join(''))}</div>${locked?'':`<button class="btn" data-act="check" ${q.lane.length?'':'disabled'}>檢查</button>`}`;
     case 'match':case 'label':{
@@ -813,14 +815,14 @@ function qBody(it,q,locked){
       const R=q.right.map((t,j)=>{const li=Object.keys(q.map).find(k=>q.map[k]===j);return `<button class="mitem" ${dis} data-act="mR" data-j="${j}">${li!=null?`<span class="tag" style="background:${TAGC[li%8]}">${+li+1}</span>`:'<span class="tag" style="background:var(--line)"></span>'}<span>${esc(t)}</span></button>`}).join('');
       const all=Object.keys(q.map).length===q.left.length;
       const pairs=`<div class="match"><div class="col">${L}</div><div class="col">${R}</div></div>`;
-      return `<div class="qtext">${esc(it.q)}</div><div class="hint">先點左邊一個，再點右邊配對的答案</div>${fig?`<div class="figure">${fig}<div>${pairs}</div></div>`:pairs}${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
-    case 'classify':{const all=Object.keys(q.map).length===it.items.length;return `<div class="qtext">${esc(it.q)}</div><div class="cls">${it.items.map((x,i)=>`<div class="clsrow"><div style="font-size:18px">${esc(x[0])}</div><div class="cbtns">${it.cats.map((c,ci)=>`<button class="cbtn ${q.map[i]===ci?'on':''}" ${dis} data-act="cls" data-i="${i}" data-c="${ci}">${esc(c)}</button>`).join('')}</div></div>`).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+      return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="hint">先點左邊一個，再點右邊配對的答案</div>${fig?`<div class="figure">${fig}<div>${pairs}</div></div>`:pairs}${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+    case 'classify':{const all=Object.keys(q.map).length===it.items.length;return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="cls">${it.items.map((x,i)=>`<div class="clsrow"><div style="font-size:18px">${esc(x[0])}</div><div class="cbtns">${it.cats.map((c,ci)=>`<button class="cbtn ${q.map[i]===ci?'on':''}" ${dis} data-act="cls" data-i="${i}" data-c="${ci}">${esc(c)}</button>`).join('')}</div></div>`).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
     case 'evidence':{const ready=q.opt!=null&&q.ev.length;return `<div class="passage">${it.passage.map((t,i)=>`<button class="sent ${q.ev.includes(i)?'on':''} ${locked&&it.ev.includes(i)?'ev':''}" ${dis} data-act="ev" data-i="${i}">${i+1}. ${esc(t)}</button>`).join('')}</div><div class="qtext">${esc(it.q)}</div><div class="opts">${q.order.map(i=>`<button class="opt ${locked?(i===it.a?'right':(q.opt===i?'wrong':'')):(q.opt===i?'sel':'')}" ${dis} data-act="evOpt" data-i="${i}">${esc(it.opts[i])}</button>`).join('')}</div><div class="hint">① 選答案　② 在文章裡點出能證明的句子（可以點不只一句）</div>${locked?'':`<button class="btn" data-act="check" ${ready?'':'disabled'}>檢查</button>`}`}
     case 'num':{const fr=it.ans.t==='frac';const pad=['7','8','9','4','5','6','1','2','3',fr?'':'.','0','⌫'];
       const box=fr?`<div class="fracbox"><button class="nbox ${q.f==='n'?'on':''}" ${dis} data-act="nFocus" data-f="n">${esc(q.n)||'<span class=muted>分子</span>'}</button><i></i><button class="nbox ${q.f==='d'?'on':''}" ${dis} data-act="nFocus" data-f="d">${esc(q.d)||'<span class=muted>分母</span>'}</button></div>`:`<div class="row"><div class="nbox on wide">${esc(q.s)||'<span class=muted>輸入答案</span>'}</div>${it.ans.u?`<b>${esc(it.ans.u)}</b>`:''}</div>`;
       const ready=fr?(q.n&&q.d):q.s;
       return `<div class="qtext">${esc(it.q)}</div><div class="hint">可以打開右下角的「計算紙」算一算，再把答案打進來${fr?'（分數：先點分子或分母的格子）':''}</div><div class="numwrap">${box}${locked?'':`<div class="keypad">${pad.map(k=>k?`<button data-act="nKey" data-k="${k}">${k}</button>`:'<span></span>').join('')}</div><button class="btn" data-act="check" ${ready?'':'disabled'}>檢查</button>`}</div>`}
-    case 'multi':{const all=q.sel.length>0;return `<div class="qtext">${esc(it.q)}</div><div class="hint">符合的全部點起來，不能漏也不能多</div><div class="multi">${it.items.map((t,i)=>{const on=q.sel.includes(i);let c=on?'on':'';if(locked){const good=it.ans.includes(i);c=good&&on?'right':good?'miss':on?'wrong':''}return `<button class="mchip ${c}" ${dis} data-act="mTog" data-i="${i}">${esc(t)}</button>`}).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
+    case 'multi':{const all=q.sel.length>0;return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="hint">符合的全部點起來，不能漏也不能多</div><div class="multi">${it.items.map((t,i)=>{const on=q.sel.includes(i);let c=on?'on':'';if(locked){const good=it.ans.includes(i);c=good&&on?'right':good?'miss':on?'wrong':''}return `<button class="mchip ${c}" ${dis} data-act="mTog" data-i="${i}">${esc(t)}</button>`}).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
     case 'write':{const sent=esc(it.q).replace(/（(.+?)）/,'<span class="zyb">（$1）</span>');
       return `<div class="qtext">看注音，在格子裡寫出國字</div><div class="wsent">${sent}</div><div class="wrow"><div id="wpadSlot"></div>${q.reveal?`<div class="wans"><div class="small muted">正確的字</div><div class="wch">${esc(it.char)}</div><div class="small">${esc(it.word||'')}</div></div>`:''}</div>
       ${locked?'':(q.reveal?`<div class="wself"><b>跟正確的字比一比，每一筆都一樣嗎？</b><div class="row"><button class="btn" data-act="wSelf" data-v="1">✔ 我寫對了</button><button class="btn ghost" data-act="wSelf" data-v="0">✘ 我寫錯了</button></div></div>`:`<div class="row"><button class="btn ghost sm" data-act="wClear">擦掉重寫</button><button class="btn" data-act="wReveal">寫好了，看答案</button></div>`)}`}
@@ -1032,7 +1034,6 @@ const A={
   avOpen:()=>{S.avPick=true;SFX.tap();render()},
   avClose:()=>{S.avPick=false;render()},
   noop:()=>{},
-  avMake:()=>{if(!window.ARAV)return;const sid=S.view.sid;const cur=(S.stu[sid]||{}).av;S.avPick=false;render();ARAV.editor(ARAV.ok(cur)?cur:null,v=>{const d=stuDoc(sid);d.av=v;S.stu[sid]=d;saveStu(sid);SFX.sticker();render();toast('頭像換好了！')})},
   avSet:e=>{const sid=S.view.sid;const d=stuDoc(sid);d.av=e.dataset.v;S.stu[sid]=d;saveStu(sid);S.avPick=false;SFX.sticker();render();toast('頭像換好了！')},
   resetSPin:e=>{const sid=e.dataset.id;if(S.rsArm!==sid){S.rsArm=sid;return toast('再按一次確認重設這位學生的密碼')}S.rsArm=null;const d=stuDoc(sid);delete d.pin;S.stu[sid]=d;saveStu(sid);toast('已重設，學生下次進來會重新設定密碼');render()},
   school:e=>{SFX.tap();S.school=e.dataset.s;render()},
