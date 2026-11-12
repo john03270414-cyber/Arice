@@ -66,7 +66,7 @@ summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-he
   <a class="app" href="island/"><img src="island/icon-512.png" alt="" width="96" height="96"><div><b>學習島</b><span>期末考範圍・五科闖關</span></div><i aria-hidden="true">›</i></a>
   <a class="app" href="brave/"><img src="brave/icon-512.png" alt="" width="96" height="96"><div><b>勇者衝鋒</b><span>單元複習・總複習・雙人決鬥</span></div><i aria-hidden="true">›</i></a>
 </div>
-<div class="tools"><a href="accounts.html">👥 學生帳號管理</a><a href="import.html">📦 從 Claude 版搬資料</a></div>
+<div class="tools"><a href="parent.html">👪 家長專區</a><a href="accounts.html">👥 學生帳號管理</a><a href="import.html">📦 從 Claude 版搬資料</a></div>
 <details><summary>老師／家長：怎麼放到主畫面</summary><div class="how">
 <p style="margin:0">把<b>這一頁</b>加到主畫面一次就好：兩個遊戲都在裡面，全螢幕、只要登入一次。</p>
 <h2>iPad／iPhone</h2>
@@ -106,6 +106,7 @@ window.addEventListener('DOMContentLoaded',function(){
   ARICE.boot().then(function(ok){
     if(!ok)return;
     var me=ARICE.me,fs=ARICE.raw();
+    if(me.role==='parent'){location.replace('parent.html');return}
     document.body.className=me.role==='teacher'?'teacher':'student';
     $('out').hidden=false;
     $('hello').textContent=(me.name||'同學')+'，歡迎回來！';

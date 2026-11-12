@@ -58,7 +58,8 @@ td input{width:110px;font:inherit;font-size:16px;padding:8px 10px;border-radius:
 </main>
 <script>
 const $=s=>document.querySelector(s);const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const A={roster:[],login:{},members:{},secret:{},school:'',busy:false,codes:{},pass:''};
+const A={roster:[],login:{},members:{},secret:{},psec:{},school:'',busy:false,codes:{},pass:''};
+const PPW='000000';
 const PRE='a115';
 let FS=null;
 const SITE=location.origin+location.pathname.replace(/accounts\.html$/,'');
@@ -67,7 +68,7 @@ async function load(){
   if(ARICE.me.role!=='teacher'){$('#app').innerHTML='<p class="lead">這一頁只有老師能用。</p>';return}
   FS=ARICE.raw();
   await loadRoster();
-  FS.collection('secret').onSnapshot(q=>{A.secret={};A.pass='';q.docs.forEach(d=>{if(d.id==='_pass')A.pass=String(d.data().pw||'');else A.secret[d.id]=d.data()});render()},e=>showErr('帳號資料（secret）',e));
+  FS.collection('secret').onSnapshot(q=>{A.secret={};A.pass='';A.psec={};q.docs.forEach(d=>{if(d.id==='_pass')A.pass=String(d.data().pw||'');else if(d.id.indexOf('par_')===0)A.psec[d.id.slice(4)]=d.data();else A.secret[d.id]=d.data()});render()},e=>showErr('帳號資料（secret）',e));
   FS.collection('members').onSnapshot(q=>{A.members={};q.docs.forEach(d=>A.members[d.id]=d.data());render()},()=>{});
   FS.collection('login').onSnapshot(q=>{A.login={};q.docs.forEach(d=>A.login[d.id]=d.data());render()},e=>showErr('登入資料（login）',e));
   render()}
@@ -89,6 +90,7 @@ async function addStudent(name,school){
   await loadRoster();return st}
 async function delStudent(sid){
   if(secOf(sid))await off(sid);
+  if(A.psec[sid]&&!A.psec[sid].off)await poff(sid,true);
   const snaps=await loadRoster();
   for(let i=0;i<CFGS.length;i++){const s=snaps[i];if(!s||!s.exists)continue;const list=(s.data().students||[]).filter(x=>x.id!==sid);await FS.doc(CFGS[i]).set({students:list},{merge:true})}
   await loadRoster()}
@@ -113,7 +115,8 @@ function render0(){
   <div class="bar addbar"><b>➕ 新增學生</b><input id="newName" placeholder="學生姓名" maxlength="12" value="${esc(A.newName||'')}" aria-label="新學生姓名"><select id="newSchool" aria-label="學校">${(A.order||[]).map(s=>`<option ${(A.newSchool||A.school)===s?'selected':''}>${esc(s)}</option>`).join('')}</select><button class="pri" id="addStu" ${A.busy?'disabled':''}>新增${A.pass?'並建立帳號':''}</button></div>
   <div class="bar"><div class="chips"><button class="chip ${!A.school?'on':''}" data-sch="">全部（${A.roster.length}）</button>${A.schools.map(s=>`<button class="chip ${A.school===s?'on':''}" data-sch="${esc(s)}">${esc(s)}</button>`).join('')}</div>
    <span style="flex:1"></span><button class="pri" id="mkAll" ${A.busy?'disabled':''}>幫還沒有帳號的人全部建立</button><button id="print" ${n?'':'disabled'}>🖨 列印帳號卡</button></div>
-  <div class="tbl"><table><thead><tr><th>學生</th><th>帳號</th><th>密碼</th><th>狀態</th><th>動作</th></tr></thead><tbody>
+  <div class="bar"><b>👪 家長帳號</b><button class="pri" id="pmkAll" ${A.busy?'disabled':''}>幫還沒有家長帳號的全部建立</button><span style="color:var(--dim);font-size:14px">家長到 <b>${esc(SITE)}parent.html</b>，選學校、選小孩，第一次密碼是 <b>000000</b>，登入後會設定自己的密碼。</span></div>
+  <div class="tbl"><table><thead><tr><th>學生</th><th>帳號</th><th>密碼</th><th>狀態</th><th>動作</th><th>👪 家長帳號</th></tr></thead><tbody>
   ${list.map(st=>{const s=secOf(st.id),on=active(st.id);const code=s?s.code:(A.codes[st.id]??defCode(st));
     return `<tr><td><b>${esc(st.name)}</b><div style="color:var(--dim);font-size:13px">${esc(st.school)}・${esc(st.id)}</div></td>
      <td>${s?`<span class="pw" style="font-size:17px">${esc(s.code)}</span>`:`<input data-code="${esc(st.id)}" value="${esc(code)}" aria-label="${esc(st.name)} 的帳號" maxlength="20">`}</td>
@@ -121,7 +124,8 @@ function render0(){
      <td>${on?(pwSetOf(st.id)?'<span class="st ok">可以登入</span>':'<span class="st wait">還沒設密碼</span>'):s&&s.off?'<span class="st off">已停用</span>':'<span class="st no">還沒有帳號</span>'}</td>
      <td><div class="acts">${`<button class="warn" data-del="${esc(st.id)}" ${A.busy?'disabled':''} title="從名單刪除">🗑 刪除</button>`}${!s?`<button class="pri" data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>建立</button>`
        :s.off?`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重新開通</button>`
-       :`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重設密碼</button><button class="warn" data-off="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button>`}</div></td></tr>`}).join('')}
+       :`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重設密碼</button><button class="warn" data-off="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button>`}</div></td>
+     <td>${pOn(st.id)?`${pSetOf(st.id)?'<span class="st ok">家長已設密碼</span>':'<span class="st wait">密碼 000000</span>'}<div class="acts" style="margin-top:6px"><button data-pmk="${esc(st.id)}" ${A.busy?'disabled':''}>重設成 000000</button><button class="warn" data-poff="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button></div>`:`<span class="st no">${A.psec[st.id]?'已停用':'還沒有'}</span><div class="acts" style="margin-top:6px"><button class="pri" data-pmk="${esc(st.id)}" ${A.busy?'disabled':''}>建立</button></div>`}</td></tr>`}).join('')}
   </tbody></table></div>`;
   $('#cards').innerHTML=A.roster.filter(s=>active(s.id)).map(st=>{const s=secOf(st.id);return `<div class="card"><h3>${esc(st.name)}</h3><p>網址：<b>${esc(SITE)}</b></p><p>帳號：<span class="big">${esc(s.code)}</span></p><p>${pwSetOf(st.id)?'密碼：自己設定的密碼':`通行碼：<span class="big">${esc(s.pw)}</span>`}</p><p style="font-size:10pt">第一次登入後，要設定一組只有自己知道的密碼。</p><small>中正補習班・Arice　學習島／勇者衝鋒</small></div>`}).join('')}
 const msg=t=>{$('#msg').textContent=t};
@@ -143,6 +147,23 @@ async function make(sid,newCode,skipCheck){const st=A.roster.find(x=>x.id===sid)
   b.set(FS.doc('secret/'+sid),{code,pw,email,uid,v,at:Date.now(),off:false});
   await b.commit()}
 async function off(sid){const s=secOf(sid);if(!s)return;const b=FS.batch();if(s.uid)b.delete(FS.doc('members/'+s.uid));if(A.login[s.code]&&A.login[s.code].sid===sid)b.delete(FS.doc('login/'+s.code));b.set(FS.doc('secret/'+sid),Object.assign({},s,{off:true,at:Date.now()}));await b.commit()}
+/* ---- 家長帳號：家長選小孩、第一次用 000000 登入，再設定自己的密碼 ---- */
+const pOn=sid=>{const p=A.psec[sid];return !!(p&&!p.off)};
+const pSetOf=sid=>{const p=A.psec[sid];const m=p&&p.uid&&A.members[p.uid];return !!(m&&m.pwSet)};
+const mask=n=>{n=String(n||'');const a=[...n];if(a.length<=1)return n;if(a.length===2)return a[0]+'○';return a[0]+'○'.repeat(a.length-2)+a[a.length-1]};
+async function pmake(sid){const st=A.roster.find(x=>x.id===sid);if(!st)return;
+  const old=A.psec[sid];const code='p'+sid.toLowerCase().replace(/[^a-z0-9_-]/g,'');const v=(old&&old.v||0)+1;const email=code+'.v'+v+'@stu.arice.app';
+  const a2=creator();try{await a2.setPersistence(firebase.auth.Auth.Persistence.NONE)}catch(e){}
+  const cred=await a2.createUserWithEmailAndPassword(email,PPW);const uid=cred.user.uid;await a2.signOut();
+  const b=FS.batch();
+  if(old&&old.uid)b.delete(FS.doc('members/'+old.uid));
+  b.set(FS.doc('members/'+uid),{sid,name:st.name,school:st.school||'',code,role:'parent',at:Date.now()});
+  b.set(FS.doc('login/'+code),{email,sid,v,par:true});
+  b.set(FS.doc('secret/par_'+sid),{code,email,uid,v,at:Date.now(),off:false});
+  await b.commit();A.psec[sid]={code,email,uid,v,off:false}}
+async function poff(sid,skipList){const p=A.psec[sid];if(!p)return;const b=FS.batch();if(p.uid)b.delete(FS.doc('members/'+p.uid));b.delete(FS.doc('login/'+p.code));b.set(FS.doc('secret/par_'+sid),Object.assign({},p,{off:true,at:Date.now()}));await b.commit();A.psec[sid]=Object.assign({},p,{off:true});if(!skipList)await parList()}
+/* 家長登入頁要用的名單（名字中間用 ○ 遮住），放在 login/_par，登入前就讀得到 */
+async function parList(){const list=A.roster.filter(st=>pOn(st.id)).map(st=>({c:A.psec[st.id].code,n:mask(st.name),s:st.school||''}));await FS.doc('login/_par').set({list,at:Date.now()})}
 async function run(f,label){if(A.busy)return;A.busy=true;render();try{await f();msg(label||'完成')}catch(e){console.error(e);msg(e&&e.friendly||('沒有成功：'+((e&&e.code)||e&&e.message||e)))}A.busy=false;render()}
 document.addEventListener('input',e=>{const c=e.target.dataset&&e.target.dataset.code;if(c)A.codes[c]=e.target.value;if(e.target.id==='newName')A.newName=e.target.value});
 document.addEventListener('change',e=>{if(e.target.id==='newSchool')A.newSchool=e.target.value});
@@ -156,6 +177,13 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
     if(!confirm('要幫 '+todo.length+' 位學生建立帳號嗎？'))return;
     run(async()=>{let k=0;for(const st of todo){msg('建立中… '+(++k)+' / '+todo.length+'（'+st.name+'）');await make(st.id)}},'全部建立好了，共 '+todo.length+' 位。');return}
   if(t.id==='print'){window.print();return}
+  if(t.dataset.pmk){const sid=t.dataset.pmk;const st=A.roster.find(x=>x.id===sid);const on=pOn(sid);
+    if(on&&!confirm('要把 '+st.name+' 家長的密碼重設成 000000 嗎？家長下次登入要重新設定密碼。'))return;
+    run(async()=>{await pmake(sid);await parList()},st.name+' 的家長帳號'+(on?'密碼已經重設成 000000。':'建立好了，第一次密碼是 000000。'));return}
+  if(t.dataset.poff){const sid=t.dataset.poff;const st=A.roster.find(x=>x.id===sid);if(!confirm('要停用 '+st.name+' 家長的帳號嗎？家長會登不進去。'))return;run(()=>poff(sid),st.name+' 的家長帳號已停用。');return}
+  if(t.id==='pmkAll'){const todo=A.roster.filter(s=>!pOn(s.id));if(!todo.length){msg('每位學生都有家長帳號了。');return}
+    if(!confirm('要幫 '+todo.length+' 位學生建立家長帳號嗎？第一次密碼都是 000000。'))return;
+    run(async()=>{let k=0;for(const st of todo){msg('建立家長帳號中… '+(++k)+' / '+todo.length+'（'+st.name+'）');await pmake(st.id)}await parList()},'家長帳號全部建立好了，共 '+todo.length+' 位。');return}
   if(t.id==='addStu'){const name=($('#newName').value||'').trim();const school=$('#newSchool')?$('#newSchool').value:'';
     if(!name){msg('請先輸入學生姓名。');return}if(!school){msg('還沒有學校，請先到學習島老師後台「設定」新增學校。');return}
     if(A.roster.some(x=>x.name===name&&x.school===school)&&!confirm(school+' 已經有一位「'+name+'」，還是要新增嗎？'))return;

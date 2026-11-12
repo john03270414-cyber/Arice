@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isTeacher() { return signedIn() && request.auth.token.email == 'john03270414@gmail.com'; }
+    function member() { return get(/databases/$(database)/documents/members/$(request.auth.uid)); }
+    function isMember() { return signedIn() && exists(/databases/$(database)/documents/members/$(request.auth.uid)); }
+    // 家長帳號的 members 資料有 role: 'parent'；學生沒有這個欄位
+    function isParent() { return isMember() && member().data.get('role', 'student') == 'parent'; }
+    function isStudent() { return isMember() && member().data.get('role', 'student') != 'parent'; }
+    function mySid() { return member().data.sid; }
+    function ownId(id) { return id == mySid() || id.matches(mySid() + '_.*'); }
+    function special(coll) { return coll in ['login', 'members', 'secret']; }
+    // 家長和老師之間的資料（留言、評語、已讀）：學生看不到
+    function parentOnly(coll) { return coll in ['isl_pmsg', 'isl_pcm', 'isl_pread', 'isl_tread']; }
+    function shared(coll) { return coll.matches('.*_(battles|bplayers|bsync)$'); }
+    function newMine() { return request.resource.data.get('_uid', '') == request.auth.uid; }
+    function oldMine() { return resource.data.get('_uid', '') == request.auth.uid; }
+
+    // 家長可以讀：學習島設定和公告、自己小孩的學習紀錄、老師評語、和老師的留言
+    function parentRead(coll, id) {
+      return isParent() && (
+        (coll == 'isl_cfg' && id in ['main', 'notice']) ||
+        (coll in ['isl_stu', 'isl_log', 'isl_pcm', 'isl_pread'] && ownId(id)) ||
+        (coll == 'isl_pmsg' && resource.data.sid == mySid())
+      );
+    }
+    // 家長可以寫：給老師的留言（最多 500 字）、自己的已讀時間
+    function parentWrite(coll, id) {
+      return isParent() && (
+        (coll == 'isl_pmsg' && id.matches(mySid() + '_.*') && request.resource.data.sid == mySid()
+          && request.resource.data.from == 'p' && request.resource.data.text is string
+          && request.resource.data.text.size() <= 500) ||
+        (coll == 'isl_pread' && id == mySid())
+      );
+    }
+
+    // 登入用的帳號對照：查單一帳號任何人都可以，整份列出只有老師可以
+    match /login/{code} { allow get: if true; allow list, write: if isTeacher(); }
+    match /members/{uid} {
+      allow read: if isTeacher() || (signedIn() && request.auth.uid == uid);
+      allow write: if isTeacher();
+      // 學生、家長設好自己的密碼後做個標記（只能改這兩個欄位），老師的帳號頁才看得到「已設密碼」
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pwSet', 'pwAt']);
+    }
+    match /secret/{sid} { allow read, write: if isTeacher(); }
+
+    // 其他資料：老師全部可讀寫；學生可以讀，只能寫自己的紀錄；家長只能讀自己小孩的
+    match /{coll}/{id} {
+      allow read: if isTeacher()
+        || (!special(coll) && !parentOnly(coll) && isStudent())
+        || parentRead(coll, id);
+      allow create: if isTeacher()
+        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || newMine()))
+        || parentWrite(coll, id);
+      allow update: if isTeacher()
+        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || (oldMine() && newMine())))
+        || (isParent() && coll == 'isl_pread' && id == mySid());
+      allow delete: if isTeacher()
+        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || oldMine()));
+    }
+  }
+}

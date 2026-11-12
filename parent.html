@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>家長專區・Arice</title>
+<meta name="theme-color" content="#0E7C77">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#F3F6F4;--surface:#fff;--ink:#1D2A2A;--muted:#5E6E6C;--line:#DCE5E2;--pri:#0E7C77;--pri2:#E3F2F0;--good:#2A9550;--warn:#B98000;--bad:#D2503F;--shadow:0 2px 10px rgba(20,40,40,.08);
+  --zh:#D2503F;--ma:#2C79C9;--so:#B98000;--sc:#2A9550;--en:#7656BE;--font:system-ui,-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111817;--surface:#1A2322;--ink:#E7EFED;--muted:#9AABA8;--line:#2C3937;--pri:#3CB7AF;--pri2:#173331;--shadow:0 2px 10px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#111817;--surface:#1A2322;--ink:#E7EFED;--muted:#9AABA8;--line:#2C3937;--pri:#3CB7AF;--pri2:#173331;--shadow:0 2px 10px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font)}
+main{max-width:880px;margin:0 auto;padding:16px 16px 60px}
+h1,h2,h3{margin:0;line-height:1.3}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{display:flex;align-items:center;gap:12px;margin:4px 0 16px}
+.top .grow{flex:1;min-width:0}
+.eyebrow{font-size:13px;color:var(--muted);letter-spacing:.06em}
+.btn{border:0;border-radius:12px;background:var(--pri);color:#fff;font-weight:700;padding:10px 16px;min-height:44px}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.card h2{font-size:19px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.muted{color:var(--muted)}.small{font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;min-height:38px;font-weight:600}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+.stat{background:var(--pri2);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:26px;line-height:1.2}
+.stat span{font-size:13px;color:var(--muted)}
+.range{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.range input{border:1.5px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--surface);min-height:40px}
+.days{display:flex;align-items:flex-end;gap:3px;height:110px;margin-top:12px;padding-bottom:20px;position:relative;overflow-x:auto}
+.days .d{flex:1 0 12px;min-width:12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.days .d i{display:block;width:100%;max-width:26px;background:var(--pri);border-radius:5px 5px 2px 2px;min-height:2px}
+.days .d i.z{background:var(--line)}
+.days .d small{position:absolute;bottom:-20px;font-size:11px;color:var(--muted);white-space:nowrap}
+.sub{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.sub:last-child{border-bottom:0}
+.tag{display:inline-block;font-weight:700;color:#fff;border-radius:8px;padding:2px 10px;font-size:14px;text-align:center}
+.bar{height:12px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.wq{border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.wq .q{font-weight:600;white-space:pre-wrap}
+.wq dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0 0;font-size:14px}
+.wq dt{color:var(--muted)}.wq dd{margin:0}
+.ok{color:var(--good)}.no{color:var(--bad)}
+.notice{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.notice:last-child{border-bottom:0}
+.notice small{display:block;color:var(--muted);font-size:13px}
+.cmt{background:var(--pri2);border-radius:14px;padding:14px;white-space:pre-wrap}
+.thread{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;padding:4px 2px}
+.msg{max-width:82%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
+.msg small{display:block;font-size:12px;opacity:.75;margin-top:4px}
+.msg.p{align-self:flex-end;background:var(--pri);color:#fff;border-bottom-right-radius:4px}
+.msg.t{align-self:flex-start;background:var(--pri2);border-bottom-left-radius:4px}
+.compose{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
+.compose textarea{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);resize:vertical;min-height:48px}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* 登入 */
+#ar-login{position:fixed;inset:0;z-index:1000;overflow:auto;background:var(--bg);padding:24px 16px}
+#ar-login .box{max-width:520px;margin:0 auto}
+#ar-login h1{font-size:26px;margin:6px 0 4px}
+#ar-login .kid{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 16px;margin-top:8px;font-weight:700;font-size:18px;min-height:52px}
+#ar-login .kid.on{border-color:var(--pri);background:var(--pri2)}
+#ar-login label{display:block;font-weight:700;margin:16px 0 6px}
+#ar-login input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:20px;background:var(--surface);letter-spacing:.1em}
+#ar-login .err{color:var(--bad);min-height:24px;margin-top:8px;font-weight:600}
+#ar-login .go{width:100%;margin-top:10px;font-size:18px;min-height:52px}
+#ar-login .link{background:none;border:0;color:var(--pri);text-decoration:underline;padding:8px 0;margin-top:14px}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style></head><body>
+<main id="app"><p class="muted"><span class="spin" aria-hidden="true"></span>載入中…</p></main>
+<script>
+/* 家長登入畫面：選學校 → 選小孩 → 輸入密碼（第一次是 000000） */
+window.ARICE_LOGIN=function(msg){
+  let o=document.getElementById('ar-login');
+  if(!o){o=document.createElement('div');o.id='ar-login';document.body.appendChild(o);o.innerHTML='<div class="box"><p class="muted"><span class="spin"></span>讀取名單中…</p></div>';
+    const fs=ARICE.raw();fs.doc('login/_par').get().then(s=>{L.list=(s.exists&&s.data().list)||[];drawLogin()}).catch(()=>{L.list=[];drawLogin()})}
+  L.msg=msg||'';if(L.list)drawLogin();
+};
+const L={list:null,school:'',code:'',msg:'',teacher:false};
+function escL(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function drawLogin(){
+  const o=document.getElementById('ar-login');if(!o)return;
+  if(L.teacher){o.innerHTML=`<div class="box"><div class="eyebrow">中正補習班・Arice</div><h1>老師登入</h1><p class="muted">用老師帳號登入，可以預覽每位學生的家長頁面。</p>
+    <form id="tf"><label for="tem">Email</label><input id="tem" type="email" autocomplete="username" required style="letter-spacing:0"><label for="tpw">密碼</label><input id="tpw" type="password" autocomplete="current-password" required>
+    <button class="btn go" type="submit">登入</button><div class="err" role="alert">${escL(L.msg)}</div></form><button class="link" type="button" id="toPar">← 回到家長登入</button></div>`;
+    o.querySelector('#toPar').onclick=()=>{L.teacher=false;L.msg='';drawLogin()};
+    o.querySelector('#tf').onsubmit=e=>{e.preventDefault();const b=o.querySelector('.go');b.disabled=true;b.textContent='登入中…';
+      ARICE.auth().signInWithEmailAndPassword(o.querySelector('#tem').value.trim(),o.querySelector('#tpw').value).catch(x=>{L.msg='帳號或密碼不對（'+((x&&x.code)||'')+'）';drawLogin()})};
+    return}
+  const list=L.list||[];const schools=[...new Set(list.map(x=>x.s||''))];
+  if(!L.school&&schools.length===1)L.school=schools[0];
+  const kids=list.filter(x=>(x.s||'')===L.school);
+  o.innerHTML=`<div class="box"><div class="eyebrow">中正補習班・Arice</div><h1>家長專區</h1><p class="muted">選小孩的學校和名字，再輸入密碼。<br>第一次登入的密碼是 <b>000000</b>，登入後會請您設定自己的密碼。</p>
+   ${list.length?`<label>① 學校</label><div class="chips">${schools.map(s=>`<button type="button" class="chip ${s===L.school?'on':''}" data-s="${escL(s)}">${escL(s||'（未分校）')}</button>`).join('')}</div>
+   ${L.school!==''||schools.includes('')?`<label>② 小孩</label>${kids.map(k=>`<button type="button" class="kid ${k.c===L.code?'on':''}" data-c="${escL(k.c)}" aria-pressed="${k.c===L.code}">${escL(k.n)}</button>`).join('')||'<p class="muted">這間學校還沒有家長帳號。</p>'}`:''}
+   ${L.code?`<form id="pf"><label for="ppw">③ 密碼</label><input id="ppw" type="password" inputmode="text" autocomplete="current-password" required><input type="text" autocomplete="username" value="${escL(L.code)}" hidden>
+     <button class="btn go" type="submit">登入</button></form>`:''}`:'<p class="err">還沒有家長帳號，請老師先在「學生帳號管理」建立。</p>'}
+   <div class="err" role="alert">${escL(L.msg)}</div>
+   <button class="link" type="button" id="toT">老師登入</button></div>`;
+  o.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{L.school=b.dataset.s;L.code='';L.msg='';drawLogin()});
+  o.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{L.code=b.dataset.c;L.msg='';drawLogin();const p=document.getElementById('ppw');if(p)p.focus()});
+  o.querySelector('#toT').onclick=()=>{L.teacher=true;L.msg='';drawLogin()};
+  const pf=o.querySelector('#pf');if(pf)pf.onsubmit=e=>{e.preventDefault();const b=pf.querySelector('.go');b.disabled=true;b.textContent='登入中…';const pw=pf.querySelector('#ppw').value;
+    ARICE.raw().doc('login/'+L.code).get().then(s=>{if(!s.exists)throw {code:'no-account'};return ARICE.auth().signInWithEmailAndPassword(s.data().email,pw)})
+      .catch(x=>{const c=(x&&x.code)||'';L.msg=c==='no-account'?'找不到這個家長帳號，請問老師。':/network|unavailable/.test(c)?'連不上網路，請檢查網路再試一次。':/too-many/.test(c)?'試太多次了，請等幾分鐘再試。':'密碼不對。第一次登入請輸入 000000；忘記密碼請找老師重設。';drawLogin()})};
+}
+</script>
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
+<script src="lib/config.js?v=1794384737"></script>
+<script src="lib/shim.js?v=1794480000" data-app="parent" data-prefix="isl_"></script>
+<script src="island/bank.js"></script>
+<script src="island/bank_math.js"></script>
+<script src="island/bank_en.js"></script>
+<script src="island/bank_zh.js"></script>
+<script src="island/so_maps.js"></script>
+<script src="island/bank_so_hanlin.js"></script>
+<script src="island/bank_so_kangxuan.js"></script>
+<script src="island/bank_so_nanyi.js"></script>
+<script src="island/sc_figs.js"></script>
+<script src="island/bank_sc_hanlin.js"></script>
+<script src="island/bank_sc_kangxuan.js"></script>
+<script>
+(function(){
+const SUBJS=['國語','數學','社會','自然','英語'];
+const SC={國語:'var(--zh)',數學:'var(--ma)',社會:'var(--so)',自然:'var(--sc)',英語:'var(--en)'};
+const DAY=864e5;
+const P={db:null,me:null,sid:'',cfg:null,stu:null,notices:[],cmt:null,msgs:[],pread:0,logs:{},range:null,preset:'week',wsub:'',draft:'',sending:false,unsubs:[]};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=t=>{const d=new Date(t==null?Date.now():t);return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
+const fromYmd=s=>new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)).getTime();
+const isoOf=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const md=t=>{const d=new Date(t);return (d.getMonth()+1)+'/'+d.getDate()};
+const when=t=>new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+/* ---- 題庫 ---- */
+const unitsOf=(subj,pub)=>(((window.BANK||{})[subj]||{})[pub]||{}).units||[];
+const ukey=(s,p,u)=>s+'|'+p+'|'+u;
+function findQ(q){const [s,p,u,i]=q.split('|');const un=unitsOf(s,p).find(x=>x.id===u);const it=un&&un.items.find(x=>x.id===i);return it?{subj:s,pub:p,unit:un,it}:null}
+const openVal=(o,subj,pub,uid)=>{const v=o&&o[ukey(subj,pub,uid)];return subj==='社會'?v!==false:!!v};
+const isOpen=(subj,pub,uid)=>openVal(P.cfg&&P.cfg.open,subj,pub,uid);
+const students=()=>(P.cfg&&P.cfg.students)||[];
+const stuById=id=>students().find(s=>s.id===id);
+const pubOf=(sid,subj)=>{const s=stuById(sid);return s&&P.cfg.schools&&P.cfg.schools[s.school]?P.cfg.schools[s.school][subj]||'':''};
+function qLabel(it){return it.q||it.zh&&('拼出「'+it.zh+'」')||(it.say?'聽音：'+it.say:'')||''}
+function rightText(it){try{switch(it.type){case 'num':return it.ans.t==='frac'?it.ans.n+'/'+it.ans.d:it.ans.v+(it.ans.u||'');case 'multi':return it.ans.map(i=>it.items[i]).join('、');case 'write':return it.char+(it.word?'（'+it.word+'）':'');case 'mc':case 'listen':return it.opts[it.a];case 'order':return it.steps.join(' → ');case 'tiles':return /[A-Za-z]/.test(it.tiles.join(''))?it.tiles.join(' '):it.tiles.join('');case 'spell':return it.word;case 'match':return it.pairs.map(p=>p[0]+'→'+p[1]).join('；');case 'label':return it.spots.map(p=>p.a).join('、');case 'classify':return it.items.map(x=>x[0]+'：'+it.cats[x[1]]).join('；');case 'evidence':return it.opts[it.a]+'（第 '+it.ev.map(i=>i+1).join('、')+' 句）';case 'errstep':return '第 '+(it.a+1)+' 步';}}catch(e){}return ''}
+/* ---- 日期區間 ---- */
+function presetRange(k){const t=new Date();t.setHours(0,0,0,0);const today=t.getTime();const dow=(t.getDay()+6)%7;
+  if(k==='week')return [today-dow*DAY,today];
+  if(k==='lastweek')return [today-(dow+7)*DAY,today-(dow+1)*DAY];
+  if(k==='month')return [new Date(t.getFullYear(),t.getMonth(),1).getTime(),today];
+  if(k==='lastmonth')return [new Date(t.getFullYear(),t.getMonth()-1,1).getTime(),new Date(t.getFullYear(),t.getMonth(),0).getTime()];
+  return [today-29*DAY,today]}
+const PRESETS=[['week','本週'],['lastweek','上週'],['month','本月'],['lastmonth','上個月'],['d30','近 30 天']];
+function rangeDays(){const [a,b]=P.range;const out=[];for(let t=a;t<=b+1;t+=DAY){const k=ymd(t);if(!out.includes(k))out.push(k)}return out}
+async function loadLogs(){const d=(P.stu&&P.stu.days)||{};const need=rangeDays().filter(k=>d[k]&&!P.logs[k]);
+  if(!need.length)return;P.loading=true;render();
+  await Promise.all(need.map(k=>P.db.doc('log/'+P.sid+'_'+k).get().then(s=>{P.logs[k]=s.exists?s.data():{a:[]}}).catch(()=>{P.logs[k]={a:[],err:1}})));
+  P.loading=false;render()}
+/* ---- 畫面 ---- */
+function render(){const el=$('#app');const ae=document.activeElement;const typing=ae&&ae.id==='pmsg';const keep=typing?{s:ae.selectionStart,e:ae.selectionEnd}:null;
+  el.innerHTML=view();
+  if(typing){const t=$('#pmsg');if(t){t.focus();try{t.setSelectionRange(keep.s,keep.e)}catch(e){}}}
+  const th=$('.thread');if(th)th.scrollTop=th.scrollHeight}
+function view(){
+  const st=stuById(P.sid);const teacher=P.me.role==='teacher';
+  const pick=teacher?`<div class="card"><h2>👀 老師預覽</h2><p class="small muted">選一位學生，看他的家長會看到什麼。回覆家長留言請到學習島「老師後台 → 👪 家長」。</p><select id="tpick" style="min-height:44px;border-radius:10px;padding:6px 10px;border:1.5px solid var(--line);background:var(--surface)"><option value="">選學生…</option>${students().map(s=>`<option value="${esc(s.id)}" ${s.id===P.sid?'selected':''}>${esc(s.school)}・${esc(s.name)}</option>`).join('')}</select></div>`:'';
+  const head=`<div class="top"><div class="grow"><div class="eyebrow">中正補習班・Arice 家長專區</div><h1>${st?esc(st.name)+' 的學習報告':'家長專區'}</h1>${st?`<div class="small muted">${esc(st.school||'')}</div>`:''}</div><button class="btn ghost sm" id="logout">登出</button></div>`;
+  if(!P.cfg)return head+pick+'<div class="card muted"><span class="spin"></span>讀取資料中…</div>';
+  if(!st)return head+pick+(teacher?'':'<div class="card">找不到小孩的資料，請聯絡老師。</div>');
+  return head+pick+cmtCard()+rangeCard()+progCard()+weakCard()+noticeCard()+msgCard();
+}
+function cmtCard(){const c=P.cmt;return `<div class="card"><h2>📝 老師評語</h2>${c&&c.text?`<div class="cmt">${esc(c.text)}</div><p class="small muted" style="margin:8px 0 0">${esc(when(c.at||0))} 更新</p>`:'<p class="muted" style="margin:0">老師還沒有寫評語。</p>'}</div>`}
+function rangeCard(){
+  const days=rangeDays();const d=(P.stu&&P.stu.days)||{};
+  const total=days.reduce((n,k)=>n+(+d[k]||0),0);const active=days.filter(k=>d[k]).length;
+  let n=0,ok=0;const bySub={};const wrong={};
+  days.forEach(k=>{const lg=P.logs[k];if(!lg)return;(lg.a||[]).forEach(x=>{n++;if(x.ok)ok++;const s=String(x.q||'').split('|')[0];const b=bySub[s]=bySub[s]||{n:0,ok:0};b.n++;if(x.ok)b.ok++;else{const w=wrong[x.q]=wrong[x.q]||{n:0,la:''};w.n++;w.la=x.ans}})});
+  const max=Math.max(1,...days.map(k=>+d[k]||0));
+  const bars=days.length<=62?`<div class="days" role="img" aria-label="每天做題數">${days.map((k,i)=>{const v=+d[k]||0;const show=days.length<=10||i===0||i===days.length-1||new Date(fromYmd(k)).getDate()%5===0;return `<div class="d" title="${md(fromYmd(k))}：${v} 題"><i class="${v?'':'z'}" style="height:${v?Math.max(4,v/max*90):2}px"></i>${show?`<small>${md(fromYmd(k))}</small>`:''}</div>`}).join('')}</div>`:'';
+  const subRows=SUBJS.filter(s=>bySub[s]).map(s=>{const b=bySub[s];const pc=Math.round(b.ok/b.n*100);return `<div class="sub"><span class="tag" style="background:${SC[s]}">${s}</span><div class="bar" aria-hidden="true"><i style="width:${pc}%;background:var(--good)"></i></div><span class="small">${b.n} 題・答對 ${pc}%</span></div>`}).join('');
+  const topW=Object.entries(wrong).sort((a,b)=>b[1].n-a[1].n).slice(0,5).map(([q,w])=>{const f=findQ(q);return f?`<li>${esc(f.subj)}・${esc(qLabel(f.it).slice(0,40))}<span class="small muted">（這段時間錯 ${w.n} 次）</span></li>`:''}).join('');
+  const [a,b]=P.range;
+  return `<div class="card"><h2>📊 學習進度</h2>
+   <div class="chips">${PRESETS.map(([k,nm])=>`<button class="chip ${P.preset===k?'on':''}" data-pre="${k}">${nm}</button>`).join('')}<button class="chip ${P.preset==='custom'?'on':''}" data-pre="custom">自己選</button></div>
+   <div class="range"><input type="date" id="r1" value="${isoOf(a)}" aria-label="開始日期"> 到 <input type="date" id="r2" value="${isoOf(b)}" max="${isoOf(Date.now())}" aria-label="結束日期"></div>
+   <div class="stats"><div class="stat"><b>${total}</b><span>做題數</span></div><div class="stat"><b>${active}<small style="font-size:15px"> / ${days.length}</small></b><span>有練習的天數</span></div><div class="stat"><b>${n?Math.round(ok/n*100)+'%':'—'}</b><span>答對率</span></div><div class="stat"><b>${streak()}</b><span>目前連續天數</span></div></div>
+   ${P.loading?'<p class="small muted"><span class="spin"></span>讀取每天的紀錄…</p>':''}
+   ${bars}
+   ${subRows?`<h3 style="font-size:16px;margin:18px 0 4px">各科做題情形</h3>${subRows}`:total?'':'<p class="muted">這段時間沒有練習紀錄。</p>'}
+   ${topW?`<h3 style="font-size:16px;margin:16px 0 4px">這段時間最常錯的題目</h3><ul style="margin:4px 0 0;padding-left:20px">${topW}</ul>`:''}</div>`}
+function streak(){const d=(P.stu&&P.stu.days)||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
+function progCard(){const m=(P.stu&&P.stu.m)||{};
+  const rows=SUBJS.map(subj=>{const pub=pubOf(P.sid,subj);const us=pub?unitsOf(subj,pub).filter(u=>isOpen(subj,pub,u.id)):[];if(!us.length)return '';
+    let tot=0,done=0,weak=0,n=0,w=0;us.forEach(u=>u.items.forEach(it=>{tot++;const r=m[ukey(subj,pub,u.id)+'|'+it.id];if(r){n+=r.n||0;w+=r.w||0;if((r.ok||0)>=2)done++;else if((r.w||0)>=2)weak++}}));
+    const pc=tot?done/tot*100:0,wp=tot?weak/tot*100:0;
+    return `<div class="sub"><span class="tag" style="background:${SC[subj]}">${subj}</span><div><div class="bar" aria-hidden="true"><i style="width:${pc}%;background:var(--good)"></i><i style="width:${wp}%;background:var(--bad)"></i></div><div class="small muted">${esc(pub)}版・開放 ${us.length} 課</div></div><span class="small">學會 <b>${done}</b> / ${tot}${weak?`<br><span class="no">待加強 ${weak}</span>`:''}</span></div>`}).join('');
+  return `<div class="card"><h2>📚 各科學會了多少</h2><p class="small muted" style="margin:0 0 6px">同一題連續答對 2 次才算「學會」。綠色是已學會，紅色是錯 2 次以上還沒學會的題目。</p>${rows||'<p class="muted">老師還沒有開放單元。</p>'}</div>`}
+function weakCard(){const m=(P.stu&&P.stu.m)||{};const L=[];
+  for(const q in m){const r=m[q];if(!r.w||(r.ok||0)>=2)continue;const f=findQ(q);if(!f||pubOf(P.sid,f.subj)!==f.pub)continue;L.push({q,r,f})}
+  const subs=[...new Set(L.map(x=>x.f.subj))];const F=P.wsub&&subs.includes(P.wsub)?L.filter(x=>x.f.subj===P.wsub):L;
+  F.sort((a,b)=>(b.r.w-a.r.w)||((b.r.lw||0)-(a.r.lw||0)));
+  return `<div class="card"><h2>🎯 弱點題目</h2><p class="small muted" style="margin:0 0 8px">答錯過、還沒有連續答對兩次的題目。可以陪小孩一起看看。</p>
+   ${L.length?`<div class="chips"><button class="chip ${!P.wsub?'on':''}" data-ws="">全部（${L.length}）</button>${subs.map(s=>`<button class="chip ${P.wsub===s?'on':''}" data-ws="${esc(s)}">${esc(s)}（${L.filter(x=>x.f.subj===s).length}）</button>`).join('')}</div>
+   ${F.slice(0,15).map(x=>`<div class="wq"><div class="small muted">${esc(x.f.subj)}・${esc(x.f.unit.name)}</div><div class="q">${esc(qLabel(x.f.it))}</div><dl><dt>正確答案</dt><dd class="ok">${esc(rightText(x.f.it))}</dd>${x.r.la?`<dt>小孩寫的</dt><dd class="no">${esc(x.r.la)}</dd>`:''}<dt>錯了</dt><dd>${x.r.w} 次${x.r.lw?`・最近一次 ${esc(md(x.r.lw))}`:''}</dd></dl></div>`).join('')}
+   ${F.length>15?`<p class="small muted">還有 ${F.length-15} 題沒有列出來。</p>`:''}`:'<p class="muted" style="margin:0">目前沒有待加強的題目，很棒！</p>'}</div>`}
+function noticeCard(){const st=stuById(P.sid)||{};const L=(P.notices||[]).filter(n=>n&&n.text&&(!n.school||n.school===st.school)&&n.aud!=='stu').sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8);
+  return `<div class="card"><h2>📢 公告</h2>${L.length?L.map(n=>`<div class="notice"><span aria-hidden="true">${n.aud==='par'?'👪':'📢'}</span><div>${esc(n.text)}<small>${esc(when(n.at||0))}${n.aud==='par'?'・給家長':''}</small></div></div>`).join(''):'<p class="muted" style="margin:0">目前沒有公告。</p>'}</div>`}
+function msgCard(){const teacher=P.me.role==='teacher';const L=P.msgs.slice().sort((a,b)=>a.at-b.at);
+  return `<div class="card"><h2>💬 留言板</h2><p class="small muted" style="margin:0 0 8px">只有您和老師看得到。老師回覆後會顯示在這裡。</p>
+   <div class="thread" aria-live="polite">${L.length?L.map(x=>`<div class="msg ${x.from==='t'?'t':'p'}">${esc(x.text)}<small>${x.from==='t'?'老師':'家長'}・${esc(when(x.at))}</small></div>`).join(''):'<p class="muted small">還沒有留言。有任何問題都可以留言給老師。</p>'}</div>
+   ${teacher?'<p class="small muted">老師預覽中，不能用這裡留言。</p>':`<div class="compose"><textarea id="pmsg" rows="2" maxlength="500" placeholder="想跟老師說的話…" aria-label="留言內容">${esc(P.draft)}</textarea><button class="btn" id="send" ${P.sending?'disabled':''}>送出</button></div>`}</div>`}
+/* ---- 資料 ---- */
+function watch(sid){P.unsubs.forEach(f=>{try{f()}catch(e){}});P.unsubs=[];P.sid=sid;P.stu=null;P.cmt=null;P.msgs=[];P.logs={};if(!sid){render();return}
+  const db=P.db;
+  P.unsubs.push(db.doc('stu/'+sid).onSnapshot(s=>{P.stu=s.exists?s.data():{m:{},days:{}};render();loadLogs()},e=>err('學習紀錄',e)));
+  P.unsubs.push(db.doc('pcm/'+sid).onSnapshot(s=>{P.cmt=s.exists?s.data():null;render()},()=>{}));
+  P.unsubs.push(db.doc('pread/'+sid).onSnapshot(s=>{P.pread=s.exists?(s.data().t||0):0},()=>{}));
+  P.unsubs.push(db.collection('pmsg').where('sid','==',sid).onSnapshot(q=>{P.msgs=q.docs.map(d=>d.data());render();markRead()},e=>err('留言板',e)));
+}
+function markRead(){if(P.me.role!=='parent')return;const last=Math.max(0,...P.msgs.filter(x=>x.from==='t').map(x=>x.at||0));if(last>P.pread){P.pread=last;P.db.doc('pread/'+P.sid).set({sid:P.sid,t:Date.now()}).catch(()=>{})}}
+function err(where,e){console.warn(where,e);const el=document.createElement('div');el.className='card';el.style.color='var(--bad)';el.textContent=where+'讀取失敗（'+((e&&e.code)||e)+'），請截圖給老師。';$('#app').appendChild(el)}
+async function send(){const t=$('#pmsg');const text=(t?t.value:P.draft).trim();if(!text||P.sending)return;P.sending=true;render();
+  const at=Date.now();try{await P.db.doc('pmsg/'+P.sid+'_'+at).set({sid:P.sid,from:'p',text:text.slice(0,500),at,name:(stuById(P.sid)||{}).name||''});P.draft=''}catch(e){alert('沒有送出成功（'+((e&&e.code)||e)+'），請再試一次。')}
+  P.sending=false;render()}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='logout'){if(confirm('要登出嗎？'))ARICE.signOut();return}
+  if(b.id==='send'){send();return}
+  if(b.dataset.pre!=null){const k=b.dataset.pre;P.preset=k;if(k!=='custom')P.range=presetRange(k);render();loadLogs();return}
+  if(b.dataset.ws!=null){P.wsub=b.dataset.ws;render();return}});
+document.addEventListener('input',e=>{if(e.target.id==='pmsg')P.draft=e.target.value});
+document.addEventListener('change',e=>{
+  if(e.target.id==='tpick'){watch(e.target.value);return}
+  if(e.target.id==='r1'||e.target.id==='r2'){const a=$('#r1').value,b=$('#r2').value;if(!a||!b)return;let x=new Date(a+'T00:00').getTime(),y=new Date(b+'T00:00').getTime();if(x>y)[x,y]=[y,x];
+    if((y-x)/DAY>92){x=y-92*DAY;alert('一次最多看 93 天，已經幫您調整開始日期。')}P.range=[x,y];P.preset='custom';render();loadLogs()}});
+document.addEventListener('keydown',e=>{if(e.target.id==='pmsg'&&e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();send()}});
+P.range=presetRange('week');
+(async()=>{const db=await window.claude.use('db');if(!db){$('#app').innerHTML='<div class="card">網站設定有問題，請聯絡老師。</div>';return}
+  P.db=db;P.me=ARICE.me;
+  db.doc('cfg/main').onSnapshot(s=>{P.cfg=s.exists?s.data():{students:[]};render()},e=>{$('#app').innerHTML='<div class="card" style="color:var(--bad)">讀不到資料（'+esc((e&&e.code)||e)+'），請截圖給老師。</div>'});
+  db.doc('cfg/notice').onSnapshot(s=>{P.notices=(s.exists&&s.data().list)||[];render()},()=>{});
+  if(P.me.role==='parent')watch(P.me.sid);else render();
+})();
+})();
+</script>
+</body></html>

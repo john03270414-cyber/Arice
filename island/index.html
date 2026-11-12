@@ -13,7 +13,7 @@
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794470000" data-app="island" data-prefix="isl_"></script>
+<script src="../lib/shim.js?v=1794480000" data-app="island" data-prefix="isl_"></script>
 <script src="../lib/avatar.js?v=1794450000"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
@@ -686,6 +686,13 @@ async function initDB(){
   db.doc('cfg/main').onSnapshot(snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);S.cfg=snap.exists?JSON.parse(JSON.stringify(snap.data())):null;S.cfgState=snap.exists?'ok':(snap.metadata.fromCache?S.cfgState:'empty');if(S.view.n!=='play')render()},e=>{clearTimeout(timer);S.cfgState='err';render()});
   db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>{S.stu[d.id]=JSON.parse(JSON.stringify(d.data()))});if(S.view.n!=='play')render()},()=>{});
   db.doc('cfg/notice').onSnapshot(snap=>{const d=snap.exists?snap.data():null;S.notices=(d&&Array.isArray(d.list))?JSON.parse(JSON.stringify(d.list)):[];if(S.view.n!=='play')render()},()=>{});
+  /* 家長留言、老師評語：只有老師帳號讀得到 */
+  if(window.ARICE&&ARICE.me&&ARICE.me.role==='teacher'){S.pmsg=[];S.pcm={};S.tread={};S.pread={};
+    const rr=()=>{if(S.view.n==='teacher')render()};
+    db.collection('pmsg').onSnapshot(q=>{S.pmsg=q.docs.map(d=>Object.assign({id:d.id},d.data()));rr()},e=>{S.parErr=(e&&e.code)||String(e);rr()});
+    db.collection('pcm').onSnapshot(q=>{const o={};q.docs.forEach(d=>o[d.id]=d.data());S.pcm=o;rr()},()=>{});
+    db.collection('pread').onSnapshot(q=>{const o={};q.docs.forEach(d=>o[d.id]=d.data().t||0);S.pread=o;rr()},()=>{});
+    db.doc('tread/main').onSnapshot(s=>{S.tread=s.exists?s.data():{};rr()},()=>{})}
   db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{});
 }
 function saveStu(sid){const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
@@ -710,7 +717,7 @@ function scratch(){if(!SCR){SCR=Pad($('#scratchCv'),{width:3});document.querySel
 function wpad(){if(!WP){const el=document.createElement('div');el.className='tzg';el.innerHTML='<canvas aria-label="寫字格"></canvas>';WP=Pad(el.firstChild,{width:7,eraser:30});WP.el=el}return WP}
 function resetPads(){if(SCR)SCR.clear();if(WP)WP.clear()}
 function render(){
-  {const ae=document.activeElement;if(ae&&ae.dataset&&ae.dataset.ntc==='text'&&S.view.n==='teacher'&&S.tTab==='ntc')return}
+  {const ae=document.activeElement;if(ae&&ae.dataset&&ae.dataset.ntc==='text'&&S.view.n==='teacher'&&S.tTab==='ntc')return;if(ae&&ae.dataset&&ae.dataset.par&&S.view.n==='teacher'&&S.tTab==='par'&&!S.parForce)return}
   {const M=window.ARICE&&ARICE.me;if(M&&M.role==='student'&&S.cfg&&M.sid){if(['home','spin','teacher','pin'].includes(S.view.n)||(S.view.sid&&S.view.sid!==M.sid)){S.view={n:'stu',sid:M.sid}}}}
   const v=S.view,el=$('#app');
   try{XBGM.sync(v.n)}catch(e){}
@@ -742,7 +749,7 @@ function vSPin(v){const st=stuById(v.sid);if(!st)return vHome();const a=avatar(v
   return `<div class="topbar"><button class="back" data-act="home">← 換人</button></div><div class="pinbox ${S.spWrong?'fx-no':''}"><span class="av big" style="--av:${a.c}">${a.e}</span><h2>${esc(st.name)}</h2><p class="pt">${t}</p>${m!=='enter'?'<p class="small muted">按 4 個數字，不要告訴別人喔！忘記的話請老師幫你重設。</p>':'<p class="small muted">這是你自己的島，密碼保護你的成績不被別人亂動。</p>'}
   <div class="pdots">${[0,1,2,3].map(i=>`<i class="${i<S.spBuf.length?'on':''}"></i>`).join('')}</div>
   <div class="pinpad">${['1','2','3','4','5','6','7','8','9','清除','0','⌫'].map(k=>`<button data-act="spKey" data-k="${k}">${k}</button>`).join('')}</div></div>`}
-function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&(!n.school||n.school===school)).sort((a,b)=>(b.at||0)-(a.at||0))}
+function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&n.aud!=='par'&&(!n.school||n.school===school)).sort((a,b)=>(b.at||0)-(a.at||0))}
 function noticeHTML(school){const L=noticesFor(school).slice(0,3);if(!L.length)return '';
   return `<section class="noticebd" aria-label="公告欄">${L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>老師公告・${esc(new Date(n.at||Date.now()).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}))}${n.school?'・'+esc(n.school):''}</small></div></div>`).join('')}</section>`}
 function starsHTML(school,meId){const pool=students(); /* 全部五年級一起排，不分學校 */
@@ -1315,10 +1322,10 @@ function vPin(){
   return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
   <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
 }
-const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['pts','🎁 加點'],['set','設定'],['try','試玩']];
+const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🎁 加點'],['set','設定'],['try','試玩']];
 function vTeacher(){
-  const tabs=`<div class="tabs">${TT.map(([k,n])=>`<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}</button>`).join('')}</div>`;
-  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
+  const tabs=`<div class="tabs">${TT.map(([k,n])=>{const u=k==='par'?parUnread():0;return `<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}${u?` <span class="pill p-bad">${u}</span>`:''}</button>`}).join('')}</div>`;
+  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,par:tPar,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
   return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
 }
 function tLive(){
@@ -1375,11 +1382,32 @@ function tPts(){
 function tNtc(){
   if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法發公告。</div>';
   const sch=schoolsList();const L=(S.notices||[]).slice().sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<div class="card stack"><h2>📢 發公告</h2><p class="small muted">學生登入後，會在自己的頁面最上面看到（最多顯示最新 3 則）。可以只發給某一間學校。</p>
+  return `<div class="card stack"><h2>📢 發公告</h2><p class="small muted">學生登入後，會在自己的頁面最上面看到（最多顯示最新 3 則）；家長會在家長專區看到。可以只發給某一間學校，或只給學生／只給家長。</p>
   <textarea id="ntcText" rows="3" maxlength="300" placeholder="例如：星期五考自然第三單元，記得先把重點卡看完！" data-ntc="text" style="width:100%;box-sizing:border-box;font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line)">${esc(S.ntcText||'')}</textarea>
-  <div class="row"><label class="small">給誰看：<select id="ntcSchool" data-ntc="school"><option value="">全部學生</option>${sch.map(s=>`<option value="${esc(s)}" ${S.ntcSch===s?'selected':''}>只給 ${esc(s)}</option>`).join('')}</select></label><button class="btn" data-act="ntcAdd">發布</button></div>
-  <div class="ntc-list">${L.length?L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>${esc(new Date(n.at||0).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}・${n.school?'只給 '+esc(n.school):'全部學生'}</small></div><button class="btn ghost sm" data-act="ntcDel" data-id="${esc(n.id)}">刪除</button></div>`).join(''):'<p class="muted small">目前沒有公告。</p>'}</div></div>`}
+  <div class="row"><label class="small">給誰看：<select id="ntcSchool" data-ntc="school"><option value="">全部學生</option>${sch.map(s=>`<option value="${esc(s)}" ${S.ntcSch===s?'selected':''}>只給 ${esc(s)}</option>`).join('')}</select></label><label class="small">對象：<select id="ntcAud" data-ntc="aud"><option value="">學生和家長</option><option value="stu" ${S.ntcAud==='stu'?'selected':''}>只給學生</option><option value="par" ${S.ntcAud==='par'?'selected':''}>只給家長</option></select></label><button class="btn" data-act="ntcAdd">發布</button></div>
+  <div class="ntc-list">${L.length?L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>${esc(new Date(n.at||0).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}・${n.school?'只給 '+esc(n.school):'全部學校'}・${n.aud==='par'?'只給家長':n.aud==='stu'?'只給學生':'學生和家長'}</small></div><button class="btn ghost sm" data-act="ntcDel" data-id="${esc(n.id)}">刪除</button></div>`).join(''):'<p class="muted small">目前沒有公告。</p>'}</div></div>`}
 async function saveNotices(list){try{await S.db.doc('cfg/notice').set({list,at:Date.now()});S.notices=list;render();return true}catch(e){toast('沒有存成功：'+((e&&e.code)||e));return false}}
+/* ---------- 👪 家長：留言板、老師評語 ---------- */
+function parUnread(sid){const L=S.pmsg||[];const t=S.tread||{};return L.filter(x=>x.from==='p'&&(!sid||x.sid===sid)&&(x.at||0)>(t[x.sid]||0)).length}
+function tPar(){
+  if(!(window.ARICE&&ARICE.me&&ARICE.me.role==='teacher'))return '<div class="card muted">要用老師的帳號登入，才看得到家長留言。</div>';
+  if(S.parErr)return `<div class="card" style="color:var(--bad)">家長留言讀不到（${esc(S.parErr)}）。請確認 Firebase 規則已經更新成家長版。</div>`;
+  const sts=students();const last=sid=>{const L=(S.pmsg||[]).filter(x=>x.sid===sid);return L.length?L.reduce((a,b)=>(b.at||0)>(a.at||0)?b:a):null};
+  const order=sts.slice().sort((a,b)=>(parUnread(b.id)-parUnread(a.id))||(((last(b.id)||{}).at||0)-((last(a.id)||{}).at||0)));
+  const sel=S.parSel&&stuById(S.parSel)?S.parSel:null;
+  const list=`<div class="stack">${order.map(st=>{const u=parUnread(st.id),l=last(st.id),c=(S.pcm||{})[st.id];return `<button class="lcard click" style="text-align:left;${sel===st.id?'outline:3px solid var(--accent,#0E7C77)':''}" data-act="parSel" data-id="${esc(st.id)}"><div class="spread"><b>${esc(st.name)}</b>${u?`<span class="pill p-bad">${u} 則新留言</span>`:''}</div><div class="small muted">${esc(st.school||'')}・${c&&c.text?'已寫評語':'還沒寫評語'}</div>${l?`<div class="small" style="margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.from==='t'?'你：':'家長：'}${esc(l.text)}</div>`:''}</button>`}).join('')}</div>`;
+  let right='<div class="card muted">點左邊的學生，寫評語或回覆家長留言。</div>';
+  if(sel){const st=stuById(sel);const L=(S.pmsg||[]).filter(x=>x.sid===sel).sort((a,b)=>a.at-b.at);const c=(S.pcm||{})[sel];const pr=(S.pread||{})[sel]||0;
+    if(S.pcmFor!==sel){S.pcmFor=sel;S.pcmDraft=c&&c.text||'';S.parMsg=''}
+    right=`<div class="card stack"><h2>📝 給 ${esc(st.name)} 家長的評語</h2><p class="small muted">家長在家長專區最上面會看到。可以隨時修改。</p>
+      <textarea data-par="cmt" rows="4" maxlength="800" style="width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line)" placeholder="例如：這週數學進步很多，分數的加減還要再多練習。">${esc(S.pcmDraft||'')}</textarea>
+      <div class="row"><button class="btn" data-act="pcmSave">儲存評語</button>${c&&c.at?`<span class="small muted">上次儲存：${esc(new Date(c.at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}</span>`:''}</div></div>
+      <div class="card stack"><h2>💬 和 ${esc(st.name)} 家長的留言</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto">${L.length?L.map(x=>`<div style="max-width:85%;align-self:${x.from==='t'?'flex-end':'flex-start'};background:${x.from==='t'?'var(--accent,#0E7C77)':'var(--surface2,#EEF4F2)'};color:${x.from==='t'?'#fff':'inherit'};padding:8px 12px;border-radius:14px;white-space:pre-wrap;word-break:break-word">${esc(x.text)}<div style="font-size:12px;opacity:.75;margin-top:2px">${x.from==='t'?'你':'家長'}・${esc(new Date(x.at||0).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${x.from==='t'?(pr>=(x.at||0)?'・家長已讀':'・家長未讀'):''}</div></div>`).join(''):'<p class="muted small">還沒有留言。</p>'}</div>
+      <textarea data-par="msg" rows="3" maxlength="500" style="width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line)" placeholder="回覆家長…">${esc(S.parMsg||'')}</textarea>
+      <div class="row"><button class="btn" data-act="parSend">送出回覆</button></div></div>`;
+    if(parUnread(sel))setTimeout(()=>{S.tread=Object.assign({},S.tread,{[sel]:Date.now()});S.db.doc('tread/main').set(S.tread).catch(()=>{})},300)}
+  return `<p class="small muted">家長從 <b>${esc(location.origin+location.pathname.replace(/island\/(index\.html)?$/,''))}parent.html</b> 登入（帳號在「學生帳號管理」建立）。有新留言的學生會排在最上面。</p><div style="display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:14px;align-items:start" class="par-grid">${list}<div class="stack">${right}</div></div><style>@media (max-width:720px){.par-grid{grid-template-columns:minmax(0,1fr)!important}}</style>`}
 function tSet(){
   if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法修改設定。</div>';
   const d=ensureDraft();const sch=d.schoolOrder;
@@ -1481,9 +1509,13 @@ const A={
     S.xmPop={kind:'gift',pts,k,sid,emoji:e.dataset.e};SFX.tap();setTimeout(()=>{try{SFX.jingle()}catch(_){}},900);setTimeout(()=>{try{SFX.ok(3)}catch(_){}},1150);render()},
   xmClose:()=>{S.xmPop=null;render()},
   ntcAdd:async()=>{const el=document.getElementById('ntcText');const t=(el&&el.value||'').trim();if(!t)return toast('請先寫公告內容');const school=(document.getElementById('ntcSchool')||{}).value||'';
-    const list=[{id:'n'+Date.now().toString(36),text:t,school,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
+    const aud=(document.getElementById('ntcAud')||{}).value||'';const list=[{id:'n'+Date.now().toString(36),text:t,school,aud,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
   ntcDel:async e=>{if(!confirm('要刪除這則公告嗎？'))return;const list=(S.notices||[]).filter(n=>n.id!==e.dataset.id);if(await saveNotices(list))toast('已刪除')},
   openStuT:e=>{S.tStu=e.dataset.id;S.tTab='stu';render()},
+  parSel:e=>{S.parSel=e.dataset.id;S.parForce=1;render();S.parForce=0},
+  pcmSave:async()=>{const sid=S.parSel;if(!sid)return;const t=(S.pcmDraft||'').trim();try{await S.db.doc('pcm/'+sid).set({sid,text:t,at:Date.now()});S.parForce=1;render();S.parForce=0;toast(t?'評語存好了':'評語已清空')}catch(e){toast('沒有存成功：'+((e&&e.code)||e))}},
+  parSend:async()=>{const sid=S.parSel;const t=(S.parMsg||'').trim();if(!sid||!t)return toast('請先寫回覆內容');const at=Date.now();
+    try{await S.db.doc('pmsg/'+sid+'_'+at).set({sid,from:'t',text:t.slice(0,500),at});S.parMsg='';S.tread=Object.assign({},S.tread,{[sid]:at});S.db.doc('tread/main').set(S.tread).catch(()=>{});S.parForce=1;render();S.parForce=0;toast('回覆送出了')}catch(e){toast('沒有送出成功：'+((e&&e.code)||e))}},
   clearLive:async()=>{if(!S.db)return;for(const id of Object.keys(S.live)){try{await S.db.doc('live/'+id).delete()}catch(e){}}toast('已清空')},
   addSchool:()=>{const d=ensureDraft();let n='新學校',i=1;while(d.schoolOrder.includes(n))n='新學校'+(++i);d.schoolOrder.push(n);d.schools[n]={};render()},
   delSchool:e=>{const d=ensureDraft();const s=d.schoolOrder[+e.dataset.i];if(d.students.some(x=>x.school===s))return toast('這間學校還有學生，先把學生移走或刪除');d.schoolOrder.splice(+e.dataset.i,1);delete d.schools[s];render()},
@@ -1498,8 +1530,8 @@ const A={
 };
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('.xm-town .tw')){e.preventDefault();e.target.closest('.tw').dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f){e.preventDefault();f(el)}});
-document.addEventListener('input',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='text')S.ntcText=e.target.value;if(n==='school')S.ntcSch=e.target.value});
-document.addEventListener('change',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='school')S.ntcSch=e.target.value});
+document.addEventListener('input',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='text')S.ntcText=e.target.value;if(n==='school')S.ntcSch=e.target.value;if(n==='aud')S.ntcAud=e.target.value;const pr=e.target&&e.target.dataset&&e.target.dataset.par;if(pr==='msg')S.parMsg=e.target.value;if(pr==='cmt')S.pcmDraft=e.target.value});
+document.addEventListener('change',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='school')S.ntcSch=e.target.value;if(n==='aud')S.ntcAud=e.target.value});
 document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const d=ensureDraft();const f=el.dataset.f;
   if(f==='stuName'){d.students[+el.dataset.i].name=el.value;return}
   if(f==='schName'){const i=+el.dataset.i;const old=d.schoolOrder[i];const nv=el.value;if(!nv.trim()||(nv!==old&&d.schoolOrder.includes(nv)))return;d.schoolOrder[i]=nv;d.schools[nv]=d.schools[old]||{};if(nv!==old)delete d.schools[old];d.students.forEach(s=>{if(s.school===old)s.school=nv});return}});
