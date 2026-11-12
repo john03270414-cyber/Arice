@@ -74,7 +74,9 @@ async function load(){
 /* 學生名單存在學習島（isl_cfg/main）和勇者衝鋒（brv_cfg/main）兩邊，新增、刪除時兩邊一起改 */
 const CFGS=['isl_cfg/main','brv_cfg/main'];
 async function loadRoster(){
-  const [a,b]=await Promise.all(CFGS.map(p=>FS.doc(p).get()));
+  const NONE={exists:false,data:()=>({})};A.denied=[];
+  const [a,b]=await Promise.all(CFGS.map(p=>FS.doc(p).get().catch(e=>{A.denied.push(p+'：'+((e&&e.code)||e));return NONE})));
+  if(A.denied.length===CFGS.length)throw {code:'兩份名單都讀不到（'+A.denied.join('；')+'）'};
   const seen={};A.roster=[];const order=((a.exists&&a.data().schoolOrder)||(b.exists&&b.data().schoolOrder)||[]);A.order=order;
   [a,b].forEach(s=>{if(s.exists)(s.data().students||[]).forEach(x=>{if(!seen[x.id]){seen[x.id]=1;A.roster.push(x)}})});
   A.roster.sort((x,y)=>(order.indexOf(x.school)-order.indexOf(y.school))||String(x.id).localeCompare(String(y.id),'en',{numeric:true}));
@@ -83,12 +85,12 @@ async function loadRoster(){
 function nextSid(){const n=Math.max(0,...A.roster.map(x=>+((String(x.id).match(/^s(\d+)$/)||[])[1]||0)));return 's'+String(n+1).padStart(2,'0')}
 async function addStudent(name,school){
   const snaps=await loadRoster();const st={id:nextSid(),name,school};
-  for(let i=0;i<CFGS.length;i++){const s=snaps[i];if(!s.exists)continue;const list=(s.data().students||[]).slice();list.push(st);await FS.doc(CFGS[i]).set({students:list},{merge:true})}
+  for(let i=0;i<CFGS.length;i++){const s=snaps[i];if(!s||!s.exists)continue;const list=(s.data().students||[]).slice();list.push(st);await FS.doc(CFGS[i]).set({students:list},{merge:true})}
   await loadRoster();return st}
 async function delStudent(sid){
   if(secOf(sid))await off(sid);
   const snaps=await loadRoster();
-  for(let i=0;i<CFGS.length;i++){const s=snaps[i];if(!s.exists)continue;const list=(s.data().students||[]).filter(x=>x.id!==sid);await FS.doc(CFGS[i]).set({students:list},{merge:true})}
+  for(let i=0;i<CFGS.length;i++){const s=snaps[i];if(!s||!s.exists)continue;const list=(s.data().students||[]).filter(x=>x.id!==sid);await FS.doc(CFGS[i]).set({students:list},{merge:true})}
   await loadRoster()}
 const secOf=sid=>A.secret[sid]||null;
 const active=sid=>{const s=secOf(sid);return !!(s&&!s.off&&A.login[s.code]&&A.login[s.code].sid===sid)};
@@ -106,7 +108,7 @@ function render0(){
   const list=A.roster.filter(s=>!A.school||s.school===A.school);
   const n=A.roster.filter(s=>active(s.id)).length;
   const allA=A.roster.every(st=>{const s=secOf(st.id);return s&&!s.off&&/^a115\d+$/.test(s.code)});
-  $('#app').innerHTML=`<div class="bar passbar"><b>🔑 通行碼</b><input id="passIn" value="${esc(A.pass)}" placeholder="至少 6 個字" maxlength="20" autocomplete="off" aria-label="通行碼"><button id="passSave" ${A.busy?'disabled':''}>儲存通行碼</button><span style="color:var(--dim);font-size:14px">${A.pass?'學生第一次登入用這組，登入後會改成自己的密碼。':'請先設定通行碼才能建立帳號。'}</span></div>
+  $('#app').innerHTML=`${(A.denied||[]).length?`<p class="lead" style="color:var(--bad)">⚠ 有一份名單讀不到：${esc(A.denied.join('；'))}。請把這行截圖給 Claude。</p>`:''}<div class="bar passbar"><b>🔑 通行碼</b><input id="passIn" value="${esc(A.pass)}" placeholder="至少 6 個字" maxlength="20" autocomplete="off" aria-label="通行碼"><button id="passSave" ${A.busy?'disabled':''}>儲存通行碼</button><span style="color:var(--dim);font-size:14px">${A.pass?'學生第一次登入用這組，登入後會改成自己的密碼。':'請先設定通行碼才能建立帳號。'}</span></div>
   ${allA?'':`<div class="bar"><button id="renum" ${A.busy||!A.pass?'disabled':''}>🔢 把全部學生統一改成 a115 帳號</button><span style="color:var(--dim);font-size:14px">照名單順序重新編號（a11501 起）；學生要用新帳號＋通行碼重新登入、設定密碼，學習紀錄不會不見。</span></div>`}
   <div class="bar addbar"><b>➕ 新增學生</b><input id="newName" placeholder="學生姓名" maxlength="12" value="${esc(A.newName||'')}" aria-label="新學生姓名"><select id="newSchool" aria-label="學校">${(A.order||[]).map(s=>`<option ${(A.newSchool||A.school)===s?'selected':''}>${esc(s)}</option>`).join('')}</select><button class="pri" id="addStu" ${A.busy?'disabled':''}>新增${A.pass?'並建立帳號':''}</button></div>
   <div class="bar"><div class="chips"><button class="chip ${!A.school?'on':''}" data-sch="">全部（${A.roster.length}）</button>${A.schools.map(s=>`<button class="chip ${A.school===s?'on':''}" data-sch="${esc(s)}">${esc(s)}</button>`).join('')}</div>

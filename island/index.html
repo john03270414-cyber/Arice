@@ -190,6 +190,105 @@ body{background:radial-gradient(1200px 500px at 50% -120px,color-mix(in srgb,var
 @keyframes sail{0%,100%{transform:translate(70px,338px) rotate(-2deg)}50%{transform:translate(150px,340px) rotate(2deg)}}
 @keyframes wave{from{transform:translateX(0)}to{transform:translateX(-120px)}}
 @keyframes spark{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.95;transform:scale(1)}}
+/* ---------- 🎄 聖誕主題（網址加 ?theme=xmas 才會出現） ---------- */
+html.xmas{--bg:#F5F0E8;--line:#E6D9C6}
+html.xmas body{background:radial-gradient(1100px 480px at 50% -140px,rgba(214,48,49,.16),transparent 70%),radial-gradient(800px 400px at 100% 100%,rgba(31,122,77,.10),transparent 70%),var(--bg)}
+html.xmas .hero{box-shadow:0 18px 40px -18px rgba(60,20,30,.55)}
+html.xmas .hero-card{background:rgba(255,253,248,.82)}
+html.xmas .hero-title{background:linear-gradient(92deg,#C62828,#E25B45 45%,#1F7A4D);-webkit-background-clip:text;background-clip:text;color:transparent}
+html.xmas .xm-tag{display:inline-block;margin-left:8px;padding:1px 10px;border-radius:99px;background:#C62828;color:#fff;font-size:12px;letter-spacing:.06em}
+html.xmas .palm,html.xmas .bird.day,html.xmas .cloud{display:none}
+html.xmas .me{background:radial-gradient(circle at 12% 120%,rgba(255,255,255,.18) 0 60px,transparent 61px),linear-gradient(135deg,#9E1B22 0%,#C62828 48%,#1F7A4D 100%)}
+html.xmas .me::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background-image:radial-gradient(#fff 1.2px,transparent 1.6px),radial-gradient(#fff 1px,transparent 1.4px);background-size:46px 46px,29px 29px;background-position:0 0,13px 17px}
+html.xmas .me>*{position:relative;z-index:1}
+html.xmas .isle .glyph{position:relative}
+html.xmas .quest{background:linear-gradient(135deg,#FFF4F0,#FFE3DA);border-color:#E57368}
+html.xmas .quest .btn{background:#C62828}
+html.xmas .notice{background:#FFF8F2;border-color:#EBB7A6}
+html.xmas .xm-garland{height:22px;margin:-6px 0 10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22'%3E%3Cpath d='M0 4 Q30 18 60 4 Q90 18 120 4' stroke='%232E6B3F' stroke-width='3' fill='none'/%3E%3Ccircle cx='15' cy='11' r='4' fill='%23E53935'/%3E%3Ccircle cx='45' cy='11' r='4' fill='%23FBC02D'/%3E%3Ccircle cx='75' cy='11' r='4' fill='%231E88E5'/%3E%3Ccircle cx='105' cy='11' r='4' fill='%2343A047'/%3E%3C/svg%3E") repeat-x left center/120px 22px}
+.snowfall{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.snowfall i{position:absolute;top:-12px;width:var(--s);height:var(--s);border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(120,150,180,.6);opacity:.9;animation:xsnow var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes xsnow{0%{transform:translate(0,-10px)}50%{transform:translate(var(--x),50vh)}100%{transform:translate(0,105vh)}}
+.xm-flake{animation:xflake 7s linear infinite}
+@keyframes xflake{from{transform:translateY(-30px)}to{transform:translateY(440px)}}
+.xm-light{animation:xblink 1.6s ease-in-out infinite}
+@keyframes xblink{0%,100%{opacity:1}50%{opacity:.35}}
+.xm-sleigh{animation:xsleigh 26s linear infinite}
+@keyframes xsleigh{from{transform:translate(-220px,40px)}to{transform:translate(1150px,-10px)}}
+@media (prefers-reduced-motion:reduce){.snowfall,.xm-flake{display:none}.xm-light,.xm-sleigh{animation:none}}
+/* 🎄 聖誕小鎮地圖、倒數日曆、答題特效 */
+.xm-town{display:none}
+html.xmas .xm-town{display:block;margin:0 0 16px;border-radius:26px;overflow:hidden;box-shadow:0 18px 40px -20px rgba(20,25,60,.6);background:#1A2350}
+.xm-town svg{display:block;width:100%;height:auto}
+.xm-town .tw{cursor:pointer;transition:transform .2s;transform-box:fill-box;transform-origin:50% 100%}
+.xm-town .tw:hover,.xm-town .tw:focus-visible{transform:scale(1.06)}
+.xm-town .tw:focus-visible{outline:none}
+.xm-town .tw.lock{opacity:.78}
+.xm-smoke{animation:xsmoke 3.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes xsmoke{0%{transform:translate(0,0) scale(.6);opacity:.75}100%{transform:translate(14px,-46px) scale(1.7);opacity:0}}
+.xm-aur{animation:xaur 9s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes xaur{from{transform:translateX(-20px) scaleY(.9);opacity:.45}to{transform:translateX(24px) scaleY(1.1);opacity:.8}}
+.xm-adv{display:none}
+html.xmas .xm-adv{display:block;background:linear-gradient(135deg,#FFF8F0,#FDEBE4);border:1.5px solid #EBB7A6;border-radius:22px;padding:14px 16px;margin:0 0 18px;color:#5A2A1E}
+.xm-adv .hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.xm-adv .hd b{font-size:20px}.xm-adv .hd b em{font-style:normal;color:#C62828;font-size:26px;margin:0 2px}
+.xm-adv .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.xm-adv .d{aspect-ratio:1;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:15px;position:relative;background:#fff;border:1.5px dashed #E2B9AC;color:#B88A7C}
+.xm-adv .d.op{background:linear-gradient(150deg,#D84343,#A61E25);border:0;color:#fff;font-size:22px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.xm-adv .d.op small{position:absolute;right:4px;bottom:1px;font-size:10px;opacity:.85}
+.xm-adv .d.mi{background:#F1E9E4;border-style:solid;border-color:#E6DAD3;color:#C9B8AF}
+.xm-adv .d.td{border:2.5px solid #1F7A4D;color:#1F7A4D;background:#EFF8F2;animation:xpulse 1.6s ease-in-out infinite}
+.xm-adv .d.xd{background:linear-gradient(150deg,#1F7A4D,#13573A);color:#FFD447;border:0}
+@keyframes xpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.xm-adv .ft{margin-top:8px;font-size:14px;color:#8A5A4C}
+.xm-burst{position:fixed;z-index:40;pointer-events:none;left:0;top:0}
+.xm-burst span{position:absolute;font-size:24px;animation:xburst 1s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes xburst{from{transform:translate(0,0) scale(.4);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--r));opacity:0}}
+html.xmas .sbanner::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background-image:radial-gradient(#fff 1.2px,transparent 1.6px),radial-gradient(#fff 1px,transparent 1.4px);background-size:44px 44px,27px 27px;background-position:0 0,11px 15px}
+html.xmas .sbanner>*{position:relative;z-index:1}
+html.xmas .ubtn .un{position:relative}
+html.xmas .ubtn .un::after,html.xmas .isle .glyph::after{content:"";position:absolute;left:24px;top:-19px;width:40px;height:30px;transform:rotate(18deg);background:var(--xm-hat) no-repeat center/contain;filter:drop-shadow(0 2px 1px rgba(0,0,0,.18))}
+html.xmas{--xm-hat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M4 24 Q10 4 26 4 Q36 6 34 18 L30 16 Q30 10 24 11 Q16 13 14 24Z' fill='%23D32F2F'/%3E%3Crect x='2' y='21' width='16' height='7' rx='3.5' fill='%23fff'/%3E%3Ccircle cx='33' cy='19' r='4.5' fill='%23fff'/%3E%3C/svg%3E")}
+html.xmas .qcard{border-top:0}
+html.xmas .qcard::before{content:"";position:absolute;left:14px;right:14px;top:-9px;height:22px;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22'%3E%3Cpath d='M0 4 Q30 18 60 4 Q90 18 120 4' stroke='%232E6B3F' stroke-width='3' fill='none'/%3E%3Ccircle cx='15' cy='11' r='4' fill='%23E53935'/%3E%3Ccircle cx='45' cy='11' r='4' fill='%23FBC02D'/%3E%3Ccircle cx='75' cy='11' r='4' fill='%231E88E5'/%3E%3Ccircle cx='105' cy='11' r='4' fill='%2343A047'/%3E%3C/svg%3E") repeat-x left center/120px 22px}
+html.xmas .playhead .prog i{background:repeating-linear-gradient(-45deg,#D32F2F 0 10px,#fff 10px 20px)}
+.xm-gift{font-size:64px;animation:xgift 1.2s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes xgift{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.2) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@media (prefers-reduced-motion:reduce){.xm-smoke,.xm-aur,.xm-adv .d.td,.xm-burst{animation:none!important}.xm-burst{display:none}}
+.xm-bgm{display:none}
+html.xmas .xm-bgm{display:inline-flex;align-items:center;gap:6px;position:fixed;right:calc(124px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:16;min-height:38px;padding:0 14px;border-radius:999px;background:#C62828;color:#fff;border:0;box-shadow:var(--shadow);font:700 14px var(--font);cursor:pointer}
+html.xmas .xm-bgm.on{background:#1F7A4D}
+html.xmas .xm-bgm.on .nt{display:inline-block;animation:xbob .6s ease-in-out infinite alternate}
+@keyframes xbob{from{transform:translateY(1px) rotate(-8deg)}to{transform:translateY(-2px) rotate(8deg)}}
+html.xmas.inplay .xm-bgm{display:none}
+@media (max-width:640px){html.xmas .xm-bgm{right:calc(12px + env(safe-area-inset-right,0px))}}
+.xm-adv .d.rd{background:linear-gradient(150deg,#FFD447,#F2A93B);border:0;color:#7A3B00;font-size:24px;cursor:pointer;animation:xwob 1.1s ease-in-out infinite;box-shadow:0 0 0 3px #fff,0 0 14px 3px rgba(255,200,60,.8)}
+@keyframes xwob{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg) scale(1.06)}40%{transform:rotate(8deg) scale(1.06)}60%{transform:rotate(-4deg)}}
+.xm-adv .d.op small{font-weight:800}
+.xm-adv .pt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px}
+.xm-adv .pt span{background:#fff;border:1.5px solid #EBB7A6;border-radius:99px;padding:3px 12px;font-size:14px}
+.xm-adv .pt b{color:#C62828}
+.xm-pop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(15,20,45,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:20px}
+.xm-pop-card{position:relative;width:min(380px,100%);text-align:center;color:#fff;display:grid;justify-items:center;gap:10px}
+.xm-box{position:relative;width:170px;height:170px;margin-top:40px}
+.xm-box .bd{position:absolute;left:15px;right:15px;bottom:0;height:110px;border-radius:10px;background:linear-gradient(90deg,transparent 42%,#FFD447 42% 58%,transparent 58%),linear-gradient(160deg,#E53935,#A61E25);box-shadow:0 10px 30px rgba(0,0,0,.35);animation:xshake .9s ease-in-out 1}
+.xm-box .ld{position:absolute;left:5px;right:5px;top:38px;height:32px;border-radius:8px;background:linear-gradient(90deg,transparent 42%,#FFD447 42% 58%,transparent 58%),linear-gradient(160deg,#EF5350,#B71C1C);animation:xshake .9s ease-in-out 1,xlid .7s .95s cubic-bezier(.3,1.4,.5,1) forwards;transform-origin:20% 100%}
+.xm-box .ld::before,.xm-box .ld::after{content:"";position:absolute;top:-26px;width:34px;height:28px;border:7px solid #FFD447;border-radius:50% 50% 10% 50%}
+.xm-box .ld::before{left:44px;transform:rotate(-20deg)}.xm-box .ld::after{right:44px;transform:scaleX(-1) rotate(-20deg)}
+.xm-box .ry{position:absolute;left:50%;top:60%;width:320px;height:320px;margin:-160px 0 0 -160px;border-radius:50%;background:repeating-conic-gradient(rgba(255,230,140,.55) 0 10deg,transparent 10deg 24deg);opacity:0;animation:xrays 1.2s 1s ease-out forwards,xspin 9s 1s linear infinite;z-index:-1}
+.xm-pts{font:900 64px/1 var(--font);color:#FFE27A;text-shadow:0 4px 0 #B8580E,0 0 26px rgba(255,210,90,.9);opacity:0;animation:xpts .7s 1.15s cubic-bezier(.2,1.7,.4,1) forwards}
+.xm-pop .msg{opacity:0;animation:xfade .5s 1.5s forwards;font-size:19px;line-height:1.6}
+.xm-pop .btn{opacity:0;animation:xfade .5s 1.7s forwards;background:#1F7A4D;color:#fff;min-width:160px}
+.xm-pop .st{font-size:110px;line-height:1;animation:xstar 1.1s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 0 24px rgba(255,220,80,.9))}
+.xm-pop .st+.xm-pts{animation-delay:.6s}.xm-pop .st~.msg{animation-delay:.9s}.xm-pop .st~.btn{animation-delay:1.1s}
+@keyframes xshake{0%,100%{transform:rotate(0)}15%{transform:rotate(-6deg)}30%{transform:rotate(6deg)}45%{transform:rotate(-5deg)}60%{transform:rotate(5deg)}75%{transform:rotate(-3deg)}}
+@keyframes xlid{to{transform:translate(-30px,-120px) rotate(-38deg);opacity:0}}
+@keyframes xrays{to{opacity:1}}
+@keyframes xspin{to{transform:rotate(360deg)}}
+@keyframes xpts{from{opacity:0;transform:translateY(40px) scale(.3)}to{opacity:1;transform:translateY(-40px) scale(1)}}
+@keyframes xfade{to{opacity:1}}
+@keyframes xstar{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+@media (prefers-reduced-motion:reduce){.xm-box *,.xm-pts,.xm-pop .msg,.xm-pop .btn,.xm-pop .st,.xm-adv .d.rd{animation:none!important;opacity:1!important}.xm-box .ld{display:none}}
 @keyframes palm{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
 @keyframes flag{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.75)}}
 @keyframes trail{to{stroke-dashoffset:-130}}
@@ -442,6 +541,7 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <div id="scratch" class="scratch" hidden><div class="sbar"><b id="scratchTitle">計算紙</b><div class="row" style="gap:6px"><button type="button" data-pen="#1b2a2a" class="pen on" aria-label="黑筆"><i style="background:#1b2a2a"></i></button><button type="button" data-pen="#2C79C9" class="pen" aria-label="藍筆"><i style="background:#2C79C9"></i></button><button type="button" data-pen="#D2443F" class="pen" aria-label="紅筆"><i style="background:#D2443F"></i></button><button type="button" data-pen="erase" class="pen" aria-label="橡皮擦">🧽</button><button type="button" id="scratchClear" class="btn ghost sm">全部擦掉</button><button type="button" id="scratchClose" class="btn sm">收起</button></div></div><canvas id="scratchCv"></canvas></div>
 <button class="tlock" id="tlock" data-act="teacher">🔒 老師</button>
 <button class="fsbtn" id="fsbtn" type="button" aria-label="全螢幕">⛶ 全螢幕</button>
+<button class="xm-bgm" id="xmBgm" type="button" aria-pressed="false"><span class="nt">🎵</span><span class="lb">聖誕音樂</span></button>
 
 <script src="bank.js"></script>
 <script src="bank_math.js"></script>
@@ -459,6 +559,13 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 (function(){
 'use strict';
 const DAY=864e5;
+/* 🎄 聖誕主題：網址加 ?theme=xmas 開啟（記在這台裝置），?theme=normal 關掉 */
+/* 時間表（台灣時間 UTC+8）：11/30 18:00 開始維修公告 → 12/1 15:00 自動換成聖誕版 → 1/8 00:00 換回原本的樣子 */
+const TWT=(y,mo,d,h,mi)=>Date.UTC(y,mo-1,d,h-8,mi||0);
+const SCHED={maintFrom:TWT(2026,11,30,18),maintTo:TWT(2026,12,1,15),xmasFrom:TWT(2026,12,1,15),xmasTo:TWT(2027,1,8,0)};
+const XMAS=(()=>{let v=null;try{const q=new URLSearchParams(location.search).get('theme');if(q==='xmas'||q==='normal')localStorage.setItem('island-theme',q);v=localStorage.getItem('island-theme')}catch(e){}
+  const now=Date.now();if(now>=SCHED.xmasTo)return false;if(v==='normal')return false;if(v==='xmas')return true;return now>=SCHED.xmasFrom})();
+if(XMAS){document.documentElement.classList.add('xmas');const mk=()=>{if(document.querySelector('.snowfall'))return;const w=document.createElement('div');w.className='snowfall';w.setAttribute('aria-hidden','true');let h='';for(let i=0;i<34;i++){const s=3+Math.random()*5;h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;--s:${s.toFixed(1)}px;--d:${(9+Math.random()*10).toFixed(1)}s;--dl:-${(Math.random()*18).toFixed(1)}s;--x:${(Math.random()*60-30).toFixed(0)}px;opacity:${(.5+Math.random()*.5).toFixed(2)}"></i>`}w.innerHTML=h;document.body.appendChild(w)};if(document.body)mk();else document.addEventListener('DOMContentLoaded',mk)}
 const SUBJS=['國語','數學','社會','自然','英語'];
 const SM={國語:{z:'zh',g:'語'},數學:{z:'ma',g:'數'},社會:{z:'so',g:'社'},自然:{z:'sc',g:'自'},英語:{z:'en',g:'英'}};
 const PUBS=['翰林','康軒','南一','何嘉仁'];
@@ -517,7 +624,8 @@ const SFX=(()=>{
     lose(){seq([67,66,65,64],.17,.4,.13)},
     unlock(){seq([67,72,76,79,84],.08,.55,.17)},
     sticker(){note(88,0,.25,.12);note(93,.08,.4,.12)},
-    hello(){seq([72,79],.1,.4,.16)}
+    hello(){seq([72,79],.1,.4,.16)},
+    jingle(){seq([88,91,95,100],.06,.45,.11);for(let i=0;i<5;i++)noise(.02+i*.05,.04,7000,.18)}
   };
 })();
 function confetti(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}const c=document.createElement('canvas');c.className='confetti';document.body.appendChild(c);const dpr=window.devicePixelRatio||1;const W=c.width=innerWidth*dpr,H=c.height=innerHeight*dpr;const x=c.getContext('2d');const cols=['#D2503F','#2C79C9','#E2B23F','#2A9550','#7656BE','#3CB7AF','#FF8FB1'];
@@ -601,6 +709,7 @@ function render(){
   {const ae=document.activeElement;if(ae&&ae.dataset&&ae.dataset.ntc==='text'&&S.view.n==='teacher'&&S.tTab==='ntc')return}
   {const M=window.ARICE&&ARICE.me;if(M&&M.role==='student'&&S.cfg&&M.sid){if(['home','spin','teacher','pin'].includes(S.view.n)||(S.view.sid&&S.view.sid!==M.sid)){S.view={n:'stu',sid:M.sid}}}}
   const v=S.view,el=$('#app');
+  if(XMAS)try{XBGM.sync(v.n)}catch(e){}
   $('#tlock').hidden=(v.n==='play'||v.n==='cover'||v.n==='teacher'||v.n==='pin');{const fb=$('#fsbtn');if(fb&&!FS_APP&&(FS_IOS||document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))fb.hidden=(v.n==='play'||v.n==='cover');}
   const f={home:vHome,spin:vSPin,stu:vStu,unit:vUnit,subj:vSubj,play:vPlay,cover:vCover,result:vResult,profile:vProfile,teacher:vTeacher,pin:vPin}[v.n]||vHome;
   el.innerHTML=f(v);
@@ -642,7 +751,192 @@ function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
 function greet(){const h=new Date().getHours();return h<11?'早安':h<14?'午安':h<18?'下午好':'晚安'}
 function dateLabel(){const d=new Date();return `${d.getMonth()+1} 月 ${d.getDate()} 日・星期${'日一二三四五六'[d.getDay()]}`}
-function sceneSVG(){
+function sceneSVG(){const s=sceneSVG0();return XMAS?xmasScene(s):s}
+/* ---------- 🎄 聖誕小鎮地圖 ---------- */
+const XM_TOWN={國語:{n:'書香小鎮',c:'var(--zh)'},數學:{n:'禮物工廠',c:'var(--ma)'},社會:{n:'聖誕市集',c:'var(--so)'},自然:{n:'星空天文台',c:'var(--sc)'},英語:{n:'北極郵局',c:'var(--en)'}};
+const XM_POS={國語:[150,262],數學:[295,412],社會:[500,262],自然:[705,412],英語:[850,262]};
+function xmWin(x,y,w,h){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#FFD978"/><path d="M${x+w/2} ${y}v${h}M${x} ${y+h/2}h${w}" stroke="#B5813A" stroke-width="1.2" opacity=".6"/>`}
+function xmLights(x1,x2,y,n){let h='';for(let i=0;i<n;i++){const x=x1+(x2-x1)*i/(n-1);h+=`<circle class="xm-light" style="animation-delay:${(i*.17).toFixed(2)}s" cx="${x.toFixed(1)}" cy="${y+(i%2?3:0)}" r="2.6" fill="${['#E53935','#FBC02D','#1E88E5','#43A047'][i%4]}"/>`}return `<path d="M${x1} ${y}Q${(x1+x2)/2} ${y+8} ${x2} ${y}" stroke="#2E3B2E" stroke-width="1" fill="none"/>`+h}
+function xmSmoke(x,y){return [0,1.2,2.4].map(d=>`<circle class="xm-smoke" style="animation-delay:${d}s" cx="${x}" cy="${y}" r="7" fill="#E9EEF6"/>`).join('')}
+const XM_BLD={
+  國語:()=>`<rect x="-58" y="-88" width="116" height="88" fill="#F3E6D3"/><path d="M-70 -86 L0 -128 L70 -86Z" fill="#8E3B2E"/><path d="M-70 -86 L0 -128 L70 -86 Q56 -80 44 -86 Q30 -80 18 -86 Q4 -80 -8 -86 Q-22 -80 -34 -86 Q-48 -80 -58 -86Z" fill="#fff"/>${[-44,-16,16,44].map(x=>`<rect x="${x-5}" y="-80" width="10" height="80" fill="#E2D2BA"/>`).join('')}<rect x="-13" y="-38" width="26" height="38" rx="12" fill="#6B3A22"/><g transform="translate(0 -104)"><path d="M-22 0 Q-11 -8 0 -2 Q11 -8 22 0 L22 14 Q11 8 0 14 Q-11 8 -22 14Z" fill="#fff" stroke="#8E3B2E" stroke-width="1.5"/><path d="M0 -2V14" stroke="#8E3B2E" stroke-width="1.5"/></g>${xmWin(-38,-66,14,16)}${xmWin(24,-66,14,16)}${xmLights(-58,58,-88,9)}`,
+  數學:()=>`<rect x="34" y="-142" width="16" height="40" fill="#7B3B30"/><rect x="31" y="-146" width="22" height="8" fill="#fff"/>${xmSmoke(42,-152)}<rect x="-62" y="-80" width="124" height="80" fill="#C62828"/><path d="M-72 -78 L-52 -116 L52 -116 L72 -78Z" fill="#7E1D1D"/><path d="M-72 -78 L-52 -116 L52 -116 L72 -78 Q60 -72 48 -78 Q34 -72 22 -78 Q8 -72 -6 -78 Q-20 -72 -34 -78 Q-48 -72 -60 -78Z" fill="#fff"/><circle cx="0" cy="-52" r="17" fill="#FFD447" stroke="#B88A1C" stroke-width="7" stroke-dasharray="5 4"/><circle cx="0" cy="-52" r="6" fill="#B88A1C"/><rect x="-14" y="-28" width="28" height="28" fill="#5B1A12"/><path d="M-14 -28h28M0 -28V0" stroke="#FFD447" stroke-width="2"/>${xmWin(-50,-64,16,16)}${xmWin(34,-64,16,16)}<g transform="translate(-82 0)"><rect x="-3" y="-60" width="6" height="60" fill="#fff"/><path d="M-3 -60 q0 -14 12 -12 q10 2 8 12" stroke="#fff" stroke-width="6" fill="none"/><path d="M-3 -50h6M-3 -38h6M-3 -26h6M-3 -14h6" stroke="#E53935" stroke-width="4"/></g>${xmLights(-72,72,-78,10)}`,
+  社會:()=>{const stall=(x,c)=>`<g transform="translate(${x} 0)"><rect x="-26" y="-34" width="52" height="34" fill="#8D5B33"/><rect x="-22" y="-28" width="44" height="12" fill="#FFD978"/>${[0,1,2,3,4,5].map(i=>`<path d="M${-30+i*10} -50 h10 v14 q-5 6 -10 0z" fill="${i%2?'#fff':c}"/>`).join('')}<path d="M-32 -52h64" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>`;
+    return `${stall(-62,'#D32F2F')}${stall(62,'#1F7A4D')}<g transform="translate(0 0)"><rect x="-5" y="-14" width="10" height="14" fill="#6E4520"/><path d="M0 -150 L-28 -104 L-16 -104 L-40 -64 L-26 -64 L-52 -14 L52 -14 L26 -64 L40 -64 L16 -104 L28 -104Z" fill="#1F7A4D"/>${[[-12,-110,'#E53935'],[10,-96,'#FBC02D'],[-22,-74,'#1E88E5'],[18,-62,'#E53935'],[-30,-30,'#FBC02D'],[4,-44,'#fff'],[30,-26,'#1E88E5'],[-6,-24,'#43A047']].map(([a,b,c],i)=>`<circle class="xm-light" style="animation-delay:${i*.2}s" cx="${a}" cy="${b}" r="4" fill="${c}"/>`).join('')}<path d="M0 -172 l5 11 12 1 -9 8 3 12 -11 -6 -11 6 3 -12 -9 -8 12 -1z" fill="#FFD447"/></g>`},
+  自然:()=>`<rect x="-46" y="-70" width="92" height="70" fill="#DCE3EC"/><path d="M-50 -70 A50 50 0 0 1 50 -70Z" fill="#9FB0C6"/><path d="M-50 -70 A50 50 0 0 1 50 -70" stroke="#fff" stroke-width="6" fill="none"/><path d="M-4 -118 L6 -118 L6 -72 L-4 -72Z" fill="#26324A"/><g transform="rotate(-35 0 -96)"><rect x="-6" y="-150" width="16" height="58" rx="4" fill="#3B4A6B"/><rect x="-9" y="-154" width="22" height="10" rx="3" fill="#26324A"/></g><rect x="-12" y="-30" width="24" height="30" rx="10" fill="#3B4A6B"/>${xmWin(-36,-56,14,14)}${xmWin(22,-56,14,14)}<g transform="translate(78 0)"><path d="M-26 0 V-30 L0 -48 L26 -30 V0Z" fill="#BFE8F2" opacity=".75" stroke="#fff" stroke-width="2"/><path d="M-26 -30 L0 -48 L26 -30" stroke="#fff" stroke-width="5" fill="none"/><circle cx="-8" cy="-14" r="6" fill="#43A047"/><circle cx="8" cy="-10" r="5" fill="#E53935"/></g>${xmLights(-46,46,-70,7)}`,
+  英語:()=>`<rect x="-56" y="-86" width="112" height="86" fill="#3D5A99"/><path d="M-64 -84 L0 -118 L64 -84Z" fill="#26386A"/><path d="M-64 -84 L0 -118 L64 -84 Q52 -78 40 -84 Q26 -78 14 -84 Q0 -78 -12 -84 Q-26 -78 -38 -84 Q-52 -78 -62 -84Z" fill="#fff"/><g transform="translate(0 -100)"><rect x="-16" y="-10" width="32" height="22" rx="2" fill="#fff"/><path d="M-16 -10 L0 3 L16 -10" stroke="#C62828" stroke-width="2" fill="none"/></g><rect x="-14" y="-34" width="28" height="34" fill="#1E2B4D"/>${xmWin(-44,-66,16,16)}${xmWin(28,-66,16,16)}<g transform="translate(74 0)"><rect x="-10" y="-34" width="20" height="34" rx="8" fill="#D32F2F"/><rect x="-6" y="-24" width="12" height="3" fill="#2B1B10"/></g>${[[-90,-120,-10],[-110,-90,12],[-84,-150,20]].map(([x,y,r],i)=>`<g class="xm-light" style="animation-delay:${i*.4}s" transform="translate(${x} ${y}) rotate(${r})"><rect x="-9" y="-6" width="18" height="12" fill="#fff" stroke="#C9B8AF"/><path d="M-9 -6 L0 2 L9 -6" stroke="#C62828" fill="none"/></g>`).join('')}${xmLights(-64,64,-84,9)}`
+};
+function xmTownSVG(sid){
+  const subs=SUBJS.filter(x=>XM_POS[x]);
+  const trk='M-20 330 C60 300 100 285 150 292 S240 440 295 442 S440 300 500 292 S640 440 705 442 S790 300 850 292 S960 330 1030 310';
+  const stars=Array.from({length:30},(_,i)=>`<circle class="xm-light" style="animation-delay:${(i*.31%2.4).toFixed(2)}s" cx="${(i*67+23)%1000}" cy="${(i*29+11)%150}" r="${i%4?1.4:2.2}" fill="#fff"/>`).join('');
+  const flakes=Array.from({length:30},(_,i)=>`<circle class="xm-flake" style="animation-delay:-${(i*.47).toFixed(2)}s;animation-duration:${5+i%6}s" cx="${(i*37+5)%1000}" cy="${(i*13)%40}" r="${1.4+i%3*.8}" fill="#fff" opacity=".85"/>`).join('');
+  const towns=subs.map(subj=>{const [x,y]=XM_POS[subj];const t=XM_TOWN[subj];const ss=subjState(sid,subj);
+    let st='';if(ss.lock)st='🔒 '+ss.lock;else{let c={done:0},tot=0;ss.units.forEach(u=>{const q=unitSummary(sid,subj,ss.pub,u);tot+=q.tot;c.done+=q.c.done});st=`已學會 ${tot?Math.round(c.done/tot*100):0}%`}
+    const act=ss.lock?`data-act="lockedSubj" data-m="${esc(ss.lock)}"`:`data-act="openSubj" data-s="${subj}"`;
+    return `<g transform="translate(${x} ${y})"><g class="tw ${ss.lock?'lock':''}" ${act} role="button" tabindex="0" aria-label="${subj}：${t.n}，${esc(st)}"><ellipse cx="0" cy="4" rx="92" ry="14" fill="#C9D8E6" opacity=".8"/><g filter="url(#xmS)">${XM_BLD[subj]()}</g>
+      <g transform="translate(0 ${subj==='社會'?-200:-158})"><rect x="-98" y="-25" width="196" height="50" rx="25" style="fill:${t.c}" stroke="#fff" stroke-width="3"/><text x="0" y="-2" text-anchor="middle" font-size="21" font-weight="800" fill="#fff" font-family="Huninn,PingFang TC,sans-serif">${subj}・${t.n}</text><text x="0" y="17" text-anchor="middle" font-size="14" fill="#fff" opacity=".95" font-family="Huninn,PingFang TC,sans-serif">${esc(st)}</text></g></g></g>`}).join('');
+  return `<svg viewBox="0 0 1000 470" role="group" aria-label="聖誕小鎮地圖：點一個小鎮進入那一科">
+  <defs><linearGradient id="xmSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121A40"/><stop offset=".6" stop-color="#2E3C7C"/><stop offset="1" stop-color="#6E6FA8"/></linearGradient>
+  <linearGradient id="xmSnow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D6E3EF"/></linearGradient>
+  <filter id="xmS" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#1a2440" flood-opacity=".3"/></filter></defs>
+  <rect width="1000" height="470" fill="url(#xmSky)"/>
+  <path class="xm-aur" d="M-40 120 Q200 30 420 100 T860 70 T1060 110 L1060 150 Q820 120 600 150 T160 150 T-40 170Z" fill="#4BE3A5" opacity=".5"/>
+  <path class="xm-aur" style="animation-delay:-4s" d="M-40 80 Q240 10 520 70 T1060 50 L1060 80 Q760 60 500 100 T-40 110Z" fill="#9C7BFF" opacity=".35"/>
+  ${stars}<circle cx="70" cy="60" r="26" fill="#FFF6D8"/><circle cx="82" cy="52" r="24" fill="#121A40"/>
+  <path d="M0 215 Q120 165 260 195 Q360 155 480 190 Q600 145 720 185 Q840 155 1000 190 V470 H0Z" fill="#AFC3DA" opacity=".55"/>
+  <path d="M0 240 Q150 205 300 232 Q470 200 640 230 Q800 205 1000 228 V470 H0Z" fill="url(#xmSnow)"/>
+  <path d="${trk}" stroke="#8B5A2B" stroke-width="14" fill="none" stroke-dasharray="4 8"/><path id="xmTrk" d="${trk}" stroke="#6B7A8C" stroke-width="4" fill="none"/><path d="${trk}" stroke="#6B7A8C" stroke-width="1.5" fill="none" transform="translate(0 7)"/>
+  ${towns}
+  <g><animateMotion dur="22s" repeatCount="indefinite" rotate="auto"><mpath href="#xmTrk"/></animateMotion><g transform="translate(0 -12)"><rect x="-74" y="-12" width="30" height="20" rx="3" fill="#1F7A4D"/><rect x="-38" y="-12" width="30" height="20" rx="3" fill="#FBC02D"/><rect x="-2" y="-18" width="36" height="26" rx="4" fill="#C62828"/><rect x="18" y="-30" width="9" height="14" fill="#2B1B10"/><rect x="2" y="-26" width="12" height="10" fill="#FFD978"/><circle cx="6" cy="10" r="5" fill="#2B1B10"/><circle cx="26" cy="10" r="5" fill="#2B1B10"/><circle cx="-58" cy="10" r="4" fill="#2B1B10"/><circle cx="-22" cy="10" r="4" fill="#2B1B10"/><path d="M-66 -18 l4 6 4 -6 M-30 -18 l4 6 4 -6" stroke="#fff" stroke-width="2" fill="none"/></g></g>
+  ${flakes}</svg>`}
+/* ---------- 🎁 聖誕加點：開禮物 0.5～4 點；每月學習之星前 2 名 +10 點（下個月第一次進來時結算） ---------- */
+function xmData(sid){const d=stuDoc(sid);const x=d.xm||{};return {g:x.g||{},s:x.s||{}}}
+function xmTotal(sid){const x=xmData(sid);let t=0;for(const k in x.g)t+=+x.g[k]||0;for(const k in x.s)t+=+x.s[k]||0;return t}
+function ymKey(t){return ymd(t).slice(0,6)}
+function monthCount(sid,ym){const d=stuDoc(sid).days||{};let n=0;for(const k in d)if(k.slice(0,6)===ym)n+=d[k]||0;return n}
+function monthRank(ym){const L=students().map(st=>({id:st.id,n:monthCount(st.id,ym)})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+  const cut=L.length>=2?L[1].n:(L[0]?L[0].n:Infinity);return {list:L,top:L.filter(x=>x.n>=cut).map(x=>x.id)}}
+function prevYM(){const d=new Date();return ymKey(new Date(d.getFullYear(),d.getMonth()-1,15).getTime())}
+function xmStarCheck(sid){
+  if(!XMAS||S.xmPop||!Object.keys(S.stu).length)return;S.xmChecked=S.xmChecked||{};if(S.xmChecked[sid])return;S.xmChecked[sid]=1;
+  const ym=prevYM();const x=xmData(sid);if(x.s[ym]!=null)return;
+  if(!monthRank(ym).top.includes(sid))return;
+  const d=stuDoc(sid);d.xm=Object.assign({},d.xm||{},{g:x.g,s:Object.assign({},x.s,{[ym]:10})});S.stu[sid]=d;saveStu(sid);
+  S.xmPop={kind:'star',pts:10,ym};setTimeout(()=>{try{SFX.unlock();confetti()}catch(e){}},500);render()}
+function xmPopHTML(){const p=S.xmPop;if(!p)return '';const pts=(+p.pts).toFixed(p.pts%1?1:0);
+  if(p.kind==='star')return `<div class="xm-pop" data-act="xmClose" role="dialog" aria-label="上個月學習之星"><div class="xm-pop-card" data-act="noop"><div class="st">🌟</div><div class="xm-pts" style="animation-delay:.6s">+${pts} 點</div><div class="msg">恭喜！你是 <b>${+p.ym.slice(4)} 月學習之星</b> 前 2 名，<br>老師加你 10 點！</div><button class="btn" data-act="xmClose">太棒了！</button></div></div>`;
+  return `<div class="xm-pop" data-act="xmClose" role="dialog" aria-label="打開禮物"><div class="xm-pop-card" data-act="noop"><div class="xm-box" aria-hidden="true"><div class="ry"></div><div class="bd"></div><div class="ld"></div></div><div class="xm-pts">+${pts} 點</div><div class="msg">${esc(p.emoji||'🎁')} 12 月 ${+p.k.slice(6)} 日的禮物打開了！<br>你得到 <b>${pts}</b> 點，現在共 <b>${xmTotal(p.sid).toFixed(1).replace(/\.0$/,'')}</b> 點。</div><button class="btn" data-act="xmClose">收下！</button></div></div>`}
+/* 聖誕倒數日曆：12/1～12/25，那天有練習就打開一格禮物 */
+function xmAdvent(sid){
+  const now=new Date();const y=now.getMonth()===0?now.getFullYear()-1:now.getFullYear();const xm=new Date(y,11,25);
+  const left=Math.ceil((xm-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/DAY);
+  const days=stuDoc(sid).days||{};const G=['🎁','🍬','⛄','🧸','🍪','🔔','⭐','🦌','🧦','🎀','🍭','🎄','🪀','🕯️','🧤','🚂','🎈','🍫','📚','🪁','🎨','🧩','🌟','🎅','🎄'];
+  let got=0;const today=ymd();
+  const cells=Array.from({length:25},(_,i)=>{const d=new Date(y,11,i+1);const k=ymd(d.getTime());const did=(days[k]||0)>0;
+    const xg=xmData(sid).g;
+    if(did&&xg[k]!=null){got++;return `<div class="d op" title="12/${i+1} 得到 ${xg[k]} 點">${G[i]}<small>+${xg[k]}</small></div>`}
+    if(did)return `<button class="d rd" data-act="xmOpen" data-k="${k}" data-e="${G[i]}" aria-label="打開 12 月 ${i+1} 日的禮物">🎁</button>`;
+    if(k===today)return `<div class="d td" title="今天做一題就能打開">${i+1}</div>`;
+    if(d<now)return `<div class="d mi" title="12/${i+1} 沒有練習">${i+1}</div>`;
+    return `<div class="d ${i===24?'xd':''}">${i===24?'🎄':i+1}</div>`}).join('');
+  const head=left>0?`還有<em>${left}</em>天就是聖誕節`:left===0?'🎅 聖誕快樂！':'聖誕節過完了，明年見！';
+  const tip=now.getMonth()===11&&now.getDate()<=25?((days[today]||0)>0?(xmData(sid).g[today]!=null?'今天的禮物已經打開了，明天再來！':'今天的禮物可以打開了！'):'今天做一題，就能打開今天的禮物格！'):'12 月 1 日開始，每天練習就能打開一格禮物。';
+  const ym=ymKey(Date.now());const mr=monthRank(ym);const my=mr.list.findIndex(x=>x.id===sid);const tot=xmTotal(sid);
+  const rk=my<0?'這個月還沒做題，做一題就能上榜':`這個月排第 <b>${my+1}</b> 名（${mr.list[my].n} 題）${mr.top.includes(sid)?'，保持住，月底前 2 名 +10 點！':'，月底前 2 名 +10 點'}`;
+  return `<section class="xm-adv" aria-label="聖誕倒數日曆"><div class="hd"><b>🎄 ${head}</b><span>已打開 <b>${got}</b> / 25 個禮物</span></div><div class="pt"><span>🎁 我的聖誕點數 <b>${tot.toFixed(1).replace(/\.0$/,'')}</b> 點</span><span>🌟 ${rk}</span></div><div class="days">${cells}</div><div class="ft">${tip} 有練習的那天會出現會搖的禮物盒，點它打開，隨機得到 0.5～4 點。</div></section>`}
+function xmBurst(){if(!XMAS)return;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
+  const q=document.querySelector('.qcard');const r=q?q.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/3,width:0,height:0};
+  const b=document.createElement('div');b.className='xm-burst';b.style.left=(r.left+r.width/2)+'px';b.style.top=(r.top+Math.min(r.height/2,200))+'px';
+  const E=['❄️','🎁','⭐','❄️','🔔','🍬','❄️','🎄'];let h='';for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const d=90+Math.random()*80;h+=`<span style="--dx:${(Math.cos(a)*d).toFixed(0)}px;--dy:${(Math.sin(a)*d-30).toFixed(0)}px;--r:${(Math.random()*120-60).toFixed(0)}deg">${E[i%E.length]}</span>`}
+  b.innerHTML=h;document.body.appendChild(b);setTimeout(()=>b.remove(),1100);setTimeout(()=>SFX.jingle(),120)}
+/* ---------- 🎄 版本更新公告（11/30 18:00～12/1 15:00 自動出現；網址加 ?preview=1 可以略過，給老師檢查用） ---------- */
+(function(){
+  let skip=false;try{if(new URLSearchParams(location.search).get('preview')==='1')sessionStorage.setItem('island-preview','1');skip=sessionStorage.getItem('island-preview')==='1'}catch(e){}
+  const inWin=()=>{const n=Date.now();return n>=SCHED.maintFrom&&n<SCHED.maintTo};
+  const wasIn=inWin();
+  function show(){if(skip||document.getElementById('xmaint'))return;const m=document.createElement('div');m.id='xmaint';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','xm-mt-h');
+    let fl='';for(let i=0;i<40;i++)fl+=`<i style="left:${(Math.random()*100).toFixed(1)}%;width:${(3+Math.random()*5).toFixed(1)}px;height:${(3+Math.random()*5).toFixed(1)}px;animation-duration:${(8+Math.random()*10).toFixed(1)}s;animation-delay:-${(Math.random()*18).toFixed(1)}s"></i>`;
+    m.innerHTML=`<style>
+#xmaint{position:fixed;inset:0;z-index:200000;display:grid;place-items:center;padding:20px;background:radial-gradient(900px 500px at 50% 110%,#2E3C7C,transparent 70%),linear-gradient(170deg,#0E1433 0%,#1A2350 55%,#3B3F7A 100%);font-family:system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif;overflow:auto}
+#xmaint .fl{position:fixed;inset:0;pointer-events:none;overflow:hidden}#xmaint .fl i{position:absolute;top:-10px;border-radius:50%;background:#fff;opacity:.85;animation:xmtfall linear infinite}
+@keyframes xmtfall{to{transform:translate(20px,105vh)}}
+#xmaint .card{position:relative;width:100%;max-width:460px;background:#FFFDF8;color:#3A1E18;border-radius:28px;padding:46px 26px 24px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden}
+#xmaint .tape{position:absolute;left:0;right:0;top:0;height:16px;background:repeating-linear-gradient(-45deg,#D32F2F 0 14px,#fff 14px 28px)}
+#xmaint .lights{position:absolute;left:10px;right:10px;top:16px;height:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22'%3E%3Cpath d='M0 4 Q30 18 60 4 Q90 18 120 4' stroke='%232E6B3F' stroke-width='3' fill='none'/%3E%3Ccircle cx='15' cy='11' r='4' fill='%23E53935'/%3E%3Ccircle cx='45' cy='11' r='4' fill='%23FBC02D'/%3E%3Ccircle cx='75' cy='11' r='4' fill='%231E88E5'/%3E%3Ccircle cx='105' cy='11' r='4' fill='%2343A047'/%3E%3C/svg%3E") repeat-x left center/120px 22px}
+#xmaint .ic{font-size:70px;line-height:1;margin:8px 0 10px;display:inline-block;animation:xmtbob 2.2s ease-in-out infinite}
+@keyframes xmtbob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+#xmaint h1{margin:0 0 10px;font-size:30px;letter-spacing:.05em;color:#B71C1C}
+#xmaint .msg{margin:0 0 14px;font-size:18px;font-weight:700;line-height:1.7}
+#xmaint .cd{display:inline-grid;grid-auto-flow:column;gap:8px;margin:2px 0 14px}
+#xmaint .cd div{min-width:64px;padding:8px 6px;border-radius:14px;background:linear-gradient(150deg,#1F7A4D,#13573A);color:#fff}
+#xmaint .cd b{display:block;font:800 28px/1.1 ui-monospace,Menlo,monospace}#xmaint .cd span{font-size:12px;opacity:.85}
+#xmaint ul{list-style:none;margin:0 0 14px;padding:12px 14px;border-radius:16px;background:#FFF1EC;text-align:left;font-size:15.5px;line-height:1.9}
+#xmaint .foot{font-size:13px;color:#8A6A60}
+@media (prefers-reduced-motion:reduce){#xmaint .fl{display:none}#xmaint .ic{animation:none}}
+</style><div class="fl" aria-hidden="true">${fl}</div><div class="card"><div class="tape" aria-hidden="true"></div><div class="lights" aria-hidden="true"></div>
+<div class="ic" aria-hidden="true">🎅🔧</div><h1 id="xm-mt-h">學習島聖誕版更新中</h1>
+<p class="msg">聖誕老人和小精靈正在幫學習島換上聖誕新裝，<br>這段時間暫時不能使用。</p>
+<div class="cd" aria-live="polite"><div><b id="xmt-h">--</b><span>小時</span></div><div><b id="xmt-m">--</b><span>分</span></div><div><b id="xmt-s">--</b><span>秒</span></div></div>
+<p class="msg" style="margin-top:-4px">預計 <b>12 月 1 日（星期二）下午 3:00</b> 完成</p>
+<ul><li>🎄 聖誕小鎮地圖，搭小火車去每一科</li><li>🎁 聖誕倒數日曆，每天練習打開禮物拿點數</li><li>🌟 每月學習之星前 2 名加 10 點</li><li>🎵 聖誕音樂、答對灑雪花</li></ul>
+<div class="foot">中正補習班・Arice　時間到了重新整理就能進去囉！</div></div>`;
+    document.body.appendChild(m);tick()}
+  function tick(){const left=Math.max(0,SCHED.maintTo-Date.now());const h=Math.floor(left/36e5),mi=Math.floor(left%36e5/6e4),se=Math.floor(left%6e4/1e3);const p=n=>String(n).padStart(2,'0');
+    const a=document.getElementById('xmt-h');if(a){a.textContent=p(h);document.getElementById('xmt-m').textContent=p(mi);document.getElementById('xmt-s').textContent=p(se)}}
+  function check(){if(inWin())show();else if(document.getElementById('xmaint')||wasIn){location.reload()}}
+  const go=()=>{if(inWin())show();setInterval(()=>{tick();const n=Date.now();if(document.getElementById('xmaint')&&n>=SCHED.maintTo)location.reload();else if(!document.getElementById('xmaint')&&inWin())show();else if(!XMAS&&!skip&&n>=SCHED.xmasFrom&&n<SCHED.xmasTo)location.reload()},1000)};
+  if(document.body)go();else document.addEventListener('DOMContentLoaded',go);
+})();
+/* ---------- 🎄 聖誕背景音樂：Jingle Bells（1857，公共領域），用 Web Audio 合成，不需要音樂檔 ---------- */
+const XBGM=(()=>{
+  const C=72,D=74,E=76,F=77,G=79,A=81,B=83,g=67,a=69,b=71,R=null;
+  /* [音, 拍數]，一拍＝四分音符 */
+  const mel=[
+    [g,1],[E,1],[D,1],[C,1],[g,3],[g,.5],[g,.5], [g,1],[E,1],[D,1],[C,1],[a,4],
+    [a,1],[F,1],[E,1],[D,1],[b,4], [G,1],[G,1],[F,1],[D,1],[E,4],
+    [g,1],[E,1],[D,1],[C,1],[g,4], [g,1],[E,1],[D,1],[C,1],[a,3],[a,1],
+    [a,1],[F,1],[E,1],[D,1],[G,1],[G,1],[G,1],[G,1], [A,1],[G,1],[F,1],[D,1],[C,2],[G,2],
+    [E,1],[E,1],[E,2],[E,1],[E,1],[E,2],[E,1],[G,1],[C,1.5],[D,.5],[E,4],
+    [F,1],[F,1],[F,1.5],[F,.5],[F,1],[E,1],[E,1],[E,.5],[E,.5],[E,1],[D,1],[D,1],[E,1],[D,2],[G,2],
+    [E,1],[E,1],[E,2],[E,1],[E,1],[E,2],[E,1],[G,1],[C,1.5],[D,.5],[E,4],
+    [F,1],[F,1],[F,1],[F,.5],[F,.5],[F,1],[E,1],[E,1],[E,.5],[E,.5],[G,1],[G,1],[F,1],[D,1],[C,4],[R,4]];
+  /* 每小節的低音（和弦根音） */
+  const c=48,f=53,gg=43,d=50;
+  const bass=[c,c,c,f,f,gg,gg,c, c,c,c,f,f,gg,gg,c, c,c,c,c,f,c,d,gg, c,c,c,c,f,c,gg,c,c];
+  const BPM=150,SPB=60/BPM;let ctx=null,out=null,on=false,timer=null,next=0,i=0,bar=0,beatAcc=0,loopStart=0;
+  try{on=localStorage.getItem('island-bgm')==='on'}catch(e){}
+  function ac(){try{if(!ctx){const K=window.AudioContext||window.webkitAudioContext;if(!K)return null;ctx=new K();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+      out=ctx.createGain();out.gain.value=.0001;const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;out.connect(comp);comp.connect(ctx.destination)}
+    if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
+  const hz=m=>440*Math.pow(2,(m-69)/12);
+  function bell(m,t,len){const o1=ctx.createOscillator(),o2=ctx.createOscillator(),gn=ctx.createGain();o1.type='sine';o2.type='triangle';o1.frequency.value=hz(m);o2.frequency.value=hz(m)*2;
+    const g2=ctx.createGain();g2.gain.value=.25;o1.connect(gn);o2.connect(g2);g2.connect(gn);gn.connect(out);
+    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.32,t+.012);gn.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.35,len*1.3));o1.start(t);o2.start(t);o1.stop(t+len*1.3+.4);o2.stop(t+len*1.3+.4)}
+  function low(m,t,len){const o=ctx.createOscillator(),gn=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);o.connect(gn);gn.connect(out);
+    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.22,t+.02);gn.gain.exponentialRampToValueAtTime(.0001,t+len);o.start(t);o.stop(t+len+.05)}
+  function shake(t,v){const n=Math.floor(ctx.sampleRate*.06),bf=ctx.createBuffer(1,n,ctx.sampleRate),d=bf.getChannelData(0);for(let k=0;k<n;k++)d[k]=(Math.random()*2-1)*(1-k/n);
+    const src=ctx.createBufferSource();src.buffer=bf;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const gn=ctx.createGain();gn.gain.value=v;src.connect(f);f.connect(gn);gn.connect(out);src.start(t)}
+  function sched(){if(!ctx)return;while(next<ctx.currentTime+.6){
+      const [m,len]=mel[i];const dur=len*SPB;if(m!=null)bell(m,next,dur);
+      const b0=Math.floor(beatAcc/4),b1=Math.floor((beatAcc+len-1e-6)/4);
+      for(let q=Math.ceil(beatAcc*2)/2;q<beatAcc+len-1e-6;q+=.5){const tq=next+(q-beatAcc)*SPB;if(q%1===0&&q%4===0){low(bass[Math.floor(q/4)%bass.length],tq,SPB*1.8)}if(q%1===0&&q%4===2)low(bass[Math.floor(q/4)%bass.length]+7,tq,SPB*1.2);shake(tq,q%1===0?.10:.05)}
+      beatAcc+=len;next+=dur;i++;if(i>=mel.length){i=0;beatAcc=0}}}
+  function start(){if(!XMAS||!on)return;const c=ac();if(!c)return;if(timer)return;next=c.currentTime+.1;out.gain.cancelScheduledValues(c.currentTime);out.gain.setValueAtTime(Math.max(out.gain.value,.0001),c.currentTime);out.gain.exponentialRampToValueAtTime(.55,c.currentTime+.8);timer=setInterval(sched,150);sched()}
+  function stop(){if(!timer)return;clearInterval(timer);timer=null;if(ctx&&out){out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setValueAtTime(Math.max(out.gain.value,.0001),ctx.currentTime);out.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.4)}i=0;beatAcc=0}
+  function ui(){const b=document.getElementById('xmBgm');if(!b)return;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');b.querySelector('.lb').textContent=on?'音樂開著':'聖誕音樂';b.setAttribute('aria-label',on?'關掉聖誕音樂':'打開聖誕音樂')}
+  function toggle(){on=!on;try{localStorage.setItem('island-bgm',on?'on':'off')}catch(e){}ui();if(on)start();else stop()}
+  /* 做題、看結果時暫停，回到地圖再播 */
+  function sync(view){const busy=view==='play'||view==='result';document.documentElement.classList.toggle('inplay',view==='play');if(busy)stop();else if(on)start()}
+  if(XMAS){const b0=()=>{const b=document.getElementById('xmBgm');if(b){b.addEventListener('click',e=>{e.stopPropagation();toggle()});ui()}};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',b0);else b0();
+    /* 瀏覽器規定要先點一下才能出聲：之前開著的話，第一次點畫面就接著播 */
+    const first=()=>{document.removeEventListener('pointerdown',first,true);if(on&&!['play','result'].includes((S.view||{}).n))start()};document.addEventListener('pointerdown',first,true);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(on&&!['play','result'].includes((S.view||{}).n))start()})}
+  return {sync,toggle,get on(){return on}};
+})();
+function xmasScene(s){
+  const R=(a,b)=>{s=s.split(a).join(b)};
+  R('<stop offset="0" stop-color="#47B3E6"/><stop offset=".55" stop-color="#A6E0F5"/><stop offset="1" stop-color="#FFF0CF"/>','<stop offset="0" stop-color="#1A2350"/><stop offset=".55" stop-color="#3F4E91"/><stop offset="1" stop-color="#E9B9B0"/>');
+  R('<stop offset="0" stop-color="#A6E585"/><stop offset=".6" stop-color="#5DBB5A"/><stop offset="1" stop-color="#2F8A4A"/>','<stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#E8F1F8"/><stop offset="1" stop-color="#BCD3E4"/>');
+  R('<stop offset="0" stop-color="#FFEDBA"/><stop offset="1" stop-color="#E2B66A"/>','<stop offset="0" stop-color="#F4F8FB"/><stop offset="1" stop-color="#C9DAE6"/>');
+  R('<stop offset="0" stop-color="#40C6DB"/><stop offset=".5" stop-color="#1A98BC"/><stop offset="1" stop-color="#0B5F86"/>','<stop offset="0" stop-color="#3B6E9E"/><stop offset=".5" stop-color="#244E7A"/><stop offset="1" stop-color="#14304F"/>');
+  R('<stop offset="0" stop-color="#7EC4CF"/><stop offset="1" stop-color="#B6E3E8"/>','<stop offset="0" stop-color="#DCE8F2"/><stop offset="1" stop-color="#F4F8FB"/>');
+  R('fill="#FFE07A"/>','fill="#FFF6D8"/>');R('stop-color="#FFF8D6" stop-opacity=".95"','stop-color="#FFF3C4" stop-opacity=".55"');
+  R('fill="#CFF5A8" opacity=".55"','fill="#FFFFFF" opacity=".8"');R('stroke="#FFF7DC" stroke-width="5"','stroke="#C62828" stroke-width="5"');
+  const tree=(x,y,k)=>`<g transform="translate(${x} ${y}) scale(${k})" filter="url(#fSoft)"><rect x="-5" y="-14" width="10" height="16" fill="#7A4A26"/><path d="M0 -96 L-30 -52 L-18 -52 L-40 -18 L-26 -18 L-50 14 L50 14 L26 -18 L40 -18 L18 -52 L30 -52Z" fill="#1F7A4D" transform="translate(0 -12)"/><path d="M-30 -64 Q0 -50 24 -66 M-40 -30 Q0 -12 34 -32 M-48 0 Q0 18 44 -2" stroke="#FFD447" stroke-width="2.5" fill="none" opacity=".9" transform="translate(0 -12)"/>${[[-14,-62,'#E53935'],[12,-52,'#1E88E5'],[-22,-30,'#FBC02D'],[20,-24,'#E53935'],[-30,2,'#1E88E5'],[4,-38,'#fff'],[30,4,'#FBC02D'],[-4,-6,'#E53935']].map(([a,b,c],i)=>`<circle class="xm-light" style="animation-delay:${i*.2}s" cx="${a}" cy="${b-12}" r="4" fill="${c}"/>`).join('')}<path d="M0 -122 l5 11 12 1 -9 8 3 12 -11 -6 -11 6 3 -12 -9 -8 12 -1z" fill="#FFD447"/></g>`;
+  const snowman=(x,y)=>`<g transform="translate(${x} ${y})" filter="url(#fSoft)"><circle cx="0" cy="-16" r="18" fill="#fff"/><circle cx="0" cy="-44" r="13" fill="#fff"/><circle cx="-4" cy="-47" r="1.8" fill="#222"/><circle cx="4" cy="-47" r="1.8" fill="#222"/><path d="M0 -43 l9 2 -9 2z" fill="#F57C00"/><path d="M-12 -34 Q0 -28 12 -34 L12 -30 Q0 -24 -12 -30Z" fill="#C62828"/><rect x="6" y="-34" width="5" height="12" fill="#C62828"/><rect x="-10" y="-62" width="20" height="5" fill="#222"/><rect x="-7" y="-76" width="14" height="15" fill="#222"/><circle cx="0" cy="-20" r="1.8" fill="#222"/><circle cx="0" cy="-12" r="1.8" fill="#222"/></g>`;
+  const gift=(x,y,w,c,r)=>`<g transform="translate(${x} ${y})"><rect x="0" y="${-w}" width="${w}" height="${w}" rx="2" fill="${c}"/><rect x="${w/2-2}" y="${-w}" width="4" height="${w}" fill="${r}"/><rect x="0" y="${-w/2-2}" width="${w}" height="4" fill="${r}"/><path d="M${w/2} ${-w} q-7 -8 -10 -1 q4 3 10 1 q7 -8 10 -1 q-4 3 -10 1" fill="${r}"/></g>`;
+  const stars=[[60,40],[140,150],[250,60],[330,30],[430,90],[520,30],[660,120],[700,40],[930,60],[970,170],[880,200],[40,200]].map(([x,y],i)=>`<circle class="xm-light" style="animation-delay:${i*.27}s" cx="${x}" cy="${y}" r="${i%3?1.6:2.4}" fill="#fff"/>`).join('');
+  const flakes=Array.from({length:26},(_,i)=>`<circle class="xm-flake" style="animation-delay:-${(i*.53).toFixed(2)}s;animation-duration:${(5+i%5)}s" cx="${(i*41)%1000}" cy="${(i*37)%60}" r="${1.5+i%3}" fill="#fff" opacity=".85"/>`).join('');
+  const sleigh=`<g class="xm-sleigh"><g transform="translate(0 70)" fill="#2B1B10" opacity=".85"><path d="M0 0 l14 -4 4 -10 4 8 8 2 -8 4z"/><path d="M34 0 l14 -4 4 -10 4 8 8 2 -8 4z"/><path d="M70 -6 h34 q8 0 10 -12 l4 0 q-2 20 -16 22 h-34z"/><path d="M66 8 h46 q8 0 10 -6" stroke="#2B1B10" stroke-width="2.5" fill="none"/><path d="M18 -4 L70 -2 M52 -4 L70 -2" stroke="#2B1B10" stroke-width="1.2"/><circle cx="96" cy="-24" r="6" fill="#C62828"/></g></g>`;
+  const roof=`<path d="M510 135 L551 103 L592 135 Q586 128 580 134 Q572 126 564 133 Q556 126 548 133 Q540 126 532 133 Q524 126 516 133Z" fill="#fff"/>${[518,530,542,554,566,578].map((x,i)=>`<circle class="xm-light" style="animation-delay:${i*.25}s" cx="${x}" cy="${138}" r="3" fill="${['#E53935','#FBC02D','#1E88E5','#43A047'][i%4]}"/>`).join('')}<path d="M547 160 a5 5 0 1 0 8 0" stroke="#1F7A4D" stroke-width="4" fill="none"/>`;
+  const aur=`<path class="xm-aur" d="M-40 110 Q200 20 420 90 T860 60 T1060 100 L1060 140 Q820 110 600 140 T160 140 T-40 160Z" fill="#4BE3A5" opacity=".45"/><path class="xm-aur" style="animation-delay:-4s" d="M-40 70 Q240 0 520 60 T1060 40 L1060 70 Q760 50 500 90 T-40 100Z" fill="#9C7BFF" opacity=".3"/>`;
+  const chimney=`<rect x="566" y="106" width="10" height="20" fill="#8E3B2E"/><rect x="564" y="103" width="14" height="5" fill="#fff"/>${xmSmoke(571,96)}`;
+  const deer=(x,y,k)=>`<g transform="translate(${x} ${y}) scale(${k})" fill="#7A4A26"><ellipse cx="0" cy="-16" rx="16" ry="9"/><rect x="-12" y="-10" width="3.5" height="14"/><rect x="8" y="-10" width="3.5" height="14"/><path d="M12 -20 l8 -14 6 2 -4 12z"/><circle cx="24" cy="-34" r="6"/><circle cx="30" cy="-33" r="2.6" fill="#E53935"/><path d="M20 -40 l-4 -10 M20 -40 l-8 -6 M26 -40 l2 -10 M26 -40 l8 -6" stroke="#7A4A26" stroke-width="2.2" fill="none"/></g>`;
+  const extra=`<g class="xm">${aur}${stars}${sleigh}${chimney}${deer(655,318,.9)}${deer(690,326,.75)}${tree(272,334,1)}${tree(752,334,1)}${tree(722,340,.62)}${snowman(236,338)}${gift(596,174,16,'#C62828','#FFD447')}${gift(614,176,12,'#1E88E5','#fff')}${gift(500,182,13,'#43A047','#E53935')}${roof}${flakes}</g>`;
+  return s.replace(/<\/svg>\s*$/,extra+'</svg>');
+}
+function sceneSVG0(){
   const pins=[['語','var(--zh)',318,300],['數','var(--ma)',392,246],['社','var(--so)',478,200],['自','var(--sc)',612,204],['英','var(--en)',690,262]];
   const spark=[[120,350],[260,380],[840,360],[930,392],[660,398],[420,404],[60,396]];
   return `<svg class="scene-svg" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -663,7 +957,7 @@ function sceneSVG(){
   <g class="cloud c1"><g fill="#fff" opacity=".95"><ellipse cx="160" cy="92" rx="70" ry="24"/><circle cx="135" cy="80" r="26"/><circle cx="178" cy="70" r="32"/><circle cx="210" cy="86" r="20"/></g><ellipse cx="165" cy="108" rx="64" ry="8" fill="#9CD3EA" opacity=".5"/></g>
   <g class="cloud c2"><g fill="#fff" opacity=".85"><ellipse cx="560" cy="64" rx="52" ry="16"/><circle cx="545" cy="54" r="18"/><circle cx="576" cy="48" r="22"/></g></g>
   <g class="cloud c3"><g fill="#fff" opacity=".7"><ellipse cx="380" cy="140" rx="40" ry="11"/><circle cx="392" cy="130" r="14"/></g></g>
-  <g class="bird"><path d="M0 0 q9 -9 18 0 q9 -9 18 0" stroke="#2C5866" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M40 16 q6 -6 12 0 q6 -6 12 0" stroke="#2C5866" stroke-width="2.2" fill="none" stroke-linecap="round"/></g>
+  <g class="bird day"><path d="M0 0 q9 -9 18 0 q9 -9 18 0" stroke="#2C5866" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M40 16 q6 -6 12 0 q6 -6 12 0" stroke="#2C5866" stroke-width="2.2" fill="none" stroke-linecap="round"/></g>
   <path d="M40 304 Q110 252 190 274 Q240 262 290 304 Z" fill="url(#gFar)" opacity=".85"/>
   <path d="M770 304 Q830 262 900 280 Q950 270 990 304 Z" fill="url(#gFar)" opacity=".75"/>
   <rect y="300" width="1000" height="120" fill="url(#gSea)"/>
@@ -690,7 +984,7 @@ function vHome(){
   const ready=S.cfgState==='ok'&&S.dbState==='ok'&&students().length;
   const today=ready?students().filter(s=>(stuDoc(s.id).days||{})[ymd()]):[];
   const openN=(()=>{const o=(S.cfg&&S.cfg.open)||{};let n=Object.keys(o).filter(k=>o[k]===true).length;const pubs=new Set(Object.values((S.cfg&&S.cfg.schools)||{}).map(x=>x&&x['社會']).filter(Boolean));pubs.forEach(p=>unitsOf('社會',p).forEach(u=>{if(isOpen('社會',p,u.id))n++}));return n})();
-  const hero=`<section class="hero">${sceneSVG()}<div class="hero-card"><div class="eyebrow">${dateLabel()}</div><h1 class="hero-title">Arice 學習島</h1><p class="hero-sub">五年級上學期・期末考衝刺，國語 數學 社會 自然 英語一起闖關！</p>
+  const hero=`<section class="hero">${sceneSVG()}<div class="hero-card"><div class="eyebrow">${dateLabel()}${XMAS?'<span class="xm-tag">🎄 聖誕特別版</span>':''}</div><h1 class="hero-title">Arice ${XMAS?'聖誕島':'學習島'}</h1><p class="hero-sub">五年級上學期・期末考衝刺，國語 數學 社會 自然 英語一起闖關！</p>
     ${ready?`<div class="hero-stats"><div><b>${today.length}</b><span>今天已上島</span></div><div><b>${students().length}</b><span>島民</span></div><div><b>${openN}</b><span>開放單元</span></div></div>`:''}</div>
     <button class="scene-mute" data-act="mute" aria-label="音效開關">${SFX.label}</button></section>`;
   let body='';
@@ -716,6 +1010,7 @@ function ring(p,c,size){const r=20,C=2*Math.PI*r;const pct=Math.round(p*100);ret
 /* ---------- student home ---------- */
 function vStu(v){
   const sid=v.sid,st=stuById(sid);if(!st)return vHome();
+  if(XMAS&&!S.xmPop)setTimeout(()=>xmStarCheck(sid),400);
   const due=dueList(sid);const a=avatar(sid);const sk=streak(sid),mc=masteredCount(sid),wk=weekCount(sid);
   const tiles=SUBJS.map(subj=>{const ss=subjState(sid,subj);const z=SM[subj].z;
     if(ss.lock)return `<button class="isle locked z-${z}" data-act="lockedSubj" data-m="${esc(ss.lock)}"><span class="wm">${SM[subj].g}</span><div class="isle-top"><span class="glyph">${SM[subj].g}</span><span class="lockb">🔒</span></div><div class="isle-name"><h3>${subj}</h3><small>${ss.pub?esc(ss.pub)+'版':'版本未設定'}</small></div><div class="isle-foot">${esc(ss.lock)}</div></button>`;
@@ -723,14 +1018,14 @@ function vStu(v){
     const nd=due.filter(d=>d.f.subj===subj).length;
     return `<button class="isle z-${z}" data-act="openSubj" data-s="${subj}"><span class="wm">${SM[subj].g}</span><div class="isle-top"><span class="glyph">${SM[subj].g}</span>${ring(tot?c.done/tot:0)}</div><div class="isle-name"><h3>${subj}</h3><small>${esc(ss.pub)}版・開放 ${ss.units.length} 課</small></div><div class="isle-foot"><span>已學會 ${c.done}/${tot}</span>${c.weak?`<span class="warnb">要加油 ${c.weak}</span>`:''}${nd?`<span class="warnb">複習 ${nd}</span>`:''}<span class="go">出發 ›</span></div></button>`}).join('');
   return `<section class="me">
-    <div class="me-l"><button class="me-av" style="--av:${a.c}" data-act="avOpen" aria-label="換頭像">${a.e}<em>換</em></button><div class="me-t"><div class="eyebrow">${dateLabel()}・${esc(st.school)}</div><h1>${greet()}，${esc(st.name)}！</h1><p>今天想先去哪一座島？</p></div></div>
+    <div class="me-l"><button class="me-av" style="--av:${a.c}" data-act="avOpen" aria-label="換頭像">${a.e}<em>換</em></button><div class="me-t"><div class="eyebrow">${dateLabel()}・${esc(st.school)}</div><h1>${XMAS?'🎄 聖誕快樂':greet()}，${esc(st.name)}！</h1><p>今天想先去哪一座島？</p></div></div>
     <div class="me-stats"><div><b>🔥 ${sk}</b><span>連續天數</span></div><div><b>✅ ${mc}</b><span>已學會題數</span></div><div><b>📝 ${wk}</b><span>本週做題</span></div></div>
     <div class="me-act"><button class="btn light" data-act="profile" data-id="${esc(sid)}">📒 我的學習檔案</button><button class="btn ghostw" data-act="home">換人</button></div>
   </section>
-  ${noticeHTML(st.school)}<div class="stu-grid"><div>
+  ${noticeHTML(st.school)}${XMAS?`<div class="xm-garland" aria-hidden="true"></div><div class="sec-h"><h2>🎄 聖誕小鎮地圖</h2><span class="muted">點一個小鎮出發，還沒開放的會先鎖起來</span></div><div class="xm-town">${xmTownSVG(sid)}</div>`+xmAdvent(sid):''}<div class="stu-grid"><div>
   ${due.length?`<section class="quest"><span class="chest">🧰</span><div class="q-t"><b>今日任務：救回 ${due.length} 題錯題</b><span>之前答錯的題目換個方式再出現，連續答對兩次就學會了。</span></div><button class="btn" data-act="startReview" data-id="${esc(sid)}">開始任務</button></section>`:`<section class="quest calm"><span class="chest">🌤️</span><div class="q-t"><b>今天沒有待複習的錯題</b><span>選一座島，從練習開始吧！</span></div></section>`}
-  <div class="sec-h"><h2>我的島嶼地圖</h2><span class="muted">還沒開放的島會先鎖起來</span></div>
-  <div class="isles">${tiles}</div></div><aside class="side">${starsHTML(st.school,sid)}</aside></div>${S.avPick?avPicker(sid):''}`;
+  <div class="sec-h"><h2>${XMAS?'各科進度':'我的島嶼地圖'}</h2><span class="muted">還沒開放的島會先鎖起來</span></div>
+  <div class="isles">${tiles}</div></div><aside class="side">${starsHTML(st.school,sid)}</aside></div>${S.avPick?avPicker(sid):''}${XMAS?xmPopHTML():''}`;
 }
 /* ---------- subject page ---------- */
 const shortName=n=>String(n).replace(/^第\s*\d+\s*(單元|課)\s*/,'');
@@ -896,6 +1191,7 @@ function answer(){
   s.fb=Object.assign({},r,{until:Date.now()+3000});s.phase='fb';
   if(s.game){if(r.ok){s.combo++;const gain=10+Math.min(s.combo-1,5)*2;s.score+=gain;s.fb.gain=gain}else{s.combo=0;s.lives--}}else{s.combo=r.ok?s.combo+1:0}
   if(r.ok)SFX.ok(s.combo);else if(s.game)SFX.heart();else SFX.no();
+  if(r.ok&&XMAS)setTimeout(xmBurst,30);
   if(s.game&&s.game.board&&r.ok){const mv=1+(Math.random()*6|0);s.pos+=mv;const c=CELLS[s.pos%20];s.fb.move=mv;setTimeout(()=>SFX.dice(),380);
     if(c==='⭐'||c==='🎁'){s.stickers++;s.fb.cell='拿到一張貼紙';setTimeout(()=>SFX.sticker(),950)}
     else if(c==='🔁'){const due=s.trial?[]:dueList(s.sid).filter(d=>!s.items.slice(s.i+1).some(x=>x.qid===d.q));if(due.length){const d=due[0];s.items.splice(s.i+1,0,wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,stuDoc(s.sid).m));s.fb.cell='下一題是你之前錯過的題目'}else s.fb.cell='錯題都清光了，好棒'}}
@@ -937,7 +1233,7 @@ function vResult(){
   if(s.mode==='final')msg=ok/n>=.85?'🎉 總複習 '+Math.round(ok/n*100)+' 分，準備好考試了！':'總複習 '+Math.round(ok/n*100)+' 分，看完下面的錯題再挑戰一次！';
   if(s.game&&s.lives<=0)msg='愛心用完了，看一下錯的題目再挑戰一次！';
   return `<div class="z-${z}"><div class="qcard" style="text-align:center;justify-items:center">
-  <div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${.15+i*.22}s">${i<s.stars?'★':'☆'}</span>`).join('')}</div><h1>${ok} / ${n} 題答對</h1>${s.game?`<div class="muted">${s.score} 分${s.game.board?'・貼紙 '+s.stickers+' 張':''}</div>`:''}<p>${msg}</p>
+  <div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${.15+i*.22}s">${i<s.stars?'★':'☆'}</span>`).join('')}</div>${XMAS&&!(s.game&&s.lives<=0)&&s.stars>=2?'<div class="xm-gift" aria-hidden="true">🎁</div><b style="color:#C62828">🎅 聖誕老人送你一份禮物！</b>':''}<h1>${ok} / ${n} 題答對</h1>${s.game?`<div class="muted">${s.score} 分${s.game.board?'・貼紙 '+s.stickers+' 張':''}</div>`:''}<p>${msg}</p>
   ${s.trial?'<span class="pill p-warn">老師試玩，不記錄成績</span>':''}</div>
   ${wrong.length?`<h2 style="margin:20px 0 10px">這次錯的題目</h2><div class="stack">${wrong.map(x=>{const it=x.w.it;return `<div class="card stack" style="gap:6px"><b>${esc(qLabel(it)||TYPE_NAME[it.type])}</b><div class="small" style="color:var(--good)">正確答案：${esc(rightText(it))}</div>${it.exp?`<div class="small">${esc(it.exp)}</div>`:''}</div>`}).join('')}</div>`:''}
   <div class="row" style="margin-top:18px;justify-content:center">${s.trial?'<button class="btn" data-act="backTeacher">回老師後台</button>':`<button class="btn" data-act="again">再一次</button><button class="btn ghost" data-act="afterResult">回科目</button>`}</div></div>`;
@@ -966,10 +1262,10 @@ function vPin(){
   return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
   <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
 }
-const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['set','設定'],['try','試玩']];
+const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['pts','🎁 加點'],['set','設定'],['try','試玩']];
 function vTeacher(){
   const tabs=`<div class="tabs">${TT.map(([k,n])=>`<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}</button>`).join('')}</div>`;
-  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
+  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
   return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
 }
 function tLive(){
@@ -1014,6 +1310,15 @@ function tWeak(){
     ${top.length?`<div class="tbl" style="box-shadow:none"><table><thead><tr><th>最常錯的題目</th><th>正確答案</th><th>還沒學會的人</th><th>錯/做</th></tr></thead><tbody>${top.map(x=>`<tr><td>${esc(qLabel(x.it)||TYPE_NAME[x.it.type])}<div class="small muted">${esc(x.u.name)}${x.it.skill?'・'+esc(x.it.skill):''}</div></td><td class="small">${esc(rightText(x.it))}</td><td class="small">${esc(x.who.join('、'))||'—'}</td><td>${x.wn}/${x.n}</td></tr>`).join('')}</tbody></table></div>`:'<div class="small muted">還沒有人答錯，或還沒有人做題。</div>'}</div>`}).join('')+'</div>';
 }
 function ensureDraft(){if(!S.draft)S.draft=JSON.parse(JSON.stringify(S.cfg||{schools:{},schoolOrder:[],students:[],open:{}}));const d=S.draft;d.schools=d.schools||{};d.students=d.students||[];d.open=d.open||{};d.schoolOrder=d.schoolOrder||Object.keys(d.schools);return d}
+function tPts(){
+  const ym=ymKey(Date.now()),pm=prevYM();const mr=monthRank(ym);
+  const rows=students().map(st=>{const x=xmData(st.id);const gk=Object.keys(x.g);const gp=gk.reduce((a,k)=>a+(+x.g[k]||0),0);const sp=Object.values(x.s).reduce((a,v)=>a+(+v||0),0);
+    return {st,gn:gk.length,gp,sp,sk:Object.keys(x.s),tot:gp+sp,mn:monthCount(st.id,ym)}}).sort((a,b)=>b.tot-a.tot||b.mn-a.mn);
+  const f=n=>(+n).toFixed(1).replace(/\.0$/,'');
+  return `<div class="card stack"><h2>🎁 聖誕加點</h2><p class="small muted">學生在倒數日曆打開禮物（有練習的那天才能開）會隨機得到 0.5～4 點；每個月全五年級做題數前 2 名，下個月第一次進來時自動 +10 點。這裡的點數可以拿來換你班上的獎勵。</p>
+  <p class="small">這個月目前前 2 名：<b>${mr.top.map(id=>esc((stuById(id)||{}).name||id)).join('、')||'還沒有人'}</b>（${+ym.slice(4)} 月底結算）</p>
+  <div class="tbl"><table><thead><tr><th>學生</th><th>學校</th><th>打開禮物</th><th>禮物點數</th><th>學習之星</th><th>合計</th><th>本月題數</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td><b>${esc(r.st.name)}</b></td><td>${esc(r.st.school||'')}</td><td>${r.gn} 個</td><td>${f(r.gp)}</td><td>${r.sp?`+${f(r.sp)}（${r.sk.map(k=>+k.slice(4)+' 月').join('、')}）`:'—'}</td><td><b>${f(r.tot)}</b></td><td>${r.mn}</td></tr>`).join('')}</tbody></table></div></div>`}
 function tNtc(){
   if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法發公告。</div>';
   const sch=schoolsList();const L=(S.notices||[]).slice().sort((a,b)=>(b.at||0)-(a.at||0));
@@ -1118,6 +1423,10 @@ const A={
     if(S.pinBuf.length<6)S.pinBuf+=k;render()},
   lockT:()=>{S.tOK=false;S.draft=null;go('home')},
   tTab:e=>{S.tTab=e.dataset.k;render()},
+  xmOpen:e=>{const sid=S.view.sid;const k=e.dataset.k;if(!sid||!k||S.xmPop)return;const d=stuDoc(sid);if(!((d.days||{})[k]>0))return;const x=xmData(sid);if(x.g[k]!=null)return;
+    const pts=(1+Math.floor(Math.random()*8))/2;d.xm=Object.assign({},d.xm||{},{s:x.s,g:Object.assign({},x.g,{[k]:pts})});S.stu[sid]=d;saveStu(sid);
+    S.xmPop={kind:'gift',pts,k,sid,emoji:e.dataset.e};SFX.tap();setTimeout(()=>{try{SFX.jingle()}catch(_){}},900);setTimeout(()=>{try{SFX.ok(3)}catch(_){}},1150);render()},
+  xmClose:()=>{S.xmPop=null;render()},
   ntcAdd:async()=>{const el=document.getElementById('ntcText');const t=(el&&el.value||'').trim();if(!t)return toast('請先寫公告內容');const school=(document.getElementById('ntcSchool')||{}).value||'';
     const list=[{id:'n'+Date.now().toString(36),text:t,school,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
   ntcDel:async e=>{if(!confirm('要刪除這則公告嗎？'))return;const list=(S.notices||[]).filter(n=>n.id!==e.dataset.id);if(await saveNotices(list))toast('已刪除')},
@@ -1134,6 +1443,7 @@ const A={
   tryPick:e=>{S.tryPick[e.dataset.f]=e.dataset.v;if(e.dataset.f==='subj'){S.tryPick.pub=null;S.tryPick.uid=null}if(e.dataset.f==='pub')S.tryPick.uid=null;render()},
   tryStart:e=>{const P=S.tryPick;const un=unitsOf(P.subj,P.pub).find(u=>u.id===P.uid);const k=e.dataset.g;const g=k?GAMES[P.subj].find(x=>x.k===k):null;const items=shuffle((g?gameItemsLoose(un,g):un.items).map(it=>wrap(P.subj,P.pub,un,it))).slice(0,g&&g.board?12:10);newSession({sid:null,trial:true,demo:P.pub==='示範',subj:P.subj,pub:P.pub,uid:un.id,mode:g?'game':'practice',game:g,lives:g?3:null,items,back:{n:'teacher'}})}
 };
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('.xm-town .tw')){e.preventDefault();e.target.closest('.tw').dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f){e.preventDefault();f(el)}});
 document.addEventListener('input',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='text')S.ntcText=e.target.value;if(n==='school')S.ntcSch=e.target.value});
 document.addEventListener('change',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='school')S.ntcSch=e.target.value});
