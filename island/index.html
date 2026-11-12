@@ -400,6 +400,20 @@ body.scr-open{padding-bottom:calc(min(46vh,440px) + 20px)}
 body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 .wsent{font-size:26px;line-height:1.8;font-family:"DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",var(--font)}
 .zyb{color:var(--sc-c,var(--accent));font-weight:700;padding:0 2px}
+.zeq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin:14px 0 10px}
+.zslot,.zres{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:14px;border:2.5px dashed var(--line);font:700 36px "DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",var(--font)}
+.zslot.on{border-style:solid;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.zres{border-style:solid;border-color:var(--accent);color:var(--accent);width:76px;height:76px;font-size:46px}
+.zplus{font-size:24px;color:var(--muted)}
+.ztiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;margin:8px 0 12px}
+.ztiles.zpick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.ztile{min-height:72px;border-radius:16px;border:2px solid var(--line);background:var(--surface);font:700 36px "DFKai-SB","BiauKai","標楷體","Kaiti TC","STKaiti",var(--font);cursor:pointer;transition:transform .1s}
+.zpick .ztile{min-height:88px;font-size:46px}
+.ztile:active{transform:scale(.95)}
+.ztile.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.ztile.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--surface))}
+.ztile.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.ztile:disabled{cursor:default}
 .wrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .tzg{width:min(260px,70vw);aspect-ratio:1;border:3px solid #D2503F;border-radius:6px;background:#FFFEF7;background-image:linear-gradient(90deg,transparent calc(50% - .75px),rgba(210,80,63,.35) calc(50% - .75px),rgba(210,80,63,.35) calc(50% + .75px),transparent calc(50% + .75px)),linear-gradient(transparent calc(50% - .75px),rgba(210,80,63,.35) calc(50% - .75px),rgba(210,80,63,.35) calc(50% + .75px),transparent calc(50% + .75px))}
 .tzg canvas{width:100%;height:100%;display:block}
@@ -551,6 +565,7 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <script src="bank_math.js"></script>
 <script src="bank_en.js"></script>
 <script src="bank_zh.js"></script>
+<script src="zh_parts.js"></script>
 <script src="so_maps.js"></script>
 <script src="bank_so_hanlin.js"></script>
 <script src="bank_so_kangxuan.js"></script>
@@ -574,7 +589,7 @@ const SUBJS=['國語','數學','社會','自然','英語'];
 const SM={國語:{z:'zh',g:'語'},數學:{z:'ma',g:'數'},社會:{z:'so',g:'社'},自然:{z:'sc',g:'自'},英語:{z:'en',g:'英'}};
 const PUBS=['翰林','康軒','南一','何嘉仁'];
 const GAMES={
-  國語:[{k:'write',n:'生字挑戰',ic:'✍️',d:'看注音寫出國字',types:['write']},{k:'char',n:'形近字救援',ic:'🔍',d:'選出句子裡正確的字',types:['mc']},{k:'tiles',n:'句子拼拼樂',ic:'🧩',d:'把詞卡排成通順的句子',types:['tiles']},{k:'evid',n:'閱讀偵探',ic:'🕵️',d:'選答案，還要點出證據句',types:['evidence']}],
+  國語:[{k:'write',n:'生字挑戰',ic:'🧩',d:'看注音組出國字、選出正確的字',types:['write']},{k:'char',n:'形近字救援',ic:'🔍',d:'選出句子裡正確的字',types:['mc']},{k:'tiles',n:'句子拼拼樂',ic:'🧩',d:'把詞卡排成通順的句子',types:['tiles']},{k:'evid',n:'閱讀偵探',ic:'🕵️',d:'選答案，還要點出證據句',types:['evidence']}],
   數學:[{k:'calc',n:'計算魔王',ic:'🧮',d:'算出答案打進去',types:['num']},{k:'pick',n:'全部勾出來',ic:'☑️',d:'符合的全部勾起來',types:['multi']},{k:'mono',n:'大富翁',ic:'🎲',d:'答對才能擲骰前進',types:['mc'],board:true},{k:'order',n:'步驟排隊',ic:'🪜',d:'把解題步驟排好',types:['order']},{k:'err',n:'找錯偵探',ic:'🔎',d:'找出算錯的那一步',types:['errstep']}],
   社會:[{k:'time',n:'時間軸排序',ic:'⏳',d:'把事件排出先後',types:['order']},{k:'cause',n:'因果配對',ic:'🔗',d:'原因連到結果',types:['match']},{k:'map',n:'地圖放置',ic:'🗺️',d:'把名稱放到地圖上',types:['label']}],
   自然:[{k:'exp',n:'實驗步驟排序',ic:'🧪',d:'把實驗步驟排好',types:['order']},{k:'var',n:'變因判斷',ic:'⚖️',d:'分出三種變因',types:['classify']},{k:'lab',n:'圖片標記',ic:'🏷️',d:'把名稱標到圖上',types:['label']}],
@@ -1166,7 +1181,7 @@ function initQ(it){
     case 'match':q.left=it.pairs.map(p=>p[0]);q.right=shuffle(it.pairs.map(p=>p[1]).concat(it.extra||[]));q.map={};q.sel=null;break;
     case 'label':q.left=it.spots.map((_,i)=>'圖上的 '+'①②③④⑤⑥⑦⑧'[i]);q.right=shuffle(it.spots.map(p=>p.a).concat(it.extra||[]));q.map={};q.sel=null;break;
     case 'classify':q.map={};break;
-    case 'write':q.reveal=false;q.self=null;break;
+    case 'write':q.reveal=false;q.self=null;zhInit(it,q);break;
     case 'num':q.s='';q.n='';q.d='';q.f='n';break;
     case 'multi':q.sel=[];break;
     case 'errstep':q.pick=null;break;
@@ -1199,9 +1214,9 @@ function qBody(it,q,locked){
       const ready=fr?(q.n&&q.d):q.s;
       return `<div class="qtext">${esc(it.q)}</div><div class="hint">可以打開右下角的「計算紙」算一算，再把答案打進來${fr?'（分數：先點分子或分母的格子）':''}</div><div class="numwrap">${box}${locked?'':`<div class="keypad">${pad.map(k=>k?`<button data-act="nKey" data-k="${k}">${k}</button>`:'<span></span>').join('')}</div><button class="btn" data-act="check" ${ready?'':'disabled'}>檢查</button>`}</div>`}
     case 'multi':{const all=q.sel.length>0;return `<div class="qtext">${esc(it.q)}</div>${it.img?`<div class="fig qfig">${it.img}</div>`:''}<div class="hint">符合的全部點起來，不能漏也不能多</div><div class="multi">${it.items.map((t,i)=>{const on=q.sel.includes(i);let c=on?'on':'';if(locked){const good=it.ans.includes(i);c=good&&on?'right':good?'miss':on?'wrong':''}return `<button class="mchip ${c}" ${dis} data-act="mTog" data-i="${i}">${esc(t)}</button>`}).join('')}</div>${locked?'':`<button class="btn" data-act="check" ${all?'':'disabled'}>檢查</button>`}`}
-    case 'write':{const sent=esc(it.q).replace(/（(.+?)）/,'<span class="zyb">（$1）</span>');
+    case 'write':{const zv=zhView(it,q,locked);if(zv)return zv;const sent=esc(it.q).replace(/（(.+?)）/,'<span class="zyb">（$1）</span>');
       return `<div class="qtext">看注音，在格子裡寫出國字</div><div class="wsent">${sent}</div><div class="wrow"><div id="wpadSlot"></div>${q.reveal?`<div class="wans"><div class="small muted">正確的字</div><div class="wch">${esc(it.char)}</div><div class="small">${esc(it.word||'')}</div></div>`:''}</div>
-      ${locked?'':(q.reveal?`<div class="wself"><b>跟正確的字比一比，每一筆都一樣嗎？</b><div class="row"><button class="btn" data-act="wSelf" data-v="1">✔ 我寫對了</button><button class="btn ghost" data-act="wSelf" data-v="0">✘ 我寫錯了</button></div></div>`:`<div class="row"><button class="btn ghost sm" data-act="wClear">擦掉重寫</button><button class="btn" data-act="wReveal">寫好了，看答案</button></div>`)}`}
+      ${locked?'':(q.reveal?`<div class="wself"><b>跟正確的字比一比，每一筆都一樣嗎？</b><div class="row"><button class="btn" data-act="wSelf" data-v="1">✔ 我寫對了</button><button class="btn ghost" data-act="wSelf" data-v="0">✘ 我寫錯了</button></div></div>`:`<div class="row"><button class="btn ghost sm" data-act="wClear">擦掉重寫</button><button class="btn" data-act="wReveal">寫好了，看答案</button></div>`)}${zhSwitch(locked||q.reveal,q)}`}
     case 'errstep':return `<div class="qtext">${esc(it.q)}</div><div class="steps">${it.steps.map((t,i)=>`<button class="step ${locked?(i===it.a?'opt right':(q.pick===i?'opt wrong':'')):''}" ${dis} data-act="errPick" data-i="${i}">第 ${i+1} 步：${esc(t)}</button>`).join('')}</div><div class="hint">點出算錯的那一步</div>`;
   }
   return '<p>（這種題型還沒支援）</p>';
@@ -1219,7 +1234,10 @@ function judge(it,q){
     case 'evidence':{const okA=q.opt===it.a;const okE=q.ev.length>0&&q.ev.every(i=>it.ev.includes(i));return {ok:okA&&okE,ans:it.opts[q.opt]+'（證據：第 '+q.ev.map(i=>i+1).join('、')+' 句）',right:it.opts[it.a]+'（證據：第 '+it.ev.map(i=>i+1).join('、')+' 句）',note:okA&&!okE?'答案選對了，但證據句不對。要能在文章裡找到證據才算真的讀懂。':''}}
     case 'num':{if(it.ans.t==='frac'){const n=+q.n,d=+q.d;const g=(a,b)=>b?g(b,a%b):a;const ok=d>0&&n*it.ans.d===d*it.ans.n&&(!it.ans.simp||g(n,d)===1);return {ok,ans:q.n+'/'+q.d,right:it.ans.n+'/'+it.ans.d,note:!ok&&d>0&&n*it.ans.d===d*it.ans.n?'答案一樣大，但題目要最簡分數，要再約分。':''}}const x=parseFloat(q.s);return {ok:isFinite(x)&&Math.abs(x-it.ans.v)<1e-9,ans:q.s+(it.ans.u||''),right:it.ans.v+(it.ans.u||'')}}
     case 'multi':{const a=[...q.sel].sort((x,y)=>x-y).join(),b=[...it.ans].sort((x,y)=>x-y).join();return {ok:a===b,ans:q.sel.map(i=>it.items[i]).join('、'),right:it.ans.map(i=>it.items[i]).join('、'),note:a!==b?'綠框是要勾的；紅框是不該勾的；虛線框是漏掉的。':''}}
-    case 'write':return {ok:!!q.self,ans:q.self?'自己檢查：寫對':'自己檢查：寫錯',right:it.char+(it.word?'（'+it.word+'）':'')};
+    case 'write':{const rt=it.char+(it.word?'（'+it.word+'）':'');
+      if(q.zm==='parts'){const P=(window.ZH_PARTS||{})[it.char];const a=q.sel.map(k=>q.tiles.find(x=>x.k===k).t);const ok=a.slice().sort().join()===P.slice().sort().join();return {ok,ans:a.join('＋')||'（沒選）',right:P.join('＋')+'＝'+rt}}
+      if(q.zm==='pick'){const a=q.opts&&q.pick!=null?q.opts[q.pick]:'';return {ok:a===it.char,ans:a||'（沒選）',right:rt}}
+      return {ok:!!q.self,ans:q.self?'自己檢查：寫對':'自己檢查：寫錯',right:rt}}
     case 'errstep':return {ok:q.pick===it.a,ans:'第 '+(q.pick+1)+' 步',right:'第 '+(it.a+1)+' 步',note:it.fix?'正確寫法：'+it.fix:''};
   }
   return {ok:false,ans:'',right:''};
@@ -1245,6 +1263,28 @@ const CELLS=['🏁','⭐','','🔁','','⭐','','🎁','','🔁','⭐','','','�
 function boardHTML(s){const cells=Array(36).fill(null);RING.forEach((g,i)=>cells[g]=i);
   return `<div class="board" aria-label="大富翁棋盤">${cells.map(i=>i==null?'<div class="cell mid"></div>':`<div class="cell ${s.pos%20===i?'me':''}">${s.pos%20===i?'🧒':CELLS[i]}</div>`).join('')}</div><div class="small muted">答對才能擲骰子；走到 🔁 會抽一題你之前錯過的題目，⭐🎁 可以收集貼紙（目前 ${s.stickers} 張）。</div>`}
 function tick(){const b=$('#nextBtn');const s=S.sess;if(!b||!s||s.phase!=='fb')return;const wait=Math.max(0,Math.ceil((s.fb.until-Date.now())/1000));if(wait){b.textContent=`先看解析（${wait}）`;setTimeout(tick,250)}else{b.disabled=false;b.textContent=(s.i+1>=s.items.length||(s.lives!=null&&s.lives<=0))?'看結果':'下一題 →'}}
+/* ---------- 國語生字：不用筆也能練（部件組字／選出正確的字），有筆的可以改回手寫 ---------- */
+let ZH_HAND=false;try{ZH_HAND=localStorage.getItem('island-zh-hand')==='1'}catch(e){}
+function zhInit(it,q){const P=(window.ZH_PARTS||{})[it.char],K=(window.ZH_PICK||{})[it.char];
+  q.zm=ZH_HAND||(!P&&!K)?'hand':P?'parts':'pick';q.sel=[];q.pick=null;
+  if(q.zm==='parts'){const C=window.ZH_CONF||{};const pool=[...new Set(Object.values(window.ZH_PARTS||{}).flat())];const bad=[];
+    const add=x=>{if(x&&!P.includes(x)&&!bad.includes(x))bad.push(x)};P.forEach(p=>(C[p]||[]).slice(0,2).forEach(add));
+    shuffle(pool).forEach(x=>{if(bad.length<Math.max(3,7-P.length))add(x)});
+    q.tiles=shuffle(P.concat(bad.slice(0,Math.max(3,7-P.length))).map((t,i)=>({t,k:i})))}
+  if(q.zm==='pick')q.opts=shuffle([it.char].concat(K))}
+function zhSent(it){return esc(it.q).replace(/（(.+?)）/,'<span class="zyb">（$1）</span>')}
+function zhSwitch(locked,q){return locked?'':`<div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn ghost sm" data-act="wHand">${q.zm==='hand'?'🧩 改回點選（不用筆）':'✍️ 我有筆，改用手寫'}</button></div>`}
+function zhView(it,q,locked){
+  if(q.zm==='parts'){const P=(window.ZH_PARTS||{})[it.char];const chosen=q.sel.map(k=>q.tiles.find(x=>x.k===k).t);
+    const slots=P.map((_,i)=>`<span class="zslot ${chosen[i]?'on':''}">${esc(chosen[i]||'')}</span>`).join('<b class="zplus">＋</b>');
+    return `<div class="qtext">看注音，點出組成這個字的部件</div><div class="wsent">${zhSent(it)}</div>
+      <div class="zeq">${slots}<b class="zplus">＝</b><span class="zres">${locked?esc(it.char):'？'}</span></div>
+      <div class="ztiles">${q.tiles.map(x=>{const on=q.sel.includes(x.k);const cls=locked?(P.includes(x.t)?'right':(on?'wrong':'')):(on?'on':'');return `<button class="ztile ${cls}" data-act="wTile" data-k="${x.k}" ${locked?'disabled':''} aria-pressed="${on}">${esc(x.t)}</button>`}).join('')}</div>
+      <div class="hint">要點 ${P.length} 個部件，順序不拘；點錯了再點一次就能取消</div>
+      ${locked?'':`<div class="row"><button class="btn ghost sm" data-act="wTileClr">清除</button><button class="btn" data-act="check" ${q.sel.length===P.length?'':'disabled'}>檢查</button></div>`}${zhSwitch(locked,q)}`}
+  if(q.zm==='pick')return `<div class="qtext">看注音，選出正確的字</div><div class="wsent">${zhSent(it)}</div>
+      <div class="ztiles zpick">${q.opts.map((c,i)=>`<button class="ztile ${locked?(c===it.char?'right':(q.pick===i?'wrong':'')):''}" data-act="wPick" data-i="${i}" ${locked?'disabled':''}>${esc(c)}</button>`).join('')}</div>${zhSwitch(locked,q)}`;
+  return null}
 function answer(){
   const s=S.sess,w=s.items[s.i],it=w.it;const r=judge(it,s.qs);
   s.res.push({qid:w.qid,ok:r.ok});
@@ -1475,6 +1515,10 @@ const A={
   say:()=>say(S.sess.items[S.sess.i].it.say),
   sayWord:()=>say(S.sess.items[S.sess.i].it.word),
   wClear:()=>{wpad().clear()},
+  wTile:e=>{const s=S.sess;if(s.phase!=='q')return;const q=s.qs,k=+e.dataset.k;const P=(window.ZH_PARTS||{})[s.items[s.i].it.char]||[];const i=q.sel.indexOf(k);if(i>=0)q.sel.splice(i,1);else if(q.sel.length<P.length)q.sel.push(k);else{q.sel.pop();q.sel.push(k)}SFX.tap();render()},
+  wTileClr:()=>{const s=S.sess;if(s.phase!=='q')return;s.qs.sel=[];render()},
+  wPick:e=>{const s=S.sess;if(s.phase!=='q')return;s.qs.pick=+e.dataset.i;answer()},
+  wHand:()=>{const s=S.sess;if(!s||s.phase!=='q')return;ZH_HAND=s.qs.zm!=='hand';try{localStorage.setItem('island-zh-hand',ZH_HAND?'1':'0')}catch(e){}const it=s.items[s.i].it;s.qs.reveal=false;s.qs.self=null;zhInit(it,s.qs);if(s.qs.zm==='hand'&&!ZH_HAND)toast('這個字只能手寫');resetPads();render()},
   nFocus:e=>{S.sess.qs.f=e.dataset.f;render()},
   nKey:e=>{const q=S.sess.qs,it=S.sess.items[S.sess.i].it;SFX.tap();const k=e.dataset.k;const fr=it.ans.t==='frac';const f=fr?q.f:'s';let v=q[f];if(k==='⌫')v=v.slice(0,-1);else if(k==='.'){if(!v.includes('.'))v=(v||'0')+'.'}else if(v.length<10)v=(v==='0'?'':v)+k;q[f]=v;render()},
   mTog:e=>{const q=S.sess.qs;const i=+e.dataset.i;SFX.tap();q.sel=q.sel.includes(i)?q.sel.filter(x=>x!==i):q.sel.concat(i);render()},
