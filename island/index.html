@@ -255,14 +255,17 @@ html.xmas .playhead .prog i{background:repeating-linear-gradient(-45deg,#D32F2F 
 .xm-gift{font-size:64px;animation:xgift 1.2s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes xgift{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.2) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
 @media (prefers-reduced-motion:reduce){.xm-smoke,.xm-aur,.xm-adv .d.td,.xm-burst{animation:none!important}.xm-burst{display:none}}
-.xm-bgm{display:inline-flex;align-items:center;gap:6px;position:fixed;right:calc(124px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:16;min-height:38px;padding:0 14px;border-radius:999px;background:var(--surface);color:var(--muted);border:0;box-shadow:var(--shadow);font:700 14px var(--font);cursor:pointer}
+.bgm-bar{position:fixed;right:calc(124px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:16;display:flex;gap:8px;align-items:center}
+.xm-bgm{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--surface);color:var(--muted);border:0;box-shadow:var(--shadow);font:700 14px var(--font);cursor:pointer}
 .xm-bgm.on{background:#2A9550;color:#fff}
 html.xmas .xm-bgm{background:#C62828;color:#fff}
 html.xmas .xm-bgm.on{background:#1F7A4D}
 .xm-bgm.on .nt{display:inline-block;animation:xbob .6s ease-in-out infinite alternate}
 @keyframes xbob{from{transform:translateY(1px) rotate(-8deg)}to{transform:translateY(-2px) rotate(8deg)}}
-html.inplay .xm-bgm{display:none}
-@media (max-width:640px){.xm-bgm{right:calc(12px + env(safe-area-inset-right,0px))}}
+.xm-next{min-height:38px;padding:0 12px;border-radius:999px;background:var(--surface);color:var(--muted);border:0;box-shadow:var(--shadow);font:700 13px var(--font);cursor:pointer}
+.xm-next[hidden]{display:none}
+html.inplay .bgm-bar{display:none}
+@media (max-width:640px){.bgm-bar{right:calc(12px + env(safe-area-inset-right,0px))}}
 .xm-adv .d.rd{background:linear-gradient(150deg,#FFD447,#F2A93B);border:0;color:#7A3B00;font-size:24px;cursor:pointer;animation:xwob 1.1s ease-in-out infinite;box-shadow:0 0 0 3px #fff,0 0 14px 3px rgba(255,200,60,.8)}
 @keyframes xwob{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg) scale(1.06)}40%{transform:rotate(8deg) scale(1.06)}60%{transform:rotate(-4deg)}}
 .xm-adv .d.op small{font-weight:800}
@@ -542,7 +545,7 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <div id="scratch" class="scratch" hidden><div class="sbar"><b id="scratchTitle">計算紙</b><div class="row" style="gap:6px"><button type="button" data-pen="#1b2a2a" class="pen on" aria-label="黑筆"><i style="background:#1b2a2a"></i></button><button type="button" data-pen="#2C79C9" class="pen" aria-label="藍筆"><i style="background:#2C79C9"></i></button><button type="button" data-pen="#D2443F" class="pen" aria-label="紅筆"><i style="background:#D2443F"></i></button><button type="button" data-pen="erase" class="pen" aria-label="橡皮擦">🧽</button><button type="button" id="scratchClear" class="btn ghost sm">全部擦掉</button><button type="button" id="scratchClose" class="btn sm">收起</button></div></div><canvas id="scratchCv"></canvas></div>
 <button class="tlock" id="tlock" data-act="teacher">🔒 老師</button>
 <button class="fsbtn" id="fsbtn" type="button" aria-label="全螢幕">⛶ 全螢幕</button>
-<button class="xm-bgm" id="xmBgm" type="button" aria-pressed="false"><span class="nt">🎵</span><span class="lb">背景音樂</span></button>
+<div class="bgm-bar"><button class="xm-next" id="xmNext" type="button" hidden aria-label="換下一首音樂">⏭ 換一首</button><button class="xm-bgm" id="xmBgm" type="button" aria-pressed="false"><span class="nt">🎵</span><span class="lb">背景音樂</span></button></div>
 
 <script src="bank.js"></script>
 <script src="bank_math.js"></script>
@@ -869,11 +872,41 @@ function xmBurst(){if(!XMAS)return;try{if(matchMedia('(prefers-reduced-motion: r
   const go=()=>{if(inWin())show();setInterval(()=>{tick();const n=Date.now();if(document.getElementById('xmaint')&&n>=SCHED.maintTo)location.reload();else if(!document.getElementById('xmaint')&&inWin())show();else if(!XMAS&&!skip&&n>=SCHED.xmasFrom&&n<SCHED.xmasTo)location.reload()},1000)};
   if(document.body)go();else document.addEventListener('DOMContentLoaded',go);
 })();
-/* ---------- 🎄 聖誕背景音樂：Jingle Bells（1857，公共領域），用 Web Audio 合成，不需要音樂檔 ---------- */
+/* ---------- 🎵 背景音樂：全部用 Web Audio 合成，不需要音樂檔 ----------
+   平常版：5 首原創曲輪流播（每首播 2 遍換下一首，也可以按「換一首」）
+   聖誕版：Jingle Bells（1857，公共領域） */
 const XBGM=(()=>{
-  const C=72,D=74,E=76,F=77,G=79,A=81,B=83,g=67,a=69,b=71,R=null;
-  /* [音, 拍數]，一拍＝四分音符 */
-  const mel=[
+  const R=null;
+  /* 每首歌：bars＝每小節的 [音(midi), 拍數]；bass＝每小節的低音根音 */
+  const SONGS=[
+    {name:'小島早晨',bpm:96,bpb:4,inst:'mari',bass:[48,45,41,43,48,45,38,43,41,43,40,45,41,43,48,48],bars:[
+      [[76,1],[79,1],[76,1],[72,1]],[[72,1],[69,.5],[72,.5],[76,2]],[[77,1],[76,1],[74,1],[72,1]],[[74,3],[R,1]],
+      [[76,1],[79,1],[84,1],[79,1]],[[81,1.5],[79,.5],[76,2]],[[74,1],[77,1],[76,1],[74,1]],[[79,3],[R,1]],
+      [[81,1],[79,1],[77,1],[81,1]],[[79,1],[77,1],[76,1],[74,1]],[[76,1],[79,1],[83,1],[79,1]],[[81,3],[R,1]],
+      [[77,1],[81,1],[79,1],[77,1]],[[76,1],[74,1],[71,1],[74,1]],[[72,2],[76,1],[79,1]],[[72,3],[R,1]]]},
+    {name:'海風圓舞曲',bpm:112,bpb:3,inst:'pluck',bass:[41,41,48,48,46,41,48,41,50,46,41,48,46,48,41,41],bars:[
+      [[72,2],[69,1]],[[65,1],[69,1],[72,1]],[[76,2],[74,1]],[[72,3]],
+      [[74,2],[70,1]],[[69,2],[72,1]],[[70,1],[69,1],[67,1]],[[65,3]],
+      [[69,1],[74,1],[77,1]],[[77,2],[74,1]],[[72,1],[69,1],[72,1]],[[76,3]],
+      [[77,1],[74,1],[70,1]],[[72,1],[76,1],[79,1]],[[77,2],[76,1]],[[77,2],[R,1]]]},
+    {name:'探險出發',bpm:116,bpb:4,inst:'mari',bass:[43,43,48,50,43,40,48,50,40,48,43,50,48,50,43,43],bars:[
+      [[67,.5],[71,.5],[74,1],[74,.5],[76,.5],[74,1]],[[71,1],[67,1],[R,1],[74,1]],[[76,1],[72,.5],[76,.5],[79,1],[76,1]],[[74,2],[78,1],[R,1]],
+      [[79,.5],[78,.5],[79,1],[74,1],[71,1]],[[76,1],[71,.5],[76,.5],[79,2]],[[76,1],[74,1],[72,1],[76,1]],[[74,3],[R,1]],
+      [[71,1],[76,1],[76,.5],[78,.5],[79,1]],[[76,1],[72,1],[R,.5],[72,.5],[76,1]],[[74,1],[79,1],[78,1],[76,1]],[[74,2],[69,1],[78,1]],
+      [[76,.5],[76,.5],[79,1],[76,1],[72,1]],[[74,1],[78,1],[81,1],[78,1]],[[79,1],[74,1],[71,1],[74,1]],[[67,2],[R,2]]]},
+    {name:'星空寫功課',bpm:76,bpb:4,inst:'box',bass:[45,41,48,43,45,41,43,48,41,43,40,45,41,43,48,48],bars:[
+      [[76,1.5],[72,.5],[69,2]],[[77,1.5],[76,.5],[72,2]],[[79,1],[76,1],[72,1],[76,1]],[[74,4]],
+      [[72,1],[76,1],[81,1.5],[79,.5]],[[77,2],[81,2]],[[79,1],[77,1],[74,1],[71,1]],[[72,4]],
+      [[69,1],[72,1],[77,2]],[[79,1.5],[77,.5],[74,2]],[[76,1],[79,1],[83,2]],[[81,4]],
+      [[77,1],[76,1],[74,1],[72,1]],[[74,1],[79,1],[77,1],[74,1]],[[76,2],[74,1],[72,1]],[[72,3],[R,1]]]},
+    {name:'椰子樹跳跳',bpm:104,bpb:4,inst:'pluck',bass:[50,50,43,45,50,47,43,45,43,45,42,47,43,45,50,50],bars:[
+      [[74,.75],[74,.25],[69,1],[66,.75],[69,.25],[74,1]],[[78,1.5],[76,.5],[74,2]],[[71,.75],[74,.25],[79,1],[78,1],[76,1]],[[76,3],[R,1]],
+      [[78,.75],[78,.25],[76,1],[74,.75],[76,.25],[78,1]],[[74,1],[71,1],[66,2]],[[67,.75],[71,.25],[74,1],[76,1],[78,1]],[[76,3],[R,1]],
+      [[79,1],[78,.5],[76,.5],[74,1],[71,1]],[[73,1],[76,1],[81,2]],[[78,.75],[76,.25],[73,1],[69,2]],[[71,3],[R,1]],
+      [[71,.75],[74,.25],[79,1],[78,.75],[79,.25],[81,1]],[[78,1],[76,1],[73,1],[76,1]],[[74,2],[78,1],[76,1]],[[74,3],[R,1]]]}
+  ];
+  const C=72,D=74,E=76,F=77,G=79,A=81,g=67,a=69,b=71;
+  const JB=[
     [g,1],[E,1],[D,1],[C,1],[g,3],[g,.5],[g,.5], [g,1],[E,1],[D,1],[C,1],[a,4],
     [a,1],[F,1],[E,1],[D,1],[b,4], [G,1],[G,1],[F,1],[D,1],[E,4],
     [g,1],[E,1],[D,1],[C,1],[g,4], [g,1],[E,1],[D,1],[C,1],[a,3],[a,1],
@@ -882,47 +915,57 @@ const XBGM=(()=>{
     [F,1],[F,1],[F,1.5],[F,.5],[F,1],[E,1],[E,1],[E,.5],[E,.5],[E,1],[D,1],[D,1],[E,1],[D,2],[G,2],
     [E,1],[E,1],[E,2],[E,1],[E,1],[E,2],[E,1],[G,1],[C,1.5],[D,.5],[E,4],
     [F,1],[F,1],[F,1],[F,.5],[F,.5],[F,1],[E,1],[E,1],[E,.5],[E,.5],[G,1],[G,1],[F,1],[D,1],[C,4],[R,4]];
-  /* 每小節的低音（和弦根音） */
-  const c=48,f=53,gg=43,d=50;
-  const bass=[c,c,c,f,f,gg,gg,c, c,c,c,f,f,gg,gg,c, c,c,c,c,f,c,d,gg, c,c,c,c,f,c,gg,c,c];
-  /* 平常版：原創的小島輕快曲（C 大調，16 小節），木琴音色 */
-  const ISL=[[76,1],[79,1],[76,1],[72,1], [72,1],[69,.5],[72,.5],[76,2], [77,1],[76,1],[74,1],[72,1], [74,3],[R,1],
-    [76,1],[79,1],[84,1],[79,1], [81,1.5],[79,.5],[76,2], [74,1],[77,1],[76,1],[74,1], [79,3],[R,1],
-    [81,1],[79,1],[77,1],[81,1], [79,1],[77,1],[76,1],[74,1], [76,1],[79,1],[83,1],[79,1], [81,3],[R,1],
-    [77,1],[81,1],[79,1],[77,1], [76,1],[74,1],[71,1],[74,1], [72,2],[76,1],[79,1], [72,3],[R,1]];
-  const IBASS=[48,45,41,43, 48,45,38,43, 41,43,40,45, 41,43,48,48];
-  const T=XMAS?{mel,bass,bpm:150,shk:true}:{mel:ISL,bass:IBASS,bpm:96,shk:false};
-  const BPM=T.bpm,SPB=60/BPM;let ctx=null,out=null,on=false,timer=null,next=0,i=0,bar=0,beatAcc=0,loopStart=0;
+  const XSONG={name:'Jingle Bells',bpm:150,bpb:4,inst:'bell',shk:true,mel:JB,bass:[48,48,48,53,53,43,43,48, 48,48,48,53,53,43,43,48, 48,48,48,48,53,48,50,43, 48,48,48,48,53,48,43,48,48]};
+  SONGS.forEach(t=>{t.mel=[].concat(...t.bars)});
+  const LIST=XMAS?[XSONG]:SONGS;
+  let cur=0;try{cur=(+localStorage.getItem('island-bgm-song')||0)%LIST.length}catch(e){}
+  let T=LIST[cur],SPB=60/T.bpm,loops=0;
+  let ctx=null,out=null,on=false,timer=null,next=0,i=0,beatAcc=0,restartT=null;
   try{on=localStorage.getItem('island-bgm')==='on'}catch(e){}
   function ac(){try{if(!ctx){const K=window.AudioContext||window.webkitAudioContext;if(!K)return null;ctx=new K();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
       out=ctx.createGain();out.gain.value=.0001;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=XMAS?4500:2400;const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;out.connect(lp);lp.connect(comp);comp.connect(ctx.destination)}
     if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
   const hz=m=>440*Math.pow(2,(m-69)/12);
-  function bell(m,t,len){const o1=ctx.createOscillator(),o2=ctx.createOscillator(),gn=ctx.createGain();o1.type='sine';o2.type='triangle';o1.frequency.value=hz(m);o2.frequency.value=hz(m)*2;
-    const g2=ctx.createGain();g2.gain.value=.25;o1.connect(gn);o2.connect(g2);g2.connect(gn);gn.connect(out);
-    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.32,t+.012);gn.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.35,len*1.3));o1.start(t);o2.start(t);o1.stop(t+len*1.3+.4);o2.stop(t+len*1.3+.4)}
-  function mari(m,t,len){[[1,.26],[4,.035]].forEach(([h,v])=>{const o=ctx.createOscillator(),gn=ctx.createGain();o.type='sine';o.frequency.value=hz(m)*h;o.connect(gn);gn.connect(out);
-    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(v,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.4,len*1.1)/(h>1?3:1));o.start(t);o.stop(t+len*1.1+.5)})}
-  function low(m,t,len){const o=ctx.createOscillator(),gn=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);o.connect(gn);gn.connect(out);
-    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.22,t+.02);gn.gain.exponentialRampToValueAtTime(.0001,t+len);o.start(t);o.stop(t+len+.05)}
+  function tone(type,f,t,peak,dec,stopAt){const o=ctx.createOscillator(),gn=ctx.createGain();o.type=type;o.frequency.value=f;o.connect(gn);gn.connect(out);
+    gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(peak,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+dec);o.start(t);o.stop(t+(stopAt||dec)+.05)}
+  const INST={
+    /* 聖誕鈴鐺 */
+    bell(m,t,len){const d=Math.max(.35,len*1.3);tone('sine',hz(m),t,.32,d);tone('triangle',hz(m)*2,t,.08,d)},
+    /* 木琴 */
+    mari(m,t,len){const d=Math.max(.4,len*1.1);tone('sine',hz(m),t,.26,d);tone('sine',hz(m)*4,t,.035,d/3)},
+    /* 撥弦（像烏克麗麗） */
+    pluck(m,t,len){const d=Math.max(.3,len*.95);tone('triangle',hz(m),t,.2,d);tone('sine',hz(m)*2,t,.04,d/2)},
+    /* 音樂盒 */
+    box(m,t,len){const d=Math.max(.9,len*1.6);tone('sine',hz(m),t,.22,d);tone('sine',hz(m)*2,t,.05,d*.6);tone('sine',hz(m)*3,t,.015,d*.3)}
+  };
+  function low(m,t,len,v){tone('triangle',hz(m),t,v||.22,len)}
   function shake(t,v){const n=Math.floor(ctx.sampleRate*.06),bf=ctx.createBuffer(1,n,ctx.sampleRate),d=bf.getChannelData(0);for(let k=0;k<n;k++)d[k]=(Math.random()*2-1)*(1-k/n);
     const src=ctx.createBufferSource();src.buffer=bf;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const gn=ctx.createGain();gn.gain.value=v;src.connect(f);f.connect(gn);gn.connect(out);src.start(t)}
+  function setSong(k){cur=(k+LIST.length)%LIST.length;T=LIST[cur];SPB=60/T.bpm;i=0;beatAcc=0;loops=0;try{localStorage.setItem('island-bgm-song',String(cur))}catch(e){}ui()}
   function sched(){if(!ctx)return;while(next<ctx.currentTime+.6){
-      const [m,len]=T.mel[i];const dur=len*SPB;if(m!=null)(XMAS?bell:mari)(m,next,dur);
-      const b0=Math.floor(beatAcc/4),b1=Math.floor((beatAcc+len-1e-6)/4);
-      for(let q=Math.ceil(beatAcc*2)/2;q<beatAcc+len-1e-6;q+=.5){const tq=next+(q-beatAcc)*SPB;if(q%1===0&&q%4===0){low(T.bass[Math.floor(q/4)%T.bass.length],tq,SPB*1.8)}if(q%1===0&&q%4===2)low(T.bass[Math.floor(q/4)%T.bass.length]+7,tq,SPB*1.2);if(T.shk)shake(tq,q%1===0?.07:.035)}
-      beatAcc+=len;next+=dur;i++;if(i>=T.mel.length){i=0;beatAcc=0}}}
+      const [m,len]=T.mel[i];const dur=len*SPB;if(m!=null)INST[T.inst](m,next,dur);
+      const B=T.bpb;
+      for(let q=Math.ceil(beatAcc*2)/2;q<beatAcc+len-1e-6;q+=.5){const tq=next+(q-beatAcc)*SPB,root=T.bass[Math.floor(q/B)%T.bass.length],pos=q%B;
+        if(pos===0)low(root,tq,SPB*(B===3?1.4:1.8));
+        else if(B===4&&pos===2)low(root+7,tq,SPB*1.2);
+        else if(B===3&&(pos===1||pos===2))low(root+12,tq,SPB*.6,.09);
+        if(T.shk)shake(tq,q%1===0?.07:.035)}
+      beatAcc+=len;next+=dur;i++;
+      if(i>=T.mel.length){i=0;beatAcc=0;loops++;if(loops>=2&&LIST.length>1){setSong(cur+1);next+=SPB}}}}
   function start(){if(!on)return;const c=ac();if(!c)return;if(timer)return;next=c.currentTime+.1;out.gain.cancelScheduledValues(c.currentTime);out.gain.setValueAtTime(Math.max(out.gain.value,.0001),c.currentTime);out.gain.exponentialRampToValueAtTime(XMAS?.5:.45,c.currentTime+.8);timer=setInterval(sched,150);sched()}
-  function stop(){if(!timer)return;clearInterval(timer);timer=null;if(ctx&&out){out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setValueAtTime(Math.max(out.gain.value,.0001),ctx.currentTime);out.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.4)}i=0;beatAcc=0}
-  function ui(){const b=document.getElementById('xmBgm');if(!b)return;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');const nm=XMAS?'聖誕音樂':'背景音樂';b.querySelector('.lb').textContent=on?'音樂開著':nm;b.setAttribute('aria-label',(on?'關掉':'打開')+nm)}
+  function stop(){if(restartT){clearTimeout(restartT);restartT=null}if(!timer)return;clearInterval(timer);timer=null;if(ctx&&out){out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setValueAtTime(Math.max(out.gain.value,.0001),ctx.currentTime);out.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.4)}i=0;beatAcc=0}
+  function ui(){const b=document.getElementById('xmBgm');if(!b)return;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');const nm=XMAS?'聖誕音樂':'背景音樂';b.querySelector('.lb').textContent=on?(LIST.length>1?T.name:'音樂開著'):nm;b.setAttribute('aria-label',(on?'關掉':'打開')+nm);
+    const n=document.getElementById('xmNext');if(n)n.hidden=!(on&&LIST.length>1)}
   function toggle(){on=!on;try{localStorage.setItem('island-bgm',on?'on':'off')}catch(e){}ui();if(on)start();else stop()}
+  /* 換下一首：先淡出，等已排好的音放完再開始 */
+  function skip(){setSong(cur+1);if(!on)return;stop();restartT=setTimeout(()=>{restartT=null;if(on&&!['play','result'].includes((S.view||{}).n))start()},650)}
   /* 做題、看結果時暫停，回到地圖再播 */
   function sync(view){const busy=view==='play'||view==='result';document.documentElement.classList.toggle('inplay',view==='play');if(busy)stop();else if(on)start()}
-  {const b0=()=>{const b=document.getElementById('xmBgm');if(b){b.addEventListener('click',e=>{e.stopPropagation();toggle()});ui()}};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',b0);else b0();
+  {const b0=()=>{const b=document.getElementById('xmBgm');if(b){b.addEventListener('click',e=>{e.stopPropagation();toggle()})}const n=document.getElementById('xmNext');if(n)n.addEventListener('click',e=>{e.stopPropagation();skip()});ui()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',b0);else b0();
     /* 瀏覽器規定要先點一下才能出聲：之前開著的話，第一次點畫面就接著播 */
     const first=()=>{document.removeEventListener('pointerdown',first,true);if(on&&!['play','result'].includes((S.view||{}).n))start()};document.addEventListener('pointerdown',first,true);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(on&&!['play','result'].includes((S.view||{}).n))start()})}
-  return {sync,toggle,get on(){return on}};
+  return {sync,toggle,skip,get on(){return on},get song(){return T.name},songs:LIST.map(t=>t.name),_SONGS:SONGS};
 })();
 function xmasScene(s){
   const R=(a,b)=>{s=s.split(a).join(b)};
