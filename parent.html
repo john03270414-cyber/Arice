@@ -117,7 +117,7 @@ function drawLogin(){
 <script src="lib/firebase-auth-compat.js"></script>
 <script src="lib/firebase-firestore-compat.js"></script>
 <script src="lib/config.js?v=1794384737"></script>
-<script src="lib/shim.js?v=1794480000" data-app="parent" data-prefix="isl_"></script>
+<script src="lib/shim.js?v=1794490000" data-app="parent" data-prefix="isl_"></script>
 <script src="island/bank.js"></script>
 <script src="island/bank_math.js"></script>
 <script src="island/bank_en.js"></script>
@@ -246,6 +246,8 @@ document.addEventListener('keydown',e=>{if(e.target.id==='pmsg'&&e.key==='Enter'
 P.range=presetRange('week');
 (async()=>{const db=await window.claude.use('db');if(!db){$('#app').innerHTML='<div class="card">網站設定有問題，請聯絡老師。</div>';return}
   P.db=db;P.me=ARICE.me;
+  /* 12 秒還讀不到資料：顯示原因和重新整理按鈕，不要一直轉圈 */
+  setTimeout(()=>{if(P.cfg)return;$('#app').innerHTML='<div class="card"><h2>讀不到資料</h2><p>'+(navigator.onLine===false?'這台裝置現在沒有網路，請連上 Wi-Fi 再試一次。':'連到雲端花太久了。請按下面的按鈕重新整理；如果一直這樣，請截圖給老師。')+'</p><p class="small muted">登入身分：'+esc(P.me.role)+'</p><button class="btn" onclick="location.reload()">重新整理</button> <button class="btn ghost" onclick="ARICE.signOut()">登出</button></div>'},12000);
   db.doc('cfg/main').onSnapshot(s=>{P.cfg=s.exists?s.data():{students:[]};render()},e=>{$('#app').innerHTML='<div class="card" style="color:var(--bad)">讀不到資料（'+esc((e&&e.code)||e)+'），請截圖給老師。</div>'});
   db.doc('cfg/notice').onSnapshot(s=>{P.notices=(s.exists&&s.data().list)||[];render()},()=>{});
   if(P.me.role==='parent')watch(P.me.sid);else render();
