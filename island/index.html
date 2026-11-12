@@ -13,7 +13,7 @@
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794384737" data-app="island" data-prefix="isl_"></script>
+<script src="../lib/shim.js?v=1794460000" data-app="island" data-prefix="isl_"></script>
 <script src="../lib/avatar.js?v=1794450000"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
@@ -217,6 +217,14 @@ body{background:radial-gradient(1200px 500px at 50% -120px,color-mix(in srgb,var
 .side{display:grid;gap:14px}
 .panel{background:var(--surface);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--line)}
 .ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.noticebd{margin:0 0 18px;display:grid;gap:10px}
+.notice{display:flex;gap:12px;align-items:flex-start;background:#FFFBEA;border:1.5px solid #F2D27A;border-radius:18px;padding:12px 16px;color:#4A3410}
+.notice .ic{font-size:24px;line-height:1.2}.notice .tx{flex:1;min-width:0;white-space:pre-wrap;line-height:1.65;font-size:17px;overflow-wrap:anywhere}.notice small{display:block;color:#8a6a2c;font-size:13px;margin-top:2px}
+.stu-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+@media (max-width:820px){.stu-grid{grid-template-columns:minmax(0,1fr)}}
+.rank li.mine{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:12px;margin:0 -8px;padding:4px 8px}
+.myrank{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:15px}
+.ntc-list{display:grid;gap:8px;margin-top:12px}.ntc-list .notice{background:var(--surface)}
 .rank{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .rank li{display:flex;align-items:center;gap:10px}
 .rank .md{width:26px;text-align:center;font-size:20px;color:var(--muted);font-weight:700}
@@ -517,7 +525,7 @@ function confetti(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matche
   const t0=performance.now();(function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.04*dpr;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});if(t-t0<3200)requestAnimationFrame(f);else c.remove()})(t0)}
 const TYPE_NAME={num:'計算',multi:'勾選',write:'寫國字',mc:'選擇',order:'排序',match:'配對',tiles:'詞卡造句',evidence:'閱讀證據',classify:'分類',errstep:'找錯',listen:'聽音',spell:'拼字',label:'圖片標記'};
 const TAGC=['#2C79C9','#D2503F','#2A9550','#B98000','#7656BE','#0E7C77','#C2417A','#5B6B7A'];
-const S={db:null,dbState:'wait',cfg:null,cfgState:'wait',stu:{},live:{},logs:{},view:{n:'home'},tOK:false,sess:null,school:null,draft:null,tTab:'live',pinBuf:'',pinMode:null,pin1:'',tryPick:{}};
+const S={db:null,dbState:'wait',cfg:null,cfgState:'wait',stu:{},live:{},notices:[],logs:{},view:{n:'home'},tOK:false,sess:null,school:null,draft:null,tTab:'live',pinBuf:'',pinMode:null,pin1:'',tryPick:{}};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ymd=(t=Date.now())=>{const d=new Date(t);return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
@@ -565,6 +573,7 @@ async function initDB(){
   const timer=setTimeout(()=>{if(S.cfgState==='wait'){S.cfgState='slow';render()}},10000);
   db.doc('cfg/main').onSnapshot(snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);S.cfg=snap.exists?JSON.parse(JSON.stringify(snap.data())):null;S.cfgState=snap.exists?'ok':(snap.metadata.fromCache?S.cfgState:'empty');if(S.view.n!=='play')render()},e=>{clearTimeout(timer);S.cfgState='err';render()});
   db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>{S.stu[d.id]=JSON.parse(JSON.stringify(d.data()))});if(S.view.n!=='play')render()},()=>{});
+  db.doc('cfg/notice').onSnapshot(snap=>{const d=snap.exists?snap.data():null;S.notices=(d&&Array.isArray(d.list))?JSON.parse(JSON.stringify(d.list)):[];if(S.view.n!=='play')render()},()=>{});
   db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{});
 }
 function saveStu(sid){const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
@@ -589,6 +598,7 @@ function scratch(){if(!SCR){SCR=Pad($('#scratchCv'),{width:3});document.querySel
 function wpad(){if(!WP){const el=document.createElement('div');el.className='tzg';el.innerHTML='<canvas aria-label="寫字格"></canvas>';WP=Pad(el.firstChild,{width:7,eraser:30});WP.el=el}return WP}
 function resetPads(){if(SCR)SCR.clear();if(WP)WP.clear()}
 function render(){
+  {const ae=document.activeElement;if(ae&&ae.dataset&&ae.dataset.ntc==='text'&&S.view.n==='teacher'&&S.tTab==='ntc')return}
   {const M=window.ARICE&&ARICE.me;if(M&&M.role==='student'&&S.cfg&&M.sid){if(['home','spin','teacher','pin'].includes(S.view.n)||(S.view.sid&&S.view.sid!==M.sid)){S.view={n:'stu',sid:M.sid}}}}
   const v=S.view,el=$('#app');
   $('#tlock').hidden=(v.n==='play'||v.n==='cover'||v.n==='teacher'||v.n==='pin');{const fb=$('#fsbtn');if(fb&&!FS_APP&&(FS_IOS||document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))fb.hidden=(v.n==='play'||v.n==='cover');}
@@ -619,6 +629,14 @@ function vSPin(v){const st=stuById(v.sid);if(!st)return vHome();const a=avatar(v
   return `<div class="topbar"><button class="back" data-act="home">← 換人</button></div><div class="pinbox ${S.spWrong?'fx-no':''}"><span class="av big" style="--av:${a.c}">${a.e}</span><h2>${esc(st.name)}</h2><p class="pt">${t}</p>${m!=='enter'?'<p class="small muted">按 4 個數字，不要告訴別人喔！忘記的話請老師幫你重設。</p>':'<p class="small muted">這是你自己的島，密碼保護你的成績不被別人亂動。</p>'}
   <div class="pdots">${[0,1,2,3].map(i=>`<i class="${i<S.spBuf.length?'on':''}"></i>`).join('')}</div>
   <div class="pinpad">${['1','2','3','4','5','6','7','8','9','清除','0','⌫'].map(k=>`<button data-act="spKey" data-k="${k}">${k}</button>`).join('')}</div></div>`}
+function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&(!n.school||n.school===school)).sort((a,b)=>(b.at||0)-(a.at||0))}
+function noticeHTML(school){const L=noticesFor(school).slice(0,3);if(!L.length)return '';
+  return `<section class="noticebd" aria-label="公告欄">${L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>老師公告・${esc(new Date(n.at||Date.now()).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}))}${n.school?'・'+esc(n.school):''}</small></div></div>`).join('')}</section>`}
+function starsHTML(school,meId){const pool=students().filter(s=>s.school===school);
+  const all=pool.map(s=>({s,n:weekCount(s.id)})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const top=all.slice(0,5);const medals=['🥇','🥈','🥉','4','5'];
+  const mi=meId?all.findIndex(x=>x.s.id===meId):-1;
+  const mine=meId?(mi>=5?`<div class="myrank">你這週排第 <b>${mi+1}</b> 名，做了 <b>${all[mi].n}</b> 題，再加油就能上榜！</div>`:mi<0?'<div class="myrank">你這週還沒做題，做一題就能上榜！</div>':''):'';
+  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">近 7 天題數</span></div>${school?`<div class="muted small" style="margin:-4px 0 8px">${esc(school)}</div>`:''}${top.length?`<ol class="rank">${top.map((x,i)=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}</span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}${mine}</div>`}
 function weekCount(sid){const d=stuDoc(sid).days||{};let n=0;for(let i=0;i<7;i++)n+=d[ymd(Date.now()-i*DAY)]||0;return n}
 function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
@@ -685,12 +703,11 @@ function vHome(){
     const seg=sch.map(s=>{const n=students().filter(x=>x.school===s).length;return `<button class="seg ${s===S.school?'on':''}" data-act="school" data-s="${esc(s)}"><span>${esc(s)}</span><i>${n}</i></button>`}).join('');
     const names=students().filter(s=>s.school===S.school).map((s,i)=>{const a=avatar(s.id);const st=streak(s.id),wk=weekCount(s.id);const done=(stuDoc(s.id).days||{})[ymd()];
       return `<button class="name" data-act="pickStu" data-id="${esc(s.id)}" style="--av:${a.c};animation-delay:${i*40}ms"><span class="av">${a.e}${done?'<em title="今天練習過">✓</em>':''}</span><span class="nm"><b>${esc(s.name)}</b><small>${st?`🔥 連續 ${st} 天`:'今天開始第一天'}${wk?`・本週 ${wk} 題`:''}</small></span><span class="chev">›</span></button>`}).join('')||'<p class="muted">這間學校還沒有學生。</p>';
-    const rank=students().map(s=>({s,n:weekCount(s.id)})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,5);
-    const medals=['🥇','🥈','🥉','4','5'];
-    const aside=`<aside class="side"><div class="panel"><div class="ph"><h3>本週學習之星</h3><span class="muted small">近 7 天題數</span></div>${rank.length?`<ol class="rank">${rank.map((x,i)=>{const a=avatar(x.s.id);return `<li><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}</span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}</div>
-      <div class="panel"><div class="ph"><h3>今天上島的同學</h3><span class="muted small">${today.length} 人</span></div>${today.length?`<div class="today">${today.map(s=>{const a=avatar(s.id);return `<span class="av sm" style="--av:${a.c}" title="${esc(s.name)}">${a.e}</span>`}).join('')}</div>`:'<p class="muted small empty">還沒有人，快來當第一個！</p>'}</div>
+    const todayS=today.filter(s=>s.school===S.school);
+    const aside=`<aside class="side">${starsHTML(S.school,null)}
+      <div class="panel"><div class="ph"><h3>今天上島的同學</h3><span class="muted small">${todayS.length} 人</span></div>${todayS.length?`<div class="today">${todayS.map(s=>{const a=avatar(s.id);return `<span class="av sm" style="--av:${a.c}" title="${esc(s.name)}">${a.e}</span>`}).join('')}</div>`:'<p class="muted small empty">還沒有人，快來當第一個！</p>'}</div>
       <div class="panel tip"><b>島上規則</b><ul><li>每一課先練習，答對 85% 才能玩遊戲</li><li>同一題連續答對兩次才算學會</li><li>答錯的題目隔天會回來複習</li></ul></div></aside>`;
-    body=`<div class="home-grid"><section class="main"><div class="sec-h"><h2>你是誰？</h2><span class="muted">先選學校，再點你的名字</span></div><div class="segs">${seg}</div><div class="names">${names}</div></section>${aside}</div>`;
+    body=`<div class="home-grid"><section class="main">${noticeHTML(S.school)}<div class="sec-h"><h2>你是誰？</h2><span class="muted">先選學校，再點你的名字</span></div><div class="segs">${seg}</div><div class="names">${names}</div></section>${aside}</div>`;
   }
   return hero+body;
 }
@@ -710,9 +727,10 @@ function vStu(v){
     <div class="me-stats"><div><b>🔥 ${sk}</b><span>連續天數</span></div><div><b>✅ ${mc}</b><span>已學會題數</span></div><div><b>📝 ${wk}</b><span>本週做題</span></div></div>
     <div class="me-act"><button class="btn light" data-act="profile" data-id="${esc(sid)}">📒 我的學習檔案</button><button class="btn ghostw" data-act="home">換人</button></div>
   </section>
+  ${noticeHTML(st.school)}<div class="stu-grid"><div>
   ${due.length?`<section class="quest"><span class="chest">🧰</span><div class="q-t"><b>今日任務：救回 ${due.length} 題錯題</b><span>之前答錯的題目換個方式再出現，連續答對兩次就學會了。</span></div><button class="btn" data-act="startReview" data-id="${esc(sid)}">開始任務</button></section>`:`<section class="quest calm"><span class="chest">🌤️</span><div class="q-t"><b>今天沒有待複習的錯題</b><span>選一座島，從練習開始吧！</span></div></section>`}
   <div class="sec-h"><h2>我的島嶼地圖</h2><span class="muted">還沒開放的島會先鎖起來</span></div>
-  <div class="isles">${tiles}</div>${S.avPick?avPicker(sid):''}`;
+  <div class="isles">${tiles}</div></div><aside class="side">${starsHTML(st.school,sid)}</aside></div>${S.avPick?avPicker(sid):''}`;
 }
 /* ---------- subject page ---------- */
 const shortName=n=>String(n).replace(/^第\s*\d+\s*(單元|課)\s*/,'');
@@ -948,10 +966,10 @@ function vPin(){
   return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
   <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
 }
-const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['set','設定'],['try','試玩']];
+const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['set','設定'],['try','試玩']];
 function vTeacher(){
   const tabs=`<div class="tabs">${TT.map(([k,n])=>`<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}</button>`).join('')}</div>`;
-  const f={live:tLive,prog:tProg,weak:tWeak,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
+  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
   return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
 }
 function tLive(){
@@ -996,6 +1014,14 @@ function tWeak(){
     ${top.length?`<div class="tbl" style="box-shadow:none"><table><thead><tr><th>最常錯的題目</th><th>正確答案</th><th>還沒學會的人</th><th>錯/做</th></tr></thead><tbody>${top.map(x=>`<tr><td>${esc(qLabel(x.it)||TYPE_NAME[x.it.type])}<div class="small muted">${esc(x.u.name)}${x.it.skill?'・'+esc(x.it.skill):''}</div></td><td class="small">${esc(rightText(x.it))}</td><td class="small">${esc(x.who.join('、'))||'—'}</td><td>${x.wn}/${x.n}</td></tr>`).join('')}</tbody></table></div>`:'<div class="small muted">還沒有人答錯，或還沒有人做題。</div>'}</div>`}).join('')+'</div>';
 }
 function ensureDraft(){if(!S.draft)S.draft=JSON.parse(JSON.stringify(S.cfg||{schools:{},schoolOrder:[],students:[],open:{}}));const d=S.draft;d.schools=d.schools||{};d.students=d.students||[];d.open=d.open||{};d.schoolOrder=d.schoolOrder||Object.keys(d.schools);return d}
+function tNtc(){
+  if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法發公告。</div>';
+  const sch=schoolsList();const L=(S.notices||[]).slice().sort((a,b)=>(b.at||0)-(a.at||0));
+  return `<div class="card stack"><h2>📢 發公告</h2><p class="small muted">學生登入後，會在自己的頁面最上面看到（最多顯示最新 3 則）。可以只發給某一間學校。</p>
+  <textarea id="ntcText" rows="3" maxlength="300" placeholder="例如：星期五考自然第三單元，記得先把重點卡看完！" data-ntc="text" style="width:100%;box-sizing:border-box;font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line)">${esc(S.ntcText||'')}</textarea>
+  <div class="row"><label class="small">給誰看：<select id="ntcSchool" data-ntc="school"><option value="">全部學生</option>${sch.map(s=>`<option value="${esc(s)}" ${S.ntcSch===s?'selected':''}>只給 ${esc(s)}</option>`).join('')}</select></label><button class="btn" data-act="ntcAdd">發布</button></div>
+  <div class="ntc-list">${L.length?L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>${esc(new Date(n.at||0).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}・${n.school?'只給 '+esc(n.school):'全部學生'}</small></div><button class="btn ghost sm" data-act="ntcDel" data-id="${esc(n.id)}">刪除</button></div>`).join(''):'<p class="muted small">目前沒有公告。</p>'}</div></div>`}
+async function saveNotices(list){try{await S.db.doc('cfg/notice').set({list,at:Date.now()});S.notices=list;render();return true}catch(e){toast('沒有存成功：'+((e&&e.code)||e));return false}}
 function tSet(){
   if(S.dbState!=='ok')return '<div class="card muted">沒有連到雲端，無法修改設定。</div>';
   const d=ensureDraft();const sch=d.schoolOrder;
@@ -1092,6 +1118,9 @@ const A={
     if(S.pinBuf.length<6)S.pinBuf+=k;render()},
   lockT:()=>{S.tOK=false;S.draft=null;go('home')},
   tTab:e=>{S.tTab=e.dataset.k;render()},
+  ntcAdd:async()=>{const el=document.getElementById('ntcText');const t=(el&&el.value||'').trim();if(!t)return toast('請先寫公告內容');const school=(document.getElementById('ntcSchool')||{}).value||'';
+    const list=[{id:'n'+Date.now().toString(36),text:t,school,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
+  ntcDel:async e=>{if(!confirm('要刪除這則公告嗎？'))return;const list=(S.notices||[]).filter(n=>n.id!==e.dataset.id);if(await saveNotices(list))toast('已刪除')},
   openStuT:e=>{S.tStu=e.dataset.id;S.tTab='stu';render()},
   clearLive:async()=>{if(!S.db)return;for(const id of Object.keys(S.live)){try{await S.db.doc('live/'+id).delete()}catch(e){}}toast('已清空')},
   addSchool:()=>{const d=ensureDraft();let n='新學校',i=1;while(d.schoolOrder.includes(n))n='新學校'+(++i);d.schoolOrder.push(n);d.schools[n]={};render()},
@@ -1106,6 +1135,8 @@ const A={
   tryStart:e=>{const P=S.tryPick;const un=unitsOf(P.subj,P.pub).find(u=>u.id===P.uid);const k=e.dataset.g;const g=k?GAMES[P.subj].find(x=>x.k===k):null;const items=shuffle((g?gameItemsLoose(un,g):un.items).map(it=>wrap(P.subj,P.pub,un,it))).slice(0,g&&g.board?12:10);newSession({sid:null,trial:true,demo:P.pub==='示範',subj:P.subj,pub:P.pub,uid:un.id,mode:g?'game':'practice',game:g,lives:g?3:null,items,back:{n:'teacher'}})}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f){e.preventDefault();f(el)}});
+document.addEventListener('input',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='text')S.ntcText=e.target.value;if(n==='school')S.ntcSch=e.target.value});
+document.addEventListener('change',e=>{const n=e.target&&e.target.dataset&&e.target.dataset.ntc;if(n==='school')S.ntcSch=e.target.value});
 document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const d=ensureDraft();const f=el.dataset.f;
   if(f==='stuName'){d.students[+el.dataset.i].name=el.value;return}
   if(f==='schName'){const i=+el.dataset.i;const old=d.schoolOrder[i];const nv=el.value;if(!nv.trim()||(nv!==old&&d.schoolOrder.includes(nv)))return;d.schoolOrder[i]=nv;d.schools[nv]=d.schools[old]||{};if(nv!==old)delete d.schools[old];d.students.forEach(s=>{if(s.school===old)s.school=nv});return}});
