@@ -13,7 +13,7 @@
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794500000" data-app="brave" data-prefix="brv_"></script>
+<script src="../lib/shim.js?v=1794600000" data-app="brave" data-prefix="brv_"></script>
 <script src="../lib/avatar.js?v=1794450000"></script>
 <style>html{background:#0B0710}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
@@ -606,7 +606,9 @@ async function openGame(g,who,pub,sid){
   const gi=GAMEINFO[g];
   $('#app').innerHTML=`<div class="gbar"><button class="btn ghost sm" data-act="leaveGame">← 地城大門</button><div class="t">${esc(gi.n)}${who?`<small>勇者 ${esc(who)}</small>`:'<small>老師</small>'}</div><button class="btn ghost sm" data-act="fs">⛶</button></div><div class="gload" id="gload"><div><div class="door">🚪</div><p class="muted">石門正在打開…</p></div></div>`;
   let txt=S.gameText[g];
-  if(!txt){try{const r=await fetch('games/'+g+'.html');if(!r.ok)throw 0;txt=await r.text();S.gameText[g]=txt}catch(e){$('#gload').innerHTML='<div><p>這座地城打不開，請檢查網路再試一次。</p><button class="btn" data-act="leaveGame">回地城大門</button></div>';return}}
+  if(!txt){try{const r=await fetch('games/'+(g==='ny'?'kj':g)+'.html');if(!r.ok)throw 0;txt=await r.text();
+    /* 南一數學和康軒數學是同一個檔，只差版本代號和標題 */
+    if(g==='ny')txt=txt.replace("'kj')","'ny')").replace('content="康軒數學"','content="南一數學"').replace('<title>康軒數學大富翁','<title>南一數學大富翁').replace('MF_PUB="kj"','MF_PUB="ny"');S.gameText[g]=txt}catch(e){$('#gload').innerHTML='<div><p>這座地城打不開，請檢查網路再試一次。</p><button class="btn" data-act="leaveGame">回地城大門</button></div>';return}}
   if(S.view.n!=='game'||S.view.g!==g)return;
   const f=document.createElement('iframe');f.className='gframe';f.title=gi.n;f.setAttribute('allow','autoplay; fullscreen');
   f.onload=()=>{const l=$('#gload');if(l)l.remove()};

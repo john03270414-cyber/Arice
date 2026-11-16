@@ -13,7 +13,7 @@
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794500000" data-app="island" data-prefix="isl_"></script>
+<script src="../lib/shim.js?v=1794600000" data-app="island" data-prefix="isl_"></script>
 <script src="../lib/avatar.js?v=1794450000"></script>
 <script src="qart.js?v=1794720000"></script>
 <script src="updates.js?v=1794720000"></script>
@@ -700,14 +700,18 @@ function dueList(sid){const m=stuDoc(sid).m||{};const now=Date.now();const out=[
 /* ---------- db ---------- */
 const savers={};
 function save(path,data){if(!S.db)return;let sv=savers[path];if(!sv){sv=savers[path]={pending:null,busy:false};}sv.pending=data;if(!sv.busy)flush(path)}
-async function flush(path){const sv=savers[path];sv.busy=true;while(sv.pending){const d=sv.pending;sv.pending=null;try{await S.db.doc(path).set(d)}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,800+Math.random()*800));if(!sv.pending)sv.pending=d}else{console.warn('save fail',path,e);if(e&&e.code==='quota_exceeded')toast('雲端空間滿了，請老師清理舊紀錄');break}}}sv.busy=false}
+async function flush(path){const sv=savers[path];sv.busy=true;while(sv.pending){const d=sv.pending;sv.pending=null;try{await S.db.doc(path).set(d)}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,800+Math.random()*800));if(!sv.pending)sv.pending=d}else{console.warn('save fail',path,e);toast(e&&e.code==='quota_exceeded'?'雲端空間滿了，請老師清理舊紀錄':'沒有存成功，請截圖給老師（'+((e&&e.code)||e)+'）');break}}}sv.busy=false}
 async function initDB(){
   let db=null;try{db=await window.claude?.use?.('db')}catch(e){db=null}
   if(!db){S.dbState='none';S.cfgState='none';render();return}
   S.db=db;S.dbState='ok';
   const timer=setTimeout(()=>{if(S.cfgState==='wait'){S.cfgState='slow';render()}},10000);
   db.doc('cfg/main').onSnapshot(snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);S.cfg=snap.exists?JSON.parse(JSON.stringify(snap.data())):null;S.cfgState=snap.exists?'ok':(snap.metadata.fromCache?S.cfgState:'empty');if(S.view.n!=='play')render()},e=>{clearTimeout(timer);S.cfgState='err';render()});
-  db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>{S.stu[d.id]=JSON.parse(JSON.stringify(d.data()))});if(S.view.n!=='play')render()},()=>{});
+  const putStu=(id,d)=>{S.stu[id]=JSON.parse(JSON.stringify(d))};const mine=window.ARICE&&ARICE.me&&ARICE.me.role==='student'&&ARICE.me.sid;
+  /* 學生只即時看自己的紀錄：全班一起監聽的話，每答一題全班每台平板都要重讀一次，很快超過讀取額度。排行榜要的同學資料，回首頁時讀一次 */
+  if(mine){db.doc('stu/'+mine).onSnapshot(snap=>{if(snap.exists)putStu(mine,snap.data());S.stuReady=true;if(S.view.n!=='play')render()},e=>toast('讀不到你的紀錄，請重新整理（'+((e&&e.code)||e)+'）'));
+    S.loadOthers=()=>{if(Date.now()-(S.othersAt||0)<60e3)return;S.othersAt=Date.now();db.collection('stu').get().then(q=>{q.docs.forEach(d=>{if(d.id!==mine)putStu(d.id,d.data())});if(S.view.n!=='play')render()}).catch(()=>{S.othersAt=0})};S.loadOthers()}
+  else db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>putStu(d.id,d.data()));S.stuReady=true;if(S.view.n!=='play')render()},()=>{});
   db.doc('cfg/notice').onSnapshot(snap=>{const d=snap.exists?snap.data():null;S.notices=(d&&Array.isArray(d.list))?JSON.parse(JSON.stringify(d.list)):[];if(S.view.n!=='play')render()},()=>{});
   /* 家長留言、老師評語：只有老師帳號讀得到 */
   if(window.ARICE&&ARICE.me&&ARICE.me.role==='teacher'){S.pmsg=[];S.pcm={};S.tread={};S.pread={};
@@ -715,14 +719,18 @@ async function initDB(){
     db.collection('pmsg').onSnapshot(q=>{S.pmsg=q.docs.map(d=>Object.assign({id:d.id},d.data()));rr()},e=>{S.parErr=(e&&e.code)||String(e);rr()});
     db.collection('pcm').onSnapshot(q=>{const o={};q.docs.forEach(d=>o[d.id]=d.data());S.pcm=o;rr()},()=>{});
     db.collection('pread').onSnapshot(q=>{const o={};q.docs.forEach(d=>o[d.id]=d.data().t||0);S.pread=o;rr()},()=>{});
-    db.doc('tread/main').onSnapshot(s=>{S.tread=s.exists?s.data():{};rr()},()=>{})}
-  db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{});
+    db.doc('tread/main').onSnapshot(s=>{S.tread=s.exists?s.data():{};rr()},()=>{});
+    db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{})}
 }
-function saveStu(sid){const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
-async function loadLog(sid){const id=sid+'_'+ymd();if(S.logs[id])return S.logs[id];let d={sid,d:ymd(),a:[]};if(S.db){try{const s=await S.db.doc('log/'+id).get();if(s.exists)d=JSON.parse(JSON.stringify(s.data()))}catch(e){}}S.logs[id]=d;return d}
+function saveStu(sid){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
+/* 今天的作答紀錄：讀到雲端那份之前不存（不然會蓋掉今天稍早的作答），讀到後把這段時間答的接在後面再存 */
+const logOK=new Set(),logLoad={};
+function loadLog(sid){const id=sid+'_'+ymd();if(!S.db||logOK.has(id))return;
+  if(!logLoad[id])logLoad[id]=S.db.doc('log/'+id).get().then(s=>{const d=s.exists?JSON.parse(JSON.stringify(s.data())):{sid,d:ymd(),a:[]};const cur=S.logs[id];
+    if(cur&&cur.a.length){d.a=d.a.concat(cur.a).slice(-600);save('log/'+id,d)}S.logs[id]=d;logOK.add(id)}).catch(()=>{}).finally(()=>{delete logLoad[id]})}
 
 /* ---------- navigation ---------- */
-function go(n,o={}){S.view=Object.assign({n},o);window.scrollTo(0,0);render()}
+function go(n,o={}){S.view=Object.assign({n},o);if(n==='stu'&&S.loadOthers)S.loadOthers();window.scrollTo(0,0);render()}
 /* ---------- handwriting pads ---------- */
 function Pad(cv,o){o=o||{};const P={cv,color:'#1b2a2a',erase:false,strokes:0,penSeen:false,w:0,h:0};const ctx=cv.getContext('2d');
   P.fit=()=>{const r=cv.getBoundingClientRect();if(!r.width||(Math.round(r.width)===P.w&&Math.round(r.height)===P.h))return;const old=P.strokes?cv.toDataURL():null;const dpr=window.devicePixelRatio||1;P.w=Math.round(r.width);P.h=Math.round(r.height);cv.width=P.w*dpr;cv.height=P.h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineCap='round';ctx.lineJoin='round';if(old){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,P.w,P.h);im.src=old}};
@@ -1179,7 +1187,7 @@ function soBlocks(un){
   <div class="ucard"><div class="tl play" id="soTL" data-n="${S.soPlay||0}">${tl.map((e,i)=>`<div class="ev" style="animation-delay:${.15+i*.45}s"><span class="dot">${esc(e.ic||'•')}</span><div><b class="y">${esc(e.y)}</b><b>${esc(e.t)}</b></div>${e.d?`<div class="d">${esc(e.d)}</div>`:''}</div>`).join('')}</div><div class="small muted">小訣竅：先記住順序，再記年代。玩「時間軸排序」遊戲可以練習。</div></div>`:'';
   return nb+tb}
 /* ---------- sessions ---------- */
-function newSession(o){resetPads();const s=Object.assign({i:0,res:[],score:0,combo:0,lives:null,pos:0,stickers:0,phase:'q',qs:null,fb:null},o);s.qts=Date.now();s.qs=initQ(s.items[0].it);S.sess=s;if(s.items[0].it.type==='listen')s.autoSay=true;if(!s.demo&&!s.trial){S.tOK=false;loadLog(s.sid)}if(s.game){s.autoSay=false;go('cover')}else{go('play')}pushLive()}
+function newSession(o){if(!o.demo&&!o.trial&&S.db&&!S.stuReady){toast('還在讀取你的紀錄，請等一下再按');return}resetPads();const s=Object.assign({i:0,res:[],score:0,combo:0,lives:null,pos:0,stickers:0,phase:'q',qs:null,fb:null},o);s.qts=Date.now();s.qs=initQ(s.items[0].it);S.sess=s;if(s.items[0].it.type==='listen')s.autoSay=true;if(!s.demo&&!s.trial){S.tOK=false;loadLog(s.sid)}if(s.game){s.autoSay=false;go('cover')}else{go('play')}pushLive()}
 function vCover(){
   const s=S.sess;if(!s)return vHome();const g=s.game,cv=COVER[g.k]||{h:g.ic,d:[],t:g.d};const z=SM[s.subj].z;
   const best=s.trial?0:((stuDoc(s.sid).best||{})[ukey(s.subj,s.pub,s.uid)+'|'+g.k]||0);
@@ -1329,7 +1337,7 @@ function record(s,w,r){
   if(r.ok){m.ok=(m.ok||0)+1;m.due=m.ok>=2?0:(m.w?now+3*DAY:0)}else{m.w++;m.ok=0;m.due=nextDay(now);m.lw=now;m.la=String(r.ans).slice(0,120)}
   d.m[w.qid]=m;d.days=d.days||{};d.days[ymd()]=(d.days[ymd()]||0)+1;S.stu[s.sid]=d;saveStu(s.sid);
   const id=s.sid+'_'+ymd();const lg=S.logs[id]||(S.logs[id]={sid:s.sid,d:ymd(),a:[]});
-  lg.a.push({t:now,q:w.qid,ok:r.ok?1:0,ans:String(r.ans).slice(0,120),md:s.game?s.game.k:s.mode});if(lg.a.length>600)lg.a=lg.a.slice(-600);save('log/'+id,lg);
+  lg.a.push({t:now,q:w.qid,ok:r.ok?1:0,ans:String(r.ans).slice(0,120),md:s.game?s.game.k:s.mode});if(lg.a.length>600)lg.a=lg.a.slice(-600);if(logOK.has(id))save('log/'+id,lg);else loadLog(s.sid);
 }
 function qLabel(it){return it.q||it.zh&&('拼出「'+it.zh+'」')||(it.say?'聽音：'+it.say:'')||''}
 function pushLive(){

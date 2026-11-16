@@ -14,7 +14,9 @@ service cloud.firestore {
     // 家長和老師之間的資料（留言、評語、已讀）：學生看不到
     function parentOnly(coll) { return coll in ['isl_pmsg', 'isl_pcm', 'isl_pread', 'isl_tread']; }
     function shared(coll) { return coll.matches('.*_(battles|bplayers|bsync)$'); }
-    function newMine() { return request.resource.data.get('_uid', '') == request.auth.uid; }
+    // 自由新增（隨機 id）只給遊戲成績這類集合；學習紀錄和設定不行，否則學生可以先在同學名下建立假紀錄
+    function newMine(coll) { return request.resource.data.get('_uid', '') == request.auth.uid
+      && !(coll in ['isl_stu', 'isl_log', 'isl_cfg', 'brv_cfg']); }
     function oldMine() { return resource.data.get('_uid', '') == request.auth.uid; }
 
     // 家長可以讀：學習島設定和公告、自己小孩的學習紀錄、老師評語、和老師的留言
@@ -52,10 +54,10 @@ service cloud.firestore {
         || (!special(coll) && !parentOnly(coll) && isStudent())
         || parentRead(coll, id);
       allow create: if isTeacher()
-        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || newMine()))
+        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || newMine(coll)))
         || parentWrite(coll, id);
       allow update: if isTeacher()
-        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || (oldMine() && newMine())))
+        || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || (oldMine() && newMine(coll))))
         || (isParent() && coll == 'isl_pread' && id == mySid());
       allow delete: if isTeacher()
         || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || oldMine()));

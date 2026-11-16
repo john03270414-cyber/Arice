@@ -77,7 +77,7 @@ button{cursor:pointer}
 </style></head><body>
 <main id="app"><p class="muted"><span class="spin" aria-hidden="true"></span>載入中…</p></main>
 <script>
-/* 家長登入畫面：選學校 → 選小孩 → 輸入密碼（第一次是 000000） */
+/* 家長登入畫面：選學校 → 選小孩 → 輸入密碼（第一次用老師給的通行碼） */
 window.ARICE_LOGIN=function(msg){
   let o=document.getElementById('ar-login');
   if(!o){o=document.createElement('div');o.id='ar-login';document.body.appendChild(o);o.innerHTML='<div class="box"><p class="muted"><span class="spin"></span>讀取名單中…</p></div>';
@@ -98,7 +98,7 @@ function drawLogin(){
   const list=L.list||[];const schools=[...new Set(list.map(x=>x.s||''))];
   if(!L.school&&schools.length===1)L.school=schools[0];
   const kids=list.filter(x=>(x.s||'')===L.school);
-  o.innerHTML=`<div class="box"><div class="eyebrow">中正補習班・Arice</div><h1>家長專區</h1><p class="muted">選小孩的學校和名字，再輸入密碼。<br>第一次登入的密碼是 <b>000000</b>，登入後會請您設定自己的密碼。</p>
+  o.innerHTML=`<div class="box"><div class="eyebrow">中正補習班・Arice</div><h1>家長專區</h1><p class="muted">選小孩的學校和名字，再輸入密碼。<br>第一次登入請用老師給您的<b>通行碼</b>，登入後會請您設定自己的密碼。</p>
    ${list.length?`<label>① 學校</label><div class="chips">${schools.map(s=>`<button type="button" class="chip ${s===L.school?'on':''}" data-s="${escL(s)}">${escL(s||'（未分校）')}</button>`).join('')}</div>
    ${L.school!==''||schools.includes('')?`<label>② 小孩</label>${kids.map(k=>`<button type="button" class="kid ${k.c===L.code?'on':''}" data-c="${escL(k.c)}" aria-pressed="${k.c===L.code}">${escL(k.n)}</button>`).join('')||'<p class="muted">這間學校還沒有家長帳號。</p>'}`:''}
    ${L.code?`<form id="pf"><label for="ppw">③ 密碼</label><input id="ppw" type="password" inputmode="text" autocomplete="current-password" required><input type="text" autocomplete="username" value="${escL(L.code)}" hidden>
@@ -110,14 +110,14 @@ function drawLogin(){
   o.querySelector('#toT').onclick=()=>{L.teacher=true;L.msg='';drawLogin()};
   const pf=o.querySelector('#pf');if(pf)pf.onsubmit=e=>{e.preventDefault();const b=pf.querySelector('.go');b.disabled=true;b.textContent='登入中…';const pw=pf.querySelector('#ppw').value;
     ARICE.raw().doc('login/'+L.code).get().then(s=>{if(!s.exists)throw {code:'no-account'};return ARICE.auth().signInWithEmailAndPassword(s.data().email,pw)})
-      .catch(x=>{const c=(x&&x.code)||'';L.msg=c==='no-account'?'找不到這個家長帳號，請問老師。':/network|unavailable/.test(c)?'連不上網路，請檢查網路再試一次。':/too-many/.test(c)?'試太多次了，請等幾分鐘再試。':'密碼不對。第一次登入請輸入 000000；忘記密碼請找老師重設。';drawLogin()})};
+      .catch(x=>{const c=(x&&x.code)||'';L.msg=c==='no-account'?'找不到這個家長帳號，請問老師。':/network|unavailable/.test(c)?'連不上網路，請檢查網路再試一次。':/too-many/.test(c)?'試太多次了，請等幾分鐘再試。':'密碼不對。第一次登入請輸入老師給的通行碼；忘記密碼請找老師重設。';drawLogin()})};
 }
 </script>
 <script src="lib/firebase-app-compat.js"></script>
 <script src="lib/firebase-auth-compat.js"></script>
 <script src="lib/firebase-firestore-compat.js"></script>
 <script src="lib/config.js?v=1794384737"></script>
-<script src="lib/shim.js?v=1794500000" data-app="parent" data-prefix="isl_"></script>
+<script src="lib/shim.js?v=1794600000" data-app="parent" data-prefix="isl_"></script>
 <script src="island/bank.js"></script>
 <script src="island/bank_math.js"></script>
 <script src="island/bank_en.js"></script>
