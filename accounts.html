@@ -115,7 +115,7 @@ function render0(){
   ${allA?'':`<div class="bar"><button id="renum" ${A.busy?'disabled':''}>🔢 把全部學生統一改成 a115 帳號</button><span style="color:var(--dim);font-size:14px">照名單順序重新編號（a11501 起）；學生要用新帳號＋通行碼重新登入、設定密碼，學習紀錄不會不見。</span></div>`}
   <div class="bar addbar"><b>➕ 新增學生</b><input id="newName" placeholder="學生姓名" maxlength="12" value="${esc(A.newName||'')}" aria-label="新學生姓名"><select id="newSchool" aria-label="學校">${(A.order||[]).map(s=>`<option ${(A.newSchool||A.school)===s?'selected':''}>${esc(s)}</option>`).join('')}</select><button class="pri" id="addStu" ${A.busy?'disabled':''}>新增並建立帳號</button></div>
   <div class="bar"><div class="chips"><button class="chip ${!A.school?'on':''}" data-sch="">全部（${A.roster.length}）</button>${A.schools.map(s=>`<button class="chip ${A.school===s?'on':''}" data-sch="${esc(s)}">${esc(s)}</button>`).join('')}</div>
-   <span style="flex:1"></span><button class="pri" id="mkAll" ${A.busy?'disabled':''}>幫還沒有帳號的人全部建立</button><button id="print" ${n?'':'disabled'}>🖨 列印帳號卡</button></div>
+   <span style="flex:1"></span><button class="pri" id="mkAll" ${A.busy?'disabled':''}>幫還沒有帳號的人全部建立</button><button id="print" ${n?'':'disabled'}>🖨 列印帳號卡</button><button id="copyNames" ${A.roster.length?'':'disabled'}>📋 複製名單</button></div>
   <div class="bar"><b>👪 家長帳號</b><button class="pri" id="pmkAll" ${A.busy?'disabled':''}>幫還沒有家長帳號的全部建立</button><span style="color:var(--dim);font-size:14px">家長到 <b>${esc(SITE)}parent.html</b>，選學校、選小孩，第一次用表格裡的通行碼登入，登入後會設定自己的密碼。</span></div>
   <div class="tbl"><table><thead><tr><th>學生</th><th>帳號</th><th>密碼</th><th>狀態</th><th>動作</th><th>👪 家長帳號</th></tr></thead><tbody>
   ${list.map(st=>{const s=secOf(st.id),on=active(st.id);const code=s?s.code:(A.codes[st.id]??defCode(st));
@@ -177,6 +177,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
     if(!confirm('要幫 '+todo.length+' 位學生建立帳號嗎？'))return;
     run(async()=>{let k=0;for(const st of todo){msg('建立中… '+(++k)+' / '+todo.length+'（'+st.name+'）');await make(st.id)}},'全部建立好了，共 '+todo.length+' 位。');return}
   if(t.id==='print'){window.print();return}
+  /* 一行一個名字（照目前選的學校），貼到點餐表之類的地方 */
+  if(t.id==='copyNames'){const L=A.roster.filter(s=>!A.school||s.school===A.school).map(s=>s.name);navigator.clipboard.writeText(L.join('\n')).then(()=>msg('已複製 '+L.length+' 位學生的名字。'),()=>msg('沒辦法自動複製，請改用 Safari 或 Chrome 再試一次。'));return}
   if(t.dataset.pmk){const sid=t.dataset.pmk;const st=A.roster.find(x=>x.id===sid);const on=pOn(sid);
     if(on&&!confirm('要把 '+st.name+' 家長的密碼重設嗎？會換一組新的通行碼，家長下次登入要重新設定密碼。'))return;
     run(async()=>{await pmake(sid);await parList()},st.name+' 的家長帳號'+'：通行碼 '+A.psec[sid].pw+(on?'（已重設）。':'（新建立）。'));return}
