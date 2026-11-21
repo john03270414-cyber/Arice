@@ -804,7 +804,7 @@ function starsHTML(school,meId){ /* 全部五年級一起排，不分學校 */
   const wk=wkKey(),R=wkRank(wk),top=R.list.filter(x=>x.r<=5),medals=['🥇','🥈','🥉','4','5'];
   const me=meId?R.list.find(x=>x.s.id===meId):null,meR=meId&&!me?R.rest.find(x=>x.s.id===meId):null;
   const mine=!meId?'':me?(me.r>5?`<div class="myrank">你這週排第 <b>${me.r}</b> 名（${me.n} 題・答對 ${pct(me.acc)}），再加油就能上榜！</div>`:''):meR?`<div class="myrank">你這週做了 <b>${meR.n}</b> 題，${meR.n<WSTAR.min?`再做 <b>${WSTAR.min-meR.n}</b> 題就能排名！`:'正確率統計中，再做幾題就能排名！'}</div>`:`<div class="myrank">你這週還沒做題，做滿 ${WSTAR.min} 題就能上榜！</div>`;
-  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">${wkLabel(wk)}</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級・題數＋正確率綜合排名・前 3 名下週一加 ${WSTAR.pts.join('／')} 點</div>${top.length?`<ol class="rank">${top.map(x=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${x.n} 題・答對 ${pct(x.acc)}・${esc(x.s.school||'')}</small></span><b title="綜合分">${x.sc}</b></li>`}).join('')}</ol>`:`<p class="muted small empty">這週還沒有人做滿 ${WSTAR.min} 題，第一個做滿的就是第一名！</p>`}${mine}<details class="small muted" style="margin-top:8px"><summary>綜合分怎麼算？</summary>題數分（最多 50）：你的題數 ÷ 本週做最多的人 × 50<br>正確率分（最多 50）：答對的比例 × 50<br>兩個加起來，滿分 100。做得多又做得對，分數最高！</details></div>`}
+  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">${wkLabel(wk)}</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級・題數＋正確率綜合排名・前 3 名下週一加 ${WSTAR.pts.join('／')} 點</div>${top.length?`<ol class="rank">${top.map(x=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${x.n} 題・答對 ${pct(x.acc)}・${esc(x.s.school||'')}</small></span><b title="綜合分">${x.sc}</b></li>`}).join('')}</ol>`:`<p class="muted small empty">這週還沒有人做滿 ${WSTAR.min} 題，第一個做滿的就是第一名！</p>`}${R.rest.length?`<div class="small muted" style="margin-top:6px">另外 ${R.rest.length} 人還沒排名（未滿 ${WSTAR.min} 題，或正確率統計中）</div>`:''}${mine}<details class="small muted" style="margin-top:8px"><summary>綜合分怎麼算？</summary>題數分（最多 50）：你的題數 ÷ 本週做最多的人 × 50<br>正確率分（最多 50）：答對的比例 × 50<br>兩個加起來，滿分 100。做得多又做得對，分數最高！</details></div>`}
 /* 上週學習之星：每個學生每週跳一次通知；前 3 名自動加分（記在 stu.ws），其他人看到前 3 名是誰 */
 function wsSeen(sid){try{return localStorage.getItem('isl-ws-'+sid)||''}catch(e){return (S.wsMem||{})[sid]||''}}
 function wsMark(sid,wk){try{localStorage.setItem('isl-ws-'+sid,wk)}catch(e){}S.wsMem=S.wsMem||{};S.wsMem[sid]=wk}
@@ -822,11 +822,16 @@ function wsPopHTML(){const p=S.wsPop;if(!p)return '';const md=['🥇','🥈','�
   return `<div class="modal" data-act="wsClose"><div class="sheet" data-act="noop" role="dialog" aria-label="上週學習之星"><div class="spread"><h2>🌟 上週學習之星揭曉</h2><span class="muted small">${wkLabel(p.wk)}</span></div>${list}
   <p>${p.me?`你上週排第 <b>${p.me.r}</b> 名（${p.me.n} 題・答對 ${pct(p.me.acc)}），`:''}這週做得多、又做得對，下週一就可能是你！前 3 名分別加 ${WSTAR.pts.join('／')} 點。</p><div class="spread"><span></span><button class="btn" data-act="wsClose">我要加油！</button></div></div></div>`}
 /* 舊的天數沒有「答對題數」：從那天的作答紀錄算出正確率補上（只補這週和上週，每次開學習島補一次） */
+/* 只把補算出來的 dok 合併寫進去（不整份覆蓋），老師後台也能幫還沒上島的學生補 */
 function dokFill(sid){
-  if(!S.db||!S.stuReady)return;S.dokDone=S.dokDone||{};if(S.dokDone[sid])return;S.dokDone[sid]=1;
-  const d0=stuDoc(sid),ds=d0.days||{},dk=d0.dok||{};const ks=wkDays(prevWk()).concat(wkDays(wkKey())).filter(k=>ds[k]&&dk[k]==null&&k<=ymd());if(!ks.length)return;
-  Promise.all(ks.map(k=>{const id=sid+'_'+k;const c=S.logs[id];return (c&&logOK.has(id)?Promise.resolve(c):S.db.doc('log/'+id).get().then(s=>s.exists?s.data():null)).then(lg=>[k,lg]).catch(()=>[k,null])}))
-  .then(rs=>{const d=stuDoc(sid);d.days=d.days||{};d.dok=d.dok||{};let ch=0;rs.forEach(([k,lg])=>{const a=lg&&Array.isArray(lg.a)?lg.a:[];if(!a.length||d.dok[k]!=null)return;const ok=a.filter(x=>x.ok).length;d.dok[k]=Math.round((d.days[k]||0)*ok/a.length);ch=1});if(ch){S.stu[sid]=d;saveStu(sid);if(S.view.n!=='play')render()}})}
+  if(!S.db||!S.stuReady)return Promise.resolve();S.dokDone=S.dokDone||{};if(S.dokDone[sid])return Promise.resolve();
+  const d0=stuDoc(sid),ds=d0.days||{},dk=d0.dok||{};const ks=wkDays(prevWk()).concat(wkDays(wkKey())).filter(k=>ds[k]&&dk[k]==null&&k<=ymd());S.dokDone[sid]=1;if(!ks.length)return Promise.resolve();
+  return Promise.all(ks.map(k=>{const id=sid+'_'+k;const c=S.logs[id];return (c&&logOK.has(id)?Promise.resolve(c):S.db.doc('log/'+id).get().then(s=>s.exists?s.data():null)).then(lg=>[k,lg]).catch(()=>[k,null])}))
+  .then(rs=>{const d=stuDoc(sid),patch={};rs.forEach(([k,lg])=>{const a=lg&&Array.isArray(lg.a)?lg.a:[];if(!a.length||(d.dok||{})[k]!=null)return;patch[k]=Math.round(((d.days||{})[k]||0)*a.filter(x=>x.ok).length/a.length)});
+    if(!Object.keys(patch).length)return;d.dok=Object.assign({},d.dok||{},patch);S.stu[sid]=d;
+    return S.db.doc('stu/'+sid).set({dok:patch},{merge:true}).then(()=>{if(S.view.n!=='play')render()}).catch(e=>{S.dokDone[sid]=0;console.warn('dokFill',sid,e)})})}
+function dokFillAll(){if(S.dokAll||!S.db||!S.stuReady)return;S.dokAll=1;const L=students().map(s=>s.id);let i=0;
+  const next=()=>{if(i>=L.length)return;dokFill(L[i++]).finally(next)};for(let j=0;j<4;j++)next()}
 function weekCount(sid){return wkStat(sid,wkKey()).n}
 function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
@@ -1437,6 +1442,7 @@ function vPin(){
 }
 const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🌟 學習之星・加點'],['set','設定'],['try','試玩']];
 function vTeacher(){
+  setTimeout(dokFillAll,300);
   const tabs=`<div class="tabs">${TT.map(([k,n])=>{const u=k==='par'?parUnread():0;return `<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}${u?` <span class="pill p-bad">${u}</span>`:''}</button>`}).join('')}</div>`;
   const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,par:tPar,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
   return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
