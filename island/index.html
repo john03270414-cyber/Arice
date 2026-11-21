@@ -825,13 +825,16 @@ function wsPopHTML(){const p=S.wsPop;if(!p)return '';const md=['🥇','🥈','�
 /* 只把補算出來的 dok 合併寫進去（不整份覆蓋），老師後台也能幫還沒上島的學生補 */
 function dokFill(sid){
   if(!S.db||!S.stuReady)return Promise.resolve();S.dokDone=S.dokDone||{};if(S.dokDone[sid])return Promise.resolve();
-  const d0=stuDoc(sid),ds=d0.days||{},dk=d0.dok||{};const ks=wkDays(prevWk()).concat(wkDays(wkKey())).filter(k=>ds[k]&&dk[k]==null&&k<=ymd());S.dokDone[sid]=1;if(!ks.length)return Promise.resolve();
-  return Promise.all(ks.map(k=>{const id=sid+'_'+k;const c=S.logs[id];return (c&&logOK.has(id)?Promise.resolve(c):S.db.doc('log/'+id).get().then(s=>s.exists?s.data():null)).then(lg=>[k,lg]).catch(()=>[k,null])}))
-  .then(rs=>{const d=stuDoc(sid),patch={};rs.forEach(([k,lg])=>{const a=lg&&Array.isArray(lg.a)?lg.a:[];if(!a.length||(d.dok||{})[k]!=null)return;patch[k]=Math.round(((d.days||{})[k]||0)*a.filter(x=>x.ok).length/a.length)});
+  const st=S.dokStat||{};const d0=stuDoc(sid),ds=d0.days||{},dk=d0.dok||{};const ks=wkDays(prevWk()).concat(wkDays(wkKey())).filter(k=>ds[k]&&dk[k]==null&&k<=ymd());S.dokDone[sid]=1;if(!ks.length)return Promise.resolve();
+  return Promise.all(ks.map(k=>{const id=sid+'_'+k;const c=S.logs[id];return (c&&logOK.has(id)?Promise.resolve(c):S.db.doc('log/'+id).get().then(s=>s.exists?s.data():null)).then(lg=>[k,lg]).catch(e=>{st.err=(e&&e.code)||String(e);return [k,null]})}))
+  .then(rs=>{const d=stuDoc(sid),patch={};rs.forEach(([k,lg])=>{const a=lg&&Array.isArray(lg.a)?lg.a:[];if(!a.length){st.nolog=(st.nolog||0)+1;return}if((d.dok||{})[k]!=null)return;patch[k]=Math.round(((d.days||{})[k]||0)*a.filter(x=>x.ok).length/a.length)});
     if(!Object.keys(patch).length)return;d.dok=Object.assign({},d.dok||{},patch);S.stu[sid]=d;
-    return S.db.doc('stu/'+sid).set({dok:patch},{merge:true}).then(()=>{if(S.view.n!=='play')render()}).catch(e=>{S.dokDone[sid]=0;console.warn('dokFill',sid,e)})})}
-function dokFillAll(){if(S.dokAll||!S.db||!S.stuReady)return;S.dokAll=1;const L=students().map(s=>s.id);let i=0;
-  const next=()=>{if(i>=L.length)return;dokFill(L[i++]).finally(next)};for(let j=0;j<4;j++)next()}
+    return S.db.doc('stu/'+sid).set({dok:patch},{merge:true}).then(()=>{st.fixed=(st.fixed||0)+1;if(S.view.n!=='play')render()}).catch(e=>{S.dokDone[sid]=0;st.err=(e&&e.code)||String(e);console.warn('dokFill',sid,e)})})}
+/* 老師後台：幫全部學生補算（進度顯示在「學習之星」分頁） */
+function dokFillAll(force){if((S.dokAll&&!force)||!S.db||!S.stuReady)return;if(force)S.dokDone={};S.dokAll=1;const L=students().map(s=>s.id);let i=0,left=L.length;
+  S.dokStat={run:1,tot:L.length,done:0,fixed:0,nolog:0,err:''};const st=S.dokStat;const rr=()=>{if(S.view.n==='teacher'&&S.tTab==='pts')render()};
+  if(!L.length){st.run=0;rr();return}
+  const next=()=>{if(i>=L.length)return;dokFill(L[i++]).catch(()=>{}).finally(()=>{st.done++;if(--left===0)st.run=0;rr();next()})};for(let j=0;j<4;j++)next();rr()}
 function weekCount(sid){return wkStat(sid,wkKey()).n}
 function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
@@ -1495,8 +1498,10 @@ function tWStar(){
   const hk=Object.keys(hist).sort().reverse().slice(0,8);
   const pTop=pw<WSTAR.from?'':P.list.filter(x=>x.r<=3).map(x=>{const got=(stuDoc(x.s.id).ws||{})[pw];return `<tr><td>${md[x.r-1]}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td><b>${x.sc}</b></td><td>+${WSTAR.pts[x.r-1]}</td><td>${got?'✅ 已通知':'<span class="muted">還沒上線（下次進來會跳通知）</span>'}</td></tr>`}).join('');
   const row=x=>`<tr><td>${x.r}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td>${x.pn.toFixed(1)}</td><td>${x.pa.toFixed(1)}</td><td><b>${x.sc}</b></td></tr>`;
+  const ds=S.dokStat;const dline=`<div class="row small" style="align-items:center;gap:10px"><span>${!ds?'正確率補算：準備中…':ds.run?`正確率補算中… ${ds.done}/${ds.tot} 人`:`✅ 正確率補算完成：補上 ${ds.fixed} 人`}${ds&&ds.nolog?`・有 ${ds.nolog} 天找不到作答紀錄`:''}${ds&&ds.err?`・<span style="color:var(--bad)">有錯誤（${esc(ds.err)}）</span>`:''}</span>${ds&&!ds.run?'<button class="btn ghost sm" data-act="dokRefill">重新補算</button>':''}</div>`;
   return `<div class="card stack"><h2>🌟 每週學習之星</h2><p class="small muted">每週一～週日算一週，全部五年級一起排。綜合分滿分 100＝題數分（最多 50：題數 ÷ 本週最多的人 × 50）＋正確率分（最多 50：正確率 × 50）。本週做滿 ${WSTAR.min} 題才排名。前 3 名分別 +${WSTAR.pts.join('／+')} 點，學生下週第一次進學習島時自動加上並跳出通知；其他學生也會看到上週前 3 名。（${+WSTAR.from.slice(4,6)}/${+WSTAR.from.slice(6)} 那週開始加分）</p>
   ${pw>=WSTAR.from?`<h3>上週 ${wkLabel(pw)} 得獎</h3>${pTop?`<div class="tbl"><table><thead><tr><th></th><th>學生</th><th>題數</th><th>正確率</th><th>綜合分</th><th>加分</th><th>通知</th></tr></thead><tbody>${pTop}</tbody></table></div>`:'<p class="small muted">上週沒有人做滿題數。</p>'}`:''}
+  ${dline}
   <h3>本週 ${wkLabel(wk)} 目前排名</h3>${R.list.length?`<div class="tbl"><table><thead><tr><th>名次</th><th>學生</th><th>題數</th><th>正確率</th><th>題數分</th><th>正確率分</th><th>綜合分</th></tr></thead><tbody>${R.list.map(row).join('')}</tbody></table></div>`:'<p class="small muted">還沒有人做滿題數。</p>'}
   ${R.rest.length?`<p class="small muted">還沒排名：${R.rest.map(x=>`${esc(x.s.name)}（${x.n} 題${x.n>=WSTAR.min?'・正確率統計中':''}）`).join('、')}</p>`:''}
   ${hk.length?`<h3>歷屆學習之星</h3><div class="tbl"><table><thead><tr><th>週</th><th>得獎</th></tr></thead><tbody>${hk.map(k=>`<tr><td>${wkLabel(k)}</td><td>${hist[k].sort((a,b)=>a.w.r-b.w.r).map(h=>`${md[h.w.r-1]||''} ${esc(h.st.name)} +${h.w.p}`).join('　')}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
@@ -1648,6 +1653,7 @@ const A={
     S.xmPop={kind:'gift',pts,k,sid,emoji:e.dataset.e};SFX.tap();setTimeout(()=>{try{SFX.jingle()}catch(_){}},900);setTimeout(()=>{try{SFX.ok(3)}catch(_){}},1150);render()},
   xmClose:()=>{S.xmPop=null;render()},
   wsClose:()=>{S.wsPop=null;render()},
+  dokRefill:()=>dokFillAll(true),
   ntcAdd:async()=>{const el=document.getElementById('ntcText');const t=(el&&el.value||'').trim();if(!t)return toast('請先寫公告內容');const school=(document.getElementById('ntcSchool')||{}).value||'';
     const aud=(document.getElementById('ntcAud')||{}).value||'';const list=[{id:'n'+Date.now().toString(36),text:t,school,aud,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
   ntcDel:async e=>{if(!confirm('要刪除這則公告嗎？'))return;const list=(S.notices||[]).filter(n=>n.id!==e.dataset.id);if(await saveNotices(list))toast('已刪除')},
