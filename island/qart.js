@@ -105,9 +105,13 @@
       +C(50,66,13,'#9C6B45',st)+C(46,62,3,'#C08B62')+eyes(42,10,50,.9)+smile(50,50,4)+blush(49,17)]
   ];
   const get=(arr,i)=>arr[((i%arr.length)+arr.length)%arr.length];
+  /* 聖誕期間（時間表在 lib/avatar.js 的 ARAV.xmas）：每個角色頭上戴聖誕帽。位置照每個角色調過；牛仔、巫師本來就有帽子，不戴 */
+  const XH={a7:{y:27},a8:{y:21,s:.78,r:-8},a13:{y:34},a17:{x:52,y:25,s:.68},f5:{y:24,s:.78},f9:{skip:1},f12:{skip:1},f18:{y:40,s:.8,r:-6},f19:{y:21,s:.74,r:-8}};
+  const xmasHat=(k,n,i)=>{if(!(window.ARAV&&ARAV.xmas&&ARAV.xmas()))return '';const t=Object.assign({x:50,y:30,r:-12,s:1},XH[k+(((i%n)+n)%n)]);if(t.skip)return '';
+    return `<g transform="translate(${t.x} ${t.y}) rotate(${t.r}) scale(${t.s})" stroke="${O}" stroke-width="2.6" stroke-linejoin="round"><path d="M-25 -3 C-22 -24 -8 -36 8 -36 C22 -35 30 -24 31 -10 L25 -9 C24 -17 20 -22 14 -23 C18 -17 20 -10 20 -3 Z" fill="#D63A3A"/><path d="M-14 -18 C-9 -26 -2 -30 6 -31" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2.6" stroke-linecap="round"/><rect x="-28" y="-7" width="54" height="12" rx="6" fill="#FBFBF8"/><circle cx="29" cy="-8" r="6.5" fill="#FBFBF8"/></g>`};
   window.QART={
-    animal:i=>{const a=get(ANIMALS,i);return wrap(a[1](),a[0])},
-    fun:i=>{const a=get(FUNS,i);return wrap(a[1](),a[0])},
+    animal:i=>{const a=get(ANIMALS,i);return wrap(a[1]()+xmasHat('a',ANIMALS.length,i),a[0])},
+    fun:i=>{const a=get(FUNS,i);return wrap(a[1]()+xmasHat('f',FUNS.length,i),a[0])},
     animalName:i=>get(ANIMALS,i)[0], funName:i=>get(FUNS,i)[0],
     count:{animal:ANIMALS.length,fun:FUNS.length}
   };
