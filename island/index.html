@@ -16,7 +16,7 @@
 <script src="../lib/shim.js?v=1794600000" data-app="island" data-prefix="isl_"></script>
 <script src="../lib/avatar.js?v=1794450000"></script>
 <script src="qart.js?v=1794720000"></script>
-<script src="updates.js?v=1794720000"></script>
+<script src="updates.js?v=1795240000"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
 </head><body>
@@ -335,6 +335,7 @@ html.inplay .bgm-bar{display:none}
 .rank .md{width:26px;text-align:center;font-size:20px;color:var(--muted);font-weight:700}
 .rank .rn{flex:1;min-width:0;font-weight:600}
 .rank b{font-variant-numeric:tabular-nums;color:var(--accent)}
+.ws-top{margin:6px 0 12px}.ws-top li{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:6px 10px}
 .today{display:flex;flex-wrap:wrap;gap:6px}
 .empty{margin:0}
 .tip{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface))}
@@ -710,7 +711,7 @@ async function initDB(){
   const putStu=(id,d)=>{S.stu[id]=JSON.parse(JSON.stringify(d))};const mine=window.ARICE&&ARICE.me&&ARICE.me.role==='student'&&ARICE.me.sid;
   /* 學生只即時看自己的紀錄：全班一起監聽的話，每答一題全班每台平板都要重讀一次，很快超過讀取額度。排行榜要的同學資料，回首頁時讀一次 */
   if(mine){db.doc('stu/'+mine).onSnapshot(snap=>{if(snap.exists)putStu(mine,snap.data());S.stuReady=true;if(S.view.n!=='play')render()},e=>toast('讀不到你的紀錄，請重新整理（'+((e&&e.code)||e)+'）'));
-    S.loadOthers=()=>{if(Date.now()-(S.othersAt||0)<60e3)return;S.othersAt=Date.now();db.collection('stu').get().then(q=>{q.docs.forEach(d=>{if(d.id!==mine)putStu(d.id,d.data())});if(S.view.n!=='play')render()}).catch(()=>{S.othersAt=0})};S.loadOthers()}
+    S.loadOthers=()=>{if(Date.now()-(S.othersAt||0)<60e3)return;S.othersAt=Date.now();db.collection('stu').get().then(q=>{q.docs.forEach(d=>{if(d.id!==mine)putStu(d.id,d.data())});S.othersOK=true;if(S.view.n!=='play')render()}).catch(()=>{S.othersAt=0})};S.loadOthers()}
   else db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>putStu(d.id,d.data()));S.stuReady=true;if(S.view.n!=='play')render()},()=>{});
   db.doc('cfg/notice').onSnapshot(snap=>{const d=snap.exists?snap.data():null;S.notices=(d&&Array.isArray(d.list))?JSON.parse(JSON.stringify(d.list)):[];if(S.view.n!=='play')render()},()=>{});
   /* 家長留言、老師評語：只有老師帳號讀得到 */
@@ -783,12 +784,50 @@ function vSPin(v){const st=stuById(v.sid);if(!st)return vHome();const a=avatar(v
 function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&n.aud!=='par'&&(!n.school||n.school===school)).sort((a,b)=>(b.at||0)-(a.at||0))}
 function noticeHTML(school){const L=noticesFor(school).slice(0,3);if(!L.length)return '';
   return `<section class="noticebd" aria-label="公告欄">${L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>老師公告・${esc(new Date(n.at||Date.now()).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}))}${n.school?'・'+esc(n.school):''}</small></div></div>`).join('')}</section>`}
-function starsHTML(school,meId){const pool=students(); /* 全部五年級一起排，不分學校 */
-  const all=pool.map(s=>({s,n:weekCount(s.id)})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const top=all.slice(0,5);const medals=['🥇','🥈','🥉','4','5'];
-  const mi=meId?all.findIndex(x=>x.s.id===meId):-1;
-  const mine=meId?(mi>=5?`<div class="myrank">你這週排第 <b>${mi+1}</b> 名，做了 <b>${all[mi].n}</b> 題，再加油就能上榜！</div>`:mi<0?'<div class="myrank">你這週還沒做題，做一題就能上榜！</div>':''):'';
-  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">近 7 天題數</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級</div>${top.length?`<ol class="rank">${top.map((x,i)=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[i]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${esc(x.s.school||'')}</small></span><b>${x.n}</b></li>`}).join('')}</ol>`:'<p class="muted small empty">這週還沒有人上島，第一個練習的就是第一名！</p>'}${mine}</div>`}
-function weekCount(sid){const d=stuDoc(sid).days||{};let n=0;for(let i=0;i<7;i++)n+=d[ymd(Date.now()-i*DAY)]||0;return n}
+/* ---------- 🌟 每週學習之星：週一～週日算一週，題數＋正確率綜合排名；上週前 3 名下週第一次進來時自動加分並跳出通知 ----------
+   綜合分（滿分 100）＝ 題數分（最多 50：自己的題數 ÷ 本週最多的人的題數 × 50）＋ 正確率分（最多 50：正確率 × 50）
+   本週做滿 WSTAR.min 題才排名，避免只做 1 題全對就拿第一 */
+const WSTAR={from:'20261123',min:20,pts:[10,6,3]};
+function wkKey(t=Date.now()){const d=new Date(t);d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return ymd(d.getTime())}
+function wkDays(wk){const y=+wk.slice(0,4),m=+wk.slice(4,6),dd=+wk.slice(6);return Array.from({length:7},(_,i)=>ymd(new Date(y,m-1,dd+i,12).getTime()))}
+const prevWk=()=>{const d=wkDays(wkKey());return wkKey(new Date(+d[0].slice(0,4),+d[0].slice(4,6)-1,+d[0].slice(6)-7,12).getTime())};
+const wkLabel=wk=>{const d=wkDays(wk);const f=k=>+k.slice(4,6)+'/'+ +k.slice(6);return f(d[0])+'～'+f(d[6])};
+/* 一週的題數和正確率：dok＝每天答對題數（11/21 之後才有；更早的天數從作答紀錄補算，補不到的天不算進正確率） */
+function wkStat(sid,wk){const d=stuDoc(sid),ds=d.days||{},dk=d.dok||{};let n=0,kn=0,ok=0;wkDays(wk).forEach(k=>{const c=ds[k]||0;n+=c;if(c&&dk[k]!=null){kn+=c;ok+=Math.min(dk[k],c)}});return {n,acc:kn?ok/kn:null}}
+function wkRank(wk){const all=students().map(s=>Object.assign({s},wkStat(s.id,wk))).filter(x=>x.n>0);
+  const el=all.filter(x=>x.n>=WSTAR.min&&x.acc!=null);const mx=Math.max(1,...el.map(x=>x.n));
+  el.forEach(x=>{x.pn=x.n/mx*50;x.pa=x.acc*50;x.sc=Math.round((x.pn+x.pa)*10)/10});
+  el.sort((a,b)=>b.sc-a.sc||b.acc-a.acc||b.n-a.n);el.forEach((x,i)=>{x.r=i&&el[i-1].sc===x.sc?el[i-1].r:i+1});
+  return {list:el,rest:all.filter(x=>!el.includes(x)).sort((a,b)=>b.n-a.n)}}
+const pct=a=>a==null?'—':Math.round(a*100)+'%';
+function starsHTML(school,meId){ /* 全部五年級一起排，不分學校 */
+  const wk=wkKey(),R=wkRank(wk),top=R.list.filter(x=>x.r<=5),medals=['🥇','🥈','🥉','4','5'];
+  const me=meId?R.list.find(x=>x.s.id===meId):null,meR=meId&&!me?R.rest.find(x=>x.s.id===meId):null;
+  const mine=!meId?'':me?(me.r>5?`<div class="myrank">你這週排第 <b>${me.r}</b> 名（${me.n} 題・答對 ${pct(me.acc)}），再加油就能上榜！</div>`:''):meR?`<div class="myrank">你這週做了 <b>${meR.n}</b> 題，${meR.n<WSTAR.min?`再做 <b>${WSTAR.min-meR.n}</b> 題就能排名！`:'正確率統計中，再做幾題就能排名！'}</div>`:`<div class="myrank">你這週還沒做題，做滿 ${WSTAR.min} 題就能上榜！</div>`;
+  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">${wkLabel(wk)}</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級・題數＋正確率綜合排名・前 3 名下週一加 ${WSTAR.pts.join('／')} 分</div>${top.length?`<ol class="rank">${top.map(x=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${x.n} 題・答對 ${pct(x.acc)}・${esc(x.s.school||'')}</small></span><b title="綜合分">${x.sc}</b></li>`}).join('')}</ol>`:`<p class="muted small empty">這週還沒有人做滿 ${WSTAR.min} 題，第一個做滿的就是第一名！</p>`}${mine}<details class="small muted" style="margin-top:8px"><summary>綜合分怎麼算？</summary>題數分（最多 50）：你的題數 ÷ 本週做最多的人 × 50<br>正確率分（最多 50）：答對的比例 × 50<br>兩個加起來，滿分 100。做得多又做得對，分數最高！</details></div>`}
+/* 上週學習之星：每個學生每週跳一次通知；前 3 名自動加分（記在 stu.ws），其他人看到前 3 名是誰 */
+function wsSeen(sid){try{return localStorage.getItem('isl-ws-'+sid)||''}catch(e){return (S.wsMem||{})[sid]||''}}
+function wsMark(sid,wk){try{localStorage.setItem('isl-ws-'+sid,wk)}catch(e){}S.wsMem=S.wsMem||{};S.wsMem[sid]=wk}
+function wsCheck(sid){
+  if(!S.db||S.wsPop||(XMAS&&S.xmPop)||!S.stuReady||(S.loadOthers&&!S.othersOK))return;S.wsChecked=S.wsChecked||{};if(S.wsChecked[sid])return;
+  const wk=prevWk();if(wk<WSTAR.from)return;S.wsChecked[sid]=1;
+  const d=stuDoc(sid),ws=d.ws||{};if(ws[wk]!=null||wsSeen(sid)>=wk)return;
+  const R=wkRank(wk),me=R.list.find(x=>x.s.id===sid),top=R.list.filter(x=>x.r<=3);if(!top.length)return;
+  if(me&&me.r<=3){const pts=WSTAR.pts[me.r-1];d.ws=Object.assign({},ws,{[wk]:{r:me.r,p:pts,n:me.n,a:Math.round(me.acc*1000)/1000,sc:me.sc}});S.stu[sid]=d;saveStu(sid);setTimeout(()=>{try{SFX.unlock();confetti()}catch(e){}},500)}
+  wsMark(sid,wk);S.wsPop={sid,wk,me:me?{r:me.r,n:me.n,acc:me.acc,sc:me.sc}:null,top:top.map(x=>({id:x.s.id,name:x.s.name,r:x.r,sc:x.sc}))};render()}
+function wsTotal(sid){const ws=stuDoc(sid).ws||{};let t=0;for(const k in ws)t+=+(ws[k]&&ws[k].p)||0;return t}
+function wsPopHTML(){const p=S.wsPop;if(!p)return '';const md=['🥇','🥈','🥉'];const win=p.me&&p.me.r<=3;
+  const list=`<ol class="rank ws-top">${p.top.map(x=>{const a=avatar(x.id);return `<li><span class="md">${md[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.name)}</span><b>+${WSTAR.pts[x.r-1]}</b></li>`}).join('')}</ol>`;
+  if(win)return `<div class="xm-pop" data-act="wsClose" role="dialog" aria-label="上週學習之星加分通知"><div class="xm-pop-card" data-act="noop"><div class="st">${md[p.me.r-1]}</div><div class="xm-pts">+${WSTAR.pts[p.me.r-1]} 分</div><div class="msg">恭喜！你是 <b>上週（${wkLabel(p.wk)}）學習之星第 ${p.me.r} 名</b><br>做了 ${p.me.n} 題，答對 ${pct(p.me.acc)}，綜合分 ${p.me.sc}<br>老師加你 <b>${WSTAR.pts[p.me.r-1]}</b> 分！</div><button class="btn" data-act="wsClose">太棒了！</button></div></div>`;
+  return `<div class="modal" data-act="wsClose"><div class="sheet" data-act="noop" role="dialog" aria-label="上週學習之星"><div class="spread"><h2>🌟 上週學習之星揭曉</h2><span class="muted small">${wkLabel(p.wk)}</span></div>${list}
+  <p>${p.me?`你上週排第 <b>${p.me.r}</b> 名（${p.me.n} 題・答對 ${pct(p.me.acc)}），`:''}這週做得多、又做得對，下週一就可能是你！前 3 名分別加 ${WSTAR.pts.join('／')} 分。</p><div class="spread"><span></span><button class="btn" data-act="wsClose">我要加油！</button></div></div></div>`}
+/* 舊的天數沒有「答對題數」：從那天的作答紀錄算出正確率補上（只補這週和上週，每次開學習島補一次） */
+function dokFill(sid){
+  if(!S.db||!S.stuReady)return;S.dokDone=S.dokDone||{};if(S.dokDone[sid])return;S.dokDone[sid]=1;
+  const d0=stuDoc(sid),ds=d0.days||{},dk=d0.dok||{};const ks=wkDays(prevWk()).concat(wkDays(wkKey())).filter(k=>ds[k]&&dk[k]==null&&k<=ymd());if(!ks.length)return;
+  Promise.all(ks.map(k=>{const id=sid+'_'+k;const c=S.logs[id];return (c&&logOK.has(id)?Promise.resolve(c):S.db.doc('log/'+id).get().then(s=>s.exists?s.data():null)).then(lg=>[k,lg]).catch(()=>[k,null])}))
+  .then(rs=>{const d=stuDoc(sid);d.days=d.days||{};d.dok=d.dok||{};let ch=0;rs.forEach(([k,lg])=>{const a=lg&&Array.isArray(lg.a)?lg.a:[];if(!a.length||d.dok[k]!=null)return;const ok=a.filter(x=>x.ok).length;d.dok[k]=Math.round((d.days[k]||0)*ok/a.length);ch=1});if(ch){S.stu[sid]=d;saveStu(sid);if(S.view.n!=='play')render()}})}
+function weekCount(sid){return wkStat(sid,wkKey()).n}
 function streak(sid){const d=stuDoc(sid).days||{};let i=d[ymd()]?0:1,n=0;while(d[ymd(Date.now()-i*DAY)]){n++;i++}return n}
 function masteredCount(sid){const m=stuDoc(sid).m||{};let n=0;for(const q in m)if((m[q].ok||0)>=2)n++;return n}
 function greet(){const h=new Date().getHours();return h<11?'早安':h<14?'午安':h<18?'下午好':'晚安'}
@@ -841,7 +880,7 @@ function monthRank(ym){const L=students().map(st=>({id:st.id,n:monthCount(st.id,
   const cut=L.length>=2?L[1].n:(L[0]?L[0].n:Infinity);return {list:L,top:L.filter(x=>x.n>=cut).map(x=>x.id)}}
 function prevYM(){const d=new Date();return ymKey(new Date(d.getFullYear(),d.getMonth()-1,15).getTime())}
 function xmStarCheck(sid){
-  if(!XMAS||S.xmPop||!Object.keys(S.stu).length)return;S.xmChecked=S.xmChecked||{};if(S.xmChecked[sid])return;S.xmChecked[sid]=1;
+  if(!XMAS||S.xmPop||S.wsPop||!Object.keys(S.stu).length)return;S.xmChecked=S.xmChecked||{};if(S.xmChecked[sid])return;S.xmChecked[sid]=1;
   const ym=prevYM();const x=xmData(sid);if(x.s[ym]!=null)return;
   if(!monthRank(ym).top.includes(sid))return;
   const d=stuDoc(sid);d.xm=Object.assign({},d.xm||{},{g:x.g,s:Object.assign({},x.s,{[ym]:10})});S.stu[sid]=d;saveStu(sid);
@@ -1109,7 +1148,7 @@ function updAvs(u){if(u.av==='presets')return window.ARAV&&Array.isArray(ARAV.pr
 function updEntry(u){const avs=updAvs(u);return `<article class="upd"><div class="upd-h"><b>${esc(u.title||'學習島更新')}${u.status==='draft'?' <span class="warnb">草稿・學生看不到</span>':''}</b><span class="muted small">${esc(u.date||'')}</span></div>
   <ul>${u.items.map(it=>`<li><span class="ic" aria-hidden="true">${esc(it.ic||'✨')}</span><span>${esc(it.t||'')}</span></li>`).join('')}</ul>
   ${avs.length?`<div class="upd-av">${avs.map(v=>{const a=avById(v);return `<span class="av" style="--av:${a.c}">${a.e}</span>`}).join('')}</div>`:''}</article>`}
-function updPop(sid){const all=!!S.updOpen;if(!all&&(S.avPick||(XMAS&&S.xmPop)||(S.updShown||{})[sid]))return '';
+function updPop(sid){const all=!!S.updOpen;if(!all&&(S.avPick||(XMAS&&S.xmPop)||S.wsPop||(S.updShown||{})[sid]))return '';
   const L=all?updList():updNew(sid);if(!L.length)return '';const hasAv=L.some(u=>updAvs(u).length);
   return `<div class="modal" data-act="updClose"><div class="sheet" data-act="noop" role="dialog" aria-label="學習島更新內容"><div class="spread"><h2>${all?'📜 學習島更新紀錄':'🆕 學習島更新了！'}</h2><button class="btn ghost sm" data-act="updClose">關閉</button></div>
   ${L.slice(0,all?20:3).map(updEntry).join('')}
@@ -1117,6 +1156,7 @@ function updPop(sid){const all=!!S.updOpen;if(!all&&(S.avPick||(XMAS&&S.xmPop)||
 function vStu(v){
   const sid=v.sid,st=stuById(sid);if(!st)return vHome();
   if(XMAS&&!S.xmPop)setTimeout(()=>xmStarCheck(sid),400);
+  setTimeout(()=>{dokFill(sid);wsCheck(sid)},600);
   const due=dueList(sid);const a=avatar(sid);const sk=streak(sid),mc=masteredCount(sid),wk=weekCount(sid);
   const tiles=SUBJS.map(subj=>{const ss=subjState(sid,subj);const z=SM[subj].z;
     if(ss.lock)return `<button class="isle locked z-${z}" data-act="lockedSubj" data-m="${esc(ss.lock)}"><span class="wm">${SM[subj].g}</span><div class="isle-top"><span class="glyph">${SM[subj].g}</span><span class="lockb">🔒</span></div><div class="isle-name"><h3>${subj}</h3><small>${ss.pub?esc(ss.pub)+'版':'版本未設定'}</small></div><div class="isle-foot">${esc(ss.lock)}</div></button>`;
@@ -1131,7 +1171,7 @@ function vStu(v){
   ${noticeHTML(st.school)}${XMAS?`<div class="xm-garland" aria-hidden="true"></div><div class="sec-h"><h2>🎄 聖誕小鎮地圖</h2><span class="muted">點一個小鎮出發，還沒開放的會先鎖起來</span></div><div class="xm-town">${xmTownSVG(sid)}</div>`+xmAdvent(sid):''}<div class="stu-grid"><div>
   ${due.length?`<section class="quest"><span class="chest">🧰</span><div class="q-t"><b>今日任務：救回 ${due.length} 題錯題</b><span>之前答錯的題目換個方式再出現，連續答對兩次就學會了。</span></div><button class="btn" data-act="startReview" data-id="${esc(sid)}">開始任務</button></section>`:`<section class="quest calm"><span class="chest">🌤️</span><div class="q-t"><b>今天沒有待複習的錯題</b><span>選一座島，從練習開始吧！</span></div></section>`}
   <div class="sec-h"><h2>${XMAS?'各科進度':'我的島嶼地圖'}</h2><span class="muted">還沒開放的島會先鎖起來</span></div>
-  <div class="isles">${tiles}</div></div><aside class="side">${starsHTML(st.school,sid)}</aside></div>${S.avPick?avPicker(sid):''}${XMAS?xmPopHTML():''}${updPop(sid)}`;
+  <div class="isles">${tiles}</div></div><aside class="side">${starsHTML(st.school,sid)}</aside></div>${S.avPick?avPicker(sid):''}${XMAS?xmPopHTML():''}${wsPopHTML()}${updPop(sid)}`;
 }
 /* ---------- subject page ---------- */
 const shortName=n=>String(n).replace(/^第\s*\d+\s*(單元|課)\s*/,'');
@@ -1335,7 +1375,9 @@ function record(s,w,r){
   const d=stuDoc(s.sid);d.m=d.m||{};const m=d.m[w.qid]||{n:0,w:0,ok:0};const now=Date.now();
   m.n++;m.last=now;
   if(r.ok){m.ok=(m.ok||0)+1;m.due=m.ok>=2?0:(m.w?now+3*DAY:0)}else{m.w++;m.ok=0;m.due=nextDay(now);m.lw=now;m.la=String(r.ans).slice(0,120)}
-  d.m[w.qid]=m;d.days=d.days||{};d.days[ymd()]=(d.days[ymd()]||0)+1;S.stu[s.sid]=d;saveStu(s.sid);
+  d.m[w.qid]=m;d.days=d.days||{};const dk=ymd(),prev=d.days[dk]||0;d.days[dk]=prev+1;
+  /* 每天答對幾題（學習之星的正確率用）：當天已經有舊紀錄、還沒補算的，先不記，等 dokFill 從作答紀錄補 */
+  d.dok=d.dok||{};if(d.dok[dk]!=null||!prev)d.dok[dk]=(d.dok[dk]||0)+(r.ok?1:0);S.stu[s.sid]=d;saveStu(s.sid);
   const id=s.sid+'_'+ymd();const lg=S.logs[id]||(S.logs[id]={sid:s.sid,d:ymd(),a:[]});
   lg.a.push({t:now,q:w.qid,ok:r.ok?1:0,ans:String(r.ans).slice(0,120),md:s.game?s.game.k:s.mode});if(lg.a.length>600)lg.a=lg.a.slice(-600);if(logOK.has(id))save('log/'+id,lg);else loadLog(s.sid);
 }
@@ -1393,7 +1435,7 @@ function vPin(){
   return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
   <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
 }
-const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🎁 加點'],['set','設定'],['try','試玩']];
+const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🌟 學習之星・加點'],['set','設定'],['try','試玩']];
 function vTeacher(){
   const tabs=`<div class="tabs">${TT.map(([k,n])=>{const u=k==='par'?parUnread():0;return `<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}${u?` <span class="pill p-bad">${u}</span>`:''}</button>`}).join('')}</div>`;
   const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,par:tPar,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
@@ -1441,7 +1483,20 @@ function tWeak(){
     ${top.length?`<div class="tbl" style="box-shadow:none"><table><thead><tr><th>最常錯的題目</th><th>正確答案</th><th>還沒學會的人</th><th>錯/做</th></tr></thead><tbody>${top.map(x=>`<tr><td>${esc(qLabel(x.it)||TYPE_NAME[x.it.type])}<div class="small muted">${esc(x.u.name)}${x.it.skill?'・'+esc(x.it.skill):''}</div></td><td class="small">${esc(rightText(x.it))}</td><td class="small">${esc(x.who.join('、'))||'—'}</td><td>${x.wn}/${x.n}</td></tr>`).join('')}</tbody></table></div>`:'<div class="small muted">還沒有人答錯，或還沒有人做題。</div>'}</div>`}).join('')+'</div>';
 }
 function ensureDraft(){if(!S.draft)S.draft=JSON.parse(JSON.stringify(S.cfg||{schools:{},schoolOrder:[],students:[],open:{}}));const d=S.draft;d.schools=d.schools||{};d.students=d.students||[];d.open=d.open||{};d.schoolOrder=d.schoolOrder||Object.keys(d.schools);return d}
+function tWStar(){
+  const wk=wkKey(),pw=prevWk(),R=wkRank(wk),P=wkRank(pw),md=['🥇','🥈','🥉'];
+  const hist={};students().forEach(st=>{const ws=stuDoc(st.id).ws||{};for(const k in ws)if(ws[k])(hist[k]=hist[k]||[]).push({st,w:ws[k]})});
+  const hk=Object.keys(hist).sort().reverse().slice(0,8);
+  const pTop=pw<WSTAR.from?'':P.list.filter(x=>x.r<=3).map(x=>{const got=(stuDoc(x.s.id).ws||{})[pw];return `<tr><td>${md[x.r-1]}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td><b>${x.sc}</b></td><td>+${WSTAR.pts[x.r-1]}</td><td>${got?'✅ 已通知':'<span class="muted">還沒上線（下次進來會跳通知）</span>'}</td></tr>`}).join('');
+  const row=x=>`<tr><td>${x.r}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td>${x.pn.toFixed(1)}</td><td>${x.pa.toFixed(1)}</td><td><b>${x.sc}</b></td></tr>`;
+  return `<div class="card stack"><h2>🌟 每週學習之星</h2><p class="small muted">每週一～週日算一週，全部五年級一起排。綜合分滿分 100＝題數分（最多 50：題數 ÷ 本週最多的人 × 50）＋正確率分（最多 50：正確率 × 50）。本週做滿 ${WSTAR.min} 題才排名。前 3 名分別 +${WSTAR.pts.join('／+')} 分，學生下週第一次進學習島時自動加上並跳出通知；其他學生也會看到上週前 3 名。（${+WSTAR.from.slice(4,6)}/${+WSTAR.from.slice(6)} 那週開始加分）</p>
+  ${pw>=WSTAR.from?`<h3>上週 ${wkLabel(pw)} 得獎</h3>${pTop?`<div class="tbl"><table><thead><tr><th></th><th>學生</th><th>題數</th><th>正確率</th><th>綜合分</th><th>加分</th><th>通知</th></tr></thead><tbody>${pTop}</tbody></table></div>`:'<p class="small muted">上週沒有人做滿題數。</p>'}`:''}
+  <h3>本週 ${wkLabel(wk)} 目前排名</h3>${R.list.length?`<div class="tbl"><table><thead><tr><th>名次</th><th>學生</th><th>題數</th><th>正確率</th><th>題數分</th><th>正確率分</th><th>綜合分</th></tr></thead><tbody>${R.list.map(row).join('')}</tbody></table></div>`:'<p class="small muted">還沒有人做滿題數。</p>'}
+  ${R.rest.length?`<p class="small muted">還沒排名：${R.rest.map(x=>`${esc(x.s.name)}（${x.n} 題${x.n>=WSTAR.min?'・正確率統計中':''}）`).join('、')}</p>`:''}
+  ${hk.length?`<h3>歷屆學習之星</h3><div class="tbl"><table><thead><tr><th>週</th><th>得獎</th></tr></thead><tbody>${hk.map(k=>`<tr><td>${wkLabel(k)}</td><td>${hist[k].sort((a,b)=>a.w.r-b.w.r).map(h=>`${md[h.w.r-1]||''} ${esc(h.st.name)} +${h.w.p}`).join('　')}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
 function tPts(){
+  return tWStar()+tXmPts()}
+function tXmPts(){
   const ym=ymKey(Date.now()),pm=prevYM();const mr=monthRank(ym);
   const rows=students().map(st=>{const x=xmData(st.id);const gk=Object.keys(x.g);const gp=gk.reduce((a,k)=>a+(+x.g[k]||0),0);const sp=Object.values(x.s).reduce((a,v)=>a+(+v||0),0);
     return {st,gn:gk.length,gp,sp,sk:Object.keys(x.s),tot:gp+sp,mn:monthCount(st.id,ym)}}).sort((a,b)=>b.tot-a.tot||b.mn-a.mn);
@@ -1586,6 +1641,7 @@ const A={
     const pts=(1+Math.floor(Math.random()*8))/2;d.xm=Object.assign({},d.xm||{},{s:x.s,g:Object.assign({},x.g,{[k]:pts})});S.stu[sid]=d;saveStu(sid);
     S.xmPop={kind:'gift',pts,k,sid,emoji:e.dataset.e};SFX.tap();setTimeout(()=>{try{SFX.jingle()}catch(_){}},900);setTimeout(()=>{try{SFX.ok(3)}catch(_){}},1150);render()},
   xmClose:()=>{S.xmPop=null;render()},
+  wsClose:()=>{S.wsPop=null;render()},
   ntcAdd:async()=>{const el=document.getElementById('ntcText');const t=(el&&el.value||'').trim();if(!t)return toast('請先寫公告內容');const school=(document.getElementById('ntcSchool')||{}).value||'';
     const aud=(document.getElementById('ntcAud')||{}).value||'';const list=[{id:'n'+Date.now().toString(36),text:t,school,aud,at:Date.now()}].concat(S.notices||[]).slice(0,20);if(await saveNotices(list)){S.ntcText='';render();toast('公告發出去了')}},
   ntcDel:async e=>{if(!confirm('要刪除這則公告嗎？'))return;const list=(S.notices||[]).filter(n=>n.id!==e.dataset.id);if(await saveNotices(list))toast('已刪除')},
