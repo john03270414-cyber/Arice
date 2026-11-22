@@ -785,9 +785,9 @@ function noticesFor(school){return (S.notices||[]).filter(n=>n&&n.text&&n.aud!==
 function noticeHTML(school){const L=noticesFor(school).slice(0,3);if(!L.length)return '';
   return `<section class="noticebd" aria-label="公告欄">${L.map(n=>`<div class="notice"><span class="ic">📢</span><div class="tx">${esc(n.text)}<small>老師公告・${esc(new Date(n.at||Date.now()).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}))}${n.school?'・'+esc(n.school):''}</small></div></div>`).join('')}</section>`}
 /* ---------- 🌟 每週學習之星：週一～週日算一週，題數＋正確率綜合排名；上週前 3 名下週第一次進來時自動加分並跳出通知 ----------
-   綜合分（滿分 100）＝ 題數分（最多 50：自己的題數 ÷ 本週最多的人的題數 × 50）＋ 正確率分（最多 50：正確率 × 50）
+   綜合分（滿分 100）＝ 題數分（最多 50：做滿 WSTAR.full 題就拿滿，不到的照比例）＋ 正確率分（最多 50：正確率 × 50）→ 刷滿題數後就比誰的正確率高
    本週做滿 WSTAR.min 題才排名，避免只做 1 題全對就拿第一 */
-const WSTAR={from:'20261123',min:20,pts:[5,3,1]};
+const WSTAR={from:'20261123',min:20,full:100,pts:[5,3,1]};
 function wkKey(t=Date.now()){const d=new Date(t);d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return ymd(d.getTime())}
 function wkDays(wk){const y=+wk.slice(0,4),m=+wk.slice(4,6),dd=+wk.slice(6);return Array.from({length:7},(_,i)=>ymd(new Date(y,m-1,dd+i,12).getTime()))}
 const prevWk=()=>{const d=wkDays(wkKey());return wkKey(new Date(+d[0].slice(0,4),+d[0].slice(4,6)-1,+d[0].slice(6)-7,12).getTime())};
@@ -795,8 +795,8 @@ const wkLabel=wk=>{const d=wkDays(wk);const f=k=>+k.slice(4,6)+'/'+ +k.slice(6);
 /* 一週的題數和正確率：dok＝每天答對題數（11/21 之後才有；更早的天數從作答紀錄補算，補不到的天不算進正確率） */
 function wkStat(sid,wk){const d=stuDoc(sid),ds=d.days||{},dk=d.dok||{};let n=0,kn=0,ok=0;wkDays(wk).forEach(k=>{const c=ds[k]||0;n+=c;if(c&&dk[k]!=null){kn+=c;ok+=Math.min(dk[k],c)}});return {n,acc:kn?ok/kn:null}}
 function wkRank(wk){const all=students().map(s=>Object.assign({s},wkStat(s.id,wk))).filter(x=>x.n>0);
-  const el=all.filter(x=>x.n>=WSTAR.min&&x.acc!=null);const mx=Math.max(1,...el.map(x=>x.n));
-  el.forEach(x=>{x.pn=x.n/mx*50;x.pa=x.acc*50;x.sc=Math.round((x.pn+x.pa)*10)/10});
+  const el=all.filter(x=>x.n>=WSTAR.min&&x.acc!=null);
+  el.forEach(x=>{x.pn=Math.min(x.n,WSTAR.full)/WSTAR.full*50;x.pa=x.acc*50;x.sc=Math.round((x.pn+x.pa)*10)/10});
   el.sort((a,b)=>b.sc-a.sc||b.acc-a.acc||b.n-a.n);el.forEach((x,i)=>{x.r=i&&el[i-1].sc===x.sc?el[i-1].r:i+1});
   return {list:el,rest:all.filter(x=>!el.includes(x)).sort((a,b)=>b.n-a.n)}}
 const pct=a=>a==null?'—':Math.round(a*100)+'%';
@@ -804,7 +804,7 @@ function starsHTML(school,meId){ /* 全部五年級一起排，不分學校 */
   const wk=wkKey(),R=wkRank(wk),top=R.list.filter(x=>x.r<=5),medals=['🥇','🥈','🥉','4','5'];
   const me=meId?R.list.find(x=>x.s.id===meId):null,meR=meId&&!me?R.rest.find(x=>x.s.id===meId):null;
   const mine=!meId?'':me?(me.r>5?`<div class="myrank">你這週排第 <b>${me.r}</b> 名（${me.n} 題・答對 ${pct(me.acc)}），再加油就能上榜！</div>`:''):meR?`<div class="myrank">你這週做了 <b>${meR.n}</b> 題，${meR.n<WSTAR.min?`再做 <b>${WSTAR.min-meR.n}</b> 題就能排名！`:'正確率統計中，再做幾題就能排名！'}</div>`:`<div class="myrank">你這週還沒做題，做滿 ${WSTAR.min} 題就能上榜！</div>`;
-  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">${wkLabel(wk)}</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級・題數＋正確率綜合排名・前 3 名下週一加 ${WSTAR.pts.join('／')} 點</div>${top.length?`<ol class="rank">${top.map(x=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${x.n} 題・答對 ${pct(x.acc)}・${esc(x.s.school||'')}</small></span><b title="綜合分">${x.sc}</b></li>`}).join('')}</ol>`:`<p class="muted small empty">這週還沒有人做滿 ${WSTAR.min} 題，第一個做滿的就是第一名！</p>`}${R.rest.length?`<div class="small muted" style="margin-top:6px">另外 ${R.rest.length} 人還沒排名（未滿 ${WSTAR.min} 題，或正確率統計中）</div>`:''}${mine}<details class="small muted" style="margin-top:8px"><summary>綜合分怎麼算？</summary>題數分（最多 50）：你的題數 ÷ 本週做最多的人 × 50<br>正確率分（最多 50）：答對的比例 × 50<br>兩個加起來，滿分 100。做得多又做得對，分數最高！</details></div>`}
+  return `<div class="panel"><div class="ph"><h3>🌟 本週學習之星</h3><span class="muted small">${wkLabel(wk)}</span></div><div class="muted small" style="margin:-4px 0 8px">全部五年級・題數＋正確率綜合排名・前 3 名下週一加 ${WSTAR.pts.join('／')} 點</div>${top.length?`<ol class="rank">${top.map(x=>{const a=avatar(x.s.id);return `<li class="${x.s.id===meId?'mine':''}"><span class="md">${medals[x.r-1]}</span><span class="av sm" style="--av:${a.c}">${a.e}</span><span class="rn">${esc(x.s.name)}${x.s.id===meId?'（你）':''}<small class="muted" style="display:block;font-weight:400;font-size:12px">${x.n} 題・答對 ${pct(x.acc)}・${esc(x.s.school||'')}</small></span><b title="綜合分">${x.sc}</b></li>`}).join('')}</ol>`:`<p class="muted small empty">這週還沒有人做滿 ${WSTAR.min} 題，第一個做滿的就是第一名！</p>`}${R.rest.length?`<div class="small muted" style="margin-top:6px">另外 ${R.rest.length} 人還沒排名（未滿 ${WSTAR.min} 題，或正確率統計中）</div>`:''}${mine}<details class="small muted" style="margin-top:8px"><summary>綜合分怎麼算？</summary>題數分（最多 50）：做滿 ${WSTAR.full} 題就拿滿 50，不到的照比例<br>正確率分（最多 50）：答對的比例 × 50<br>所以先刷滿 ${WSTAR.full} 題，再比誰的正確率最高！兩個加起來，滿分 100。做得多又做得對，分數最高！</details></div>`}
 /* 上週學習之星：每個學生每週跳一次通知；前 3 名自動加分（記在 stu.ws），其他人看到前 3 名是誰 */
 function wsSeen(sid){try{return localStorage.getItem('isl-ws-'+sid)||''}catch(e){return (S.wsMem||{})[sid]||''}}
 function wsMark(sid,wk){try{localStorage.setItem('isl-ws-'+sid,wk)}catch(e){}S.wsMem=S.wsMem||{};S.wsMem[sid]=wk}
@@ -1502,7 +1502,7 @@ function tWStar(){
   const pTop=pw<WSTAR.from?'':P.list.filter(x=>x.r<=3).map(x=>{const got=(stuDoc(x.s.id).ws||{})[pw];return `<tr><td>${md[x.r-1]}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td><b>${x.sc}</b></td><td>+${WSTAR.pts[x.r-1]}</td><td>${got?'✅ 已通知':'<span class="muted">還沒上線（下次進來會跳通知）</span>'}</td></tr>`}).join('');
   const row=x=>`<tr><td>${x.r}</td><td><b>${esc(x.s.name)}</b><div class="small muted">${esc(x.s.school||'')}</div></td><td>${x.n}</td><td>${pct(x.acc)}</td><td>${x.pn.toFixed(1)}</td><td>${x.pa.toFixed(1)}</td><td><b>${x.sc}</b></td></tr>`;
   const ds=S.dokStat;const dline=`<div class="row small" style="align-items:center;gap:10px"><span>${!ds?'正確率補算：準備中…':ds.run?`正確率補算中… ${ds.done}/${ds.tot} 人`:`✅ 正確率補算完成：補上 ${ds.fixed} 人`}${ds&&ds.nolog?`・有 ${ds.nolog} 天找不到作答紀錄`:''}${ds&&ds.err?`・<span style="color:var(--bad)">有錯誤（${esc(ds.err)}）</span>`:''}</span>${ds&&ds.off?'・<span style="color:var(--bad)">這台裝置沒有網路</span>':''}${ds?'<button class="btn ghost sm" data-act="dokRefill">重新補算</button>':''}</div>`;
-  return `<div class="card stack"><h2>🌟 每週學習之星</h2><p class="small muted">每週一～週日算一週，全部五年級一起排。綜合分滿分 100＝題數分（最多 50：題數 ÷ 本週最多的人 × 50）＋正確率分（最多 50：正確率 × 50）。本週做滿 ${WSTAR.min} 題才排名。前 3 名分別 +${WSTAR.pts.join('／+')} 點，學生下週第一次進學習島時自動加上並跳出通知；其他學生也會看到上週前 3 名。（${+WSTAR.from.slice(4,6)}/${+WSTAR.from.slice(6)} 那週開始加分）</p>
+  return `<div class="card stack"><h2>🌟 每週學習之星</h2><p class="small muted">每週一～週日算一週，全部五年級一起排。綜合分滿分 100＝題數分（最多 50：做滿 ${WSTAR.full} 題就拿滿，不到的照比例）＋正確率分（最多 50：正確率 × 50）。刷滿 ${WSTAR.full} 題的人，就比誰的正確率最高。本週做滿 ${WSTAR.min} 題才排名。前 3 名分別 +${WSTAR.pts.join('／+')} 點，學生下週第一次進學習島時自動加上並跳出通知；其他學生也會看到上週前 3 名。（${+WSTAR.from.slice(4,6)}/${+WSTAR.from.slice(6)} 那週開始加分）</p>
   ${pw>=WSTAR.from?`<h3>上週 ${wkLabel(pw)} 得獎</h3>${pTop?`<div class="tbl"><table><thead><tr><th></th><th>學生</th><th>題數</th><th>正確率</th><th>綜合分</th><th>加分</th><th>通知</th></tr></thead><tbody>${pTop}</tbody></table></div>`:'<p class="small muted">上週沒有人做滿題數。</p>'}`:''}
   ${dline}
   <h3>本週 ${wkLabel(wk)} 目前排名</h3>${R.list.length?`<div class="tbl"><table><thead><tr><th>名次</th><th>學生</th><th>題數</th><th>正確率</th><th>題數分</th><th>正確率分</th><th>綜合分</th></tr></thead><tbody>${R.list.map(row).join('')}</tbody></table></div>`:'<p class="small muted">還沒有人做滿題數。</p>'}
