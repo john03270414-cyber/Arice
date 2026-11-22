@@ -8,6 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arice">
+<script src="lib/preview.js?v=1795340000"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -48,6 +49,9 @@ h1{font-size:clamp(28px,6vw,40px);margin:6px 0 6px;text-wrap:balance}
 body.signedout .apps{opacity:.55}
 .tools{display:none;gap:10px;flex-wrap:wrap;margin-top:18px}
 body.teacher .tools{display:flex}
+.tools button{font:inherit;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:14px;border:1px solid #6b3fd1;background:#2a1f45;color:var(--ink);font-size:15px}
+/* 聖誕頭像工坊：聖誕期間（或老師的新版本預覽）才出現 */
+.app.xm{display:none}html.ar-xmas .app.xm{display:flex}
 .tools a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none;font-size:15px}
 details{margin-top:30px;border-radius:20px;border:1px dashed var(--line);color:var(--dim);line-height:1.8;font-size:15px}
 summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-height:48px}
@@ -65,8 +69,9 @@ summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-he
 <div class="apps">
   <a class="app" href="island/"><img src="island/icon-512.png" alt="" width="96" height="96"><div><b>學習島</b><span>期末考範圍・五科闖關</span></div><i aria-hidden="true">›</i></a>
   <a class="app" href="brave/"><img src="brave/icon-512.png" alt="" width="96" height="96"><div><b>勇者衝鋒</b><span>單元複習・總複習・雙人決鬥</span></div><i aria-hidden="true">›</i></a>
+  <a class="app xm" href="xmas/"><img src="xmas/icon-512.png" alt="" width="96" height="96"><div><b>聖誕頭像工坊</b><span>自己搭配聖誕 Q 版大頭貼</span></div><i aria-hidden="true">›</i></a>
 </div>
-<div class="tools"><a href="parent.html">👪 家長專區</a><a href="accounts.html">👥 學生帳號管理</a></div>
+<div class="tools"><a href="parent.html">👪 家長專區</a><a href="accounts.html">👥 學生帳號管理</a><button type="button" id="pv">🧪 試玩新版本</button></div>
 <details><summary>老師／家長：怎麼放到主畫面</summary><div class="how">
 <p style="margin:0">把<b>這一頁</b>加到主畫面一次就好：兩個遊戲都在裡面，全螢幕、只要登入一次。</p>
 <h2>iPad／iPhone</h2>
@@ -84,8 +89,8 @@ summary{cursor:pointer;padding:14px 20px;color:var(--ink);font-weight:700;min-he
 <script src="lib/firebase-auth-compat.js" defer></script>
 <script src="lib/firebase-firestore-compat.js" defer></script>
 <script src="lib/config.js" defer></script>
-<script src="lib/shim.js" data-app="home" data-prefix="" defer></script>
-<script src="lib/avatar.js?v=1794450000" defer></script>
+<script src="lib/shim.js?v=1795340000" data-app="home" data-prefix="" defer></script>
+<script src="lib/avatar.js?v=1795260000" defer></script>
 <script>
 /* 從這一頁進遊戲時，遊戲裡會出現「🏠 首頁」可以回來 */
 try{sessionStorage.setItem('ar-hub','1')}catch(e){}
@@ -102,6 +107,8 @@ window.addEventListener('DOMContentLoaded',function(){
     var f=document.querySelector('#ar-login-slot form');if(!f)return;
     e.preventDefault();f.scrollIntoView({behavior:'smooth',block:'center'});var i=f.querySelector('input');if(i)i.focus({preventScroll:true});
   });
+  /* 老師專用：這台裝置先看還沒上線的新版本（學生看不到） */
+  if(window.ARPREVIEW){$('pv').textContent=ARPREVIEW.on?'🧪 關掉新版本預覽':'🧪 試玩新版本';$('pv').addEventListener('click',function(){ARPREVIEW.set(!ARPREVIEW.on)})}
   $('out').addEventListener('click',function(){if(confirm('要登出嗎？登出後要重新輸入帳號密碼。'))ARICE.signOut()});
   ARICE.boot().then(function(ok){
     if(!ok)return;

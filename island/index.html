@@ -13,9 +13,10 @@
 <script src="../lib/firebase-auth-compat.js"></script>
 <script src="../lib/firebase-firestore-compat.js"></script>
 <script src="../lib/config.js?v=1794384737"></script>
-<script src="../lib/shim.js?v=1794600000" data-app="island" data-prefix="isl_"></script>
-<script src="../lib/avatar.js?v=1794450000"></script>
-<script src="qart.js?v=1794720000"></script>
+<script src="../lib/preview.js?v=1795340000"></script>
+<script src="../lib/shim.js?v=1795340000" data-app="island" data-prefix="isl_"></script>
+<script src="../lib/avatar.js?v=1795260000"></script>
+<script src="qart.js?v=1795260000"></script>
 <script src="updates.js?v=1795240000"></script>
 <style>html{background:#1B8FD0}body{margin:0}</style>
 <style>.ar-spin{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:arspin .8s linear infinite}@keyframes arspin{to{transform:rotate(360deg)}}.ar-retry{margin-top:12px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#E2513F;color:#fff;font-size:17px;font-weight:700}</style>
@@ -592,7 +593,7 @@ const DAY=864e5;
 const TWT=(y,mo,d,h,mi)=>Date.UTC(y,mo-1,d,h-8,mi||0);
 const SCHED={maintFrom:TWT(2026,11,30,18),maintTo:TWT(2026,12,1,15),xmasFrom:TWT(2026,12,1,15),xmasTo:TWT(2027,1,8,0)};
 const XMAS=(()=>{let v=null;try{const q=new URLSearchParams(location.search).get('theme');if(q==='xmas'||q==='normal')localStorage.setItem('island-theme',q);v=localStorage.getItem('island-theme')}catch(e){}
-  const now=Date.now();if(now>=SCHED.xmasTo)return false;if(v==='normal')return false;if(v==='xmas')return true;return now>=SCHED.xmasFrom})();
+  const now=Date.now();if(now>=SCHED.xmasTo)return false;if(window.ARPV)return true;if(v==='normal')return false;if(v==='xmas')return true;return now>=SCHED.xmasFrom})();
 if(XMAS){document.documentElement.classList.add('xmas');const mk=()=>{if(document.querySelector('.snowfall'))return;const w=document.createElement('div');w.className='snowfall';w.setAttribute('aria-hidden','true');let h='';for(let i=0;i<34;i++){const s=3+Math.random()*5;h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;--s:${s.toFixed(1)}px;--d:${(9+Math.random()*10).toFixed(1)}s;--dl:-${(Math.random()*18).toFixed(1)}s;--x:${(Math.random()*60-30).toFixed(0)}px;opacity:${(.5+Math.random()*.5).toFixed(2)}"></i>`}w.innerHTML=h;document.body.appendChild(w)};if(document.body)mk();else document.addEventListener('DOMContentLoaded',mk)}
 const SUBJS=['國語','數學','社會','自然','英語'];
 const SM={國語:{z:'zh',g:'語'},數學:{z:'ma',g:'數'},社會:{z:'so',g:'社'},自然:{z:'sc',g:'自'},英語:{z:'en',g:'英'}};
@@ -924,7 +925,7 @@ function xmBurst(){if(!XMAS)return;try{if(matchMedia('(prefers-reduced-motion: r
   b.innerHTML=h;document.body.appendChild(b);setTimeout(()=>b.remove(),1100);setTimeout(()=>SFX.jingle(),120)}
 /* ---------- 🎄 版本更新公告（11/30 18:00～12/1 15:00 自動出現；網址加 ?preview=1 可以略過，給老師檢查用） ---------- */
 (function(){
-  let skip=false;try{if(new URLSearchParams(location.search).get('preview')==='1')sessionStorage.setItem('island-preview','1');skip=sessionStorage.getItem('island-preview')==='1'}catch(e){}
+  let skip=false;try{if(new URLSearchParams(location.search).get('preview')==='1')sessionStorage.setItem('island-preview','1');skip=sessionStorage.getItem('island-preview')==='1'||!!window.ARPV}catch(e){}
   const inWin=()=>{const n=Date.now();return n>=SCHED.maintFrom&&n<SCHED.maintTo};
   const wasIn=inWin();
   function show(){if(skip||document.getElementById('xmaint'))return;const m=document.createElement('div');m.id='xmaint';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','xm-mt-h');
