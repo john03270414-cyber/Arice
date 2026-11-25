@@ -574,8 +574,8 @@ body.scr-open .scratch-btn{bottom:calc(min(46vh,440px) + 14px)}
 <script src="bank.js"></script>
 <script src="bank_math.js"></script>
 <script src="bank_en.js"></script>
-<script src="bank_zh.js"></script>
-<script src="zh_parts.js"></script>
+<script src="bank_zh.js?v=1795630000"></script>
+<script src="zh_parts.js?v=1795630000"></script>
 <script src="so_maps.js"></script>
 <script src="bank_so_hanlin.js"></script>
 <script src="bank_so_kangxuan.js"></script>
@@ -1447,11 +1447,58 @@ function vPin(){
   return `<div class="topbar"><button class="back" data-act="home">← 回首頁</button></div><div class="card stack" style="max-width:380px;margin:0 auto;text-align:center"><h2>${t}</h2>${setting?'<p class="small muted">學生一開始做題，後台就會自動鎖上。</p>':''}<div class="dots">${'●'.repeat(S.pinBuf.length)}${'○'.repeat(Math.max(0,4-S.pinBuf.length))}</div>
   <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'清除',0,'確定'].map(k=>`<button data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div></div>`;
 }
-const TT=[['live','即時狀況'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🌟 學習之星・加點'],['set','設定'],['try','試玩']];
+const TT=[['live','即時狀況'],['week','📅 本週進度'],['prog','學生進度'],['weak','全班弱點'],['ntc','公告'],['par','👪 家長'],['pts','🌟 學習之星・加點'],['set','設定'],['try','試玩']];
+
+/* ---------- 本週進度：對照「小五期末考進度表」每週排的學習島範圍（改範圍時要一起改這裡） ---------- */
+/* 老師後台「本週進度」分頁：11/27 起出現；老師開「試玩新版本」可以先看 */
+const WEEK_FROM=Date.UTC(2026,10,26,16);const weekOn=()=>Date.now()>=WEEK_FROM||!!window.ARPV;
+if(location.hash==='#week'&&weekOn())S.tTab='week';
+const PLAN=[
+  ['2026-11-23',['L7','L8'],['U6']],
+  ['2026-11-30',['L9'],['U7']],
+  ['2026-12-07',['L10'],['U7']],
+  ['2026-12-14',['L11'],['U8']],
+  ['2026-12-21',['L11','L12'],['U8','U9']],
+  ['2026-12-28',['L12'],['U9']],
+  ['2027-01-04',['L7','L8','L9','L10','L11','L12'],['U10']],
+  ['2027-01-11',[],[],'全範圍錯題（錯題複習）']
+];
+const wkMon=off=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+7*off);return d};
+const isoD=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function tWeek(){
+  if(!students().length)return '<div class="card muted">還沒有學生，請到「設定」新增。</div>';
+  const off=S.wkOff||0,mon=wkMon(off),key=isoD(mon),fri=new Date(mon);fri.setDate(fri.getDate()+4);
+  const p=PLAN.find(x=>x[0]===key);
+  const nav=`<div class="spread" style="margin-bottom:10px;gap:8px;flex-wrap:wrap"><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="wkNav" data-d="-1">← 上一週</button>${off?'<button class="btn ghost sm" data-act="wkNav" data-d="0">回到這週</button>':''}<button class="btn ghost sm" data-act="wkNav" data-d="1">下一週 →</button></div><b>${mon.getMonth()+1}/${mon.getDate()}–${fri.getMonth()+1}/${fri.getDate()}${off?'':'（這週）'}</b></div>`;
+  if(!p)return nav+'<div class="card muted">這週進度表沒有排學習島範圍。</div>';
+  const want=[['國語',p[1]],['數學',p[2]]].filter(x=>x[1].length);
+  const days7=Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return ymd(d.getTime())});
+  if(!want.length)return nav+`<div class="card">這週：${esc(p[3]||'')}</div>`+tWeekCount(days7);
+  const lockNote=new Set();
+  const rows=students().map(st=>{let all=true,any=false;
+    const cells=want.map(([subj,ids])=>{const pub=pubOf(st.id,subj);if(!pub){all=false;return '<td class="small muted">版本還沒設定</td>'}
+      const us=unitsOf(subj,pub);
+      const parts=ids.map(id=>{const u=us.find(x=>x.id===id);if(!u){all=false;return `<div class="small muted">${id}：題庫沒有（${esc(pub)}）</div>`}
+        const sm=unitSummary(st.id,subj,pub,u);if(sm.st!=='done')all=false;if(sm.n)any=true;
+        const op=isOpen(subj,pub,u.id);if(!op)lockNote.add(subj+' '+pub+' '+u.id);
+        return `<div style="margin:2px 0"><span class="small"><b>${id}</b></span> ${pill(sm.st)} <span class="small">${sm.c.done}/${sm.tot}</span>${op?'':' <span class="small" style="color:var(--bad)">🔒未開放</span>'}</div>`}).join('');
+      return `<td>${parts}</td>`}).join('');
+    const d=stuDoc(st.id).days||{};const n=days7.reduce((a,k)=>a+(d[k]||0),0);
+    return {st,all,any,n,html:`<tr class="click" data-act="openStuT" data-id="${esc(st.id)}"><td><b>${esc(st.name)}</b><div class="small muted">${esc(st.school)}</div></td>${cells}<td>${all?'<span class="pill p-good">做完了</span>':any?'<span class="pill p-warn">還沒做完</span>':'<span class="pill p-bad">還沒開始</span>'}</td><td class="small">${n}</td></tr>`}});
+  rows.sort((a,b)=>(a.all-b.all)||(a.any-b.any)||(a.n-b.n));
+  const done=rows.filter(r=>r.all).length,left=rows.filter(r=>!r.all);
+  const head=`<div class="card" style="margin-bottom:12px"><div><b>這週學習島：</b>${want.map(([s,ids])=>esc(s)+' '+ids.join('、')).join('；')}</div>
+    <div style="margin-top:6px">做完 <b>${done}</b> / ${rows.length} 人${left.length?`・還沒做完：${left.map(r=>esc(r.st.name)).join('、')}`:'・全部做完了 🎉'}</div>
+    <div class="small muted" style="margin-top:4px">「做完」＝這週排的每一課／單元都到「已學會」（八成題目連對兩次）。</div>
+    ${lockNote.size?`<div class="small" style="color:var(--bad);margin-top:4px">有範圍還沒開放，學生看不到：${[...lockNote].map(esc).join('、')}（到「設定」打開）</div>`:''}</div>`;
+  return nav+head+`<div class="tbl"><table><thead><tr><th>學生</th>${want.map(([s])=>`<th>${s}</th>`).join('')}<th>狀態</th><th>本週答題</th></tr></thead><tbody>${rows.map(r=>r.html).join('')}</tbody></table></div>`;
+}
+function tWeekCount(days7){const rows=students().map(st=>{const d=stuDoc(st.id).days||{};return {st,n:days7.reduce((a,k)=>a+(d[k]||0),0)}}).sort((a,b)=>a.n-b.n);
+  return `<div class="tbl"><table><thead><tr><th>學生</th><th>本週答題</th></tr></thead><tbody>${rows.map(r=>`<tr class="click" data-act="openStuT" data-id="${esc(r.st.id)}"><td><b>${esc(r.st.name)}</b><div class="small muted">${esc(r.st.school)}</div></td><td>${r.n}</td></tr>`).join('')}</tbody></table></div>`}
 function vTeacher(){
   setTimeout(dokFillAll,300);
-  const tabs=`<div class="tabs">${TT.map(([k,n])=>{const u=k==='par'?parUnread():0;return `<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}${u?` <span class="pill p-bad">${u}</span>`:''}</button>`}).join('')}</div>`;
-  const f={live:tLive,prog:tProg,weak:tWeak,ntc:tNtc,par:tPar,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
+  const tabs=`<div class="tabs">${TT.filter(([k])=>k!=='week'||weekOn()).map(([k,n])=>{const u=k==='par'?parUnread():0;return `<button class="tab ${S.tTab===k?'on':''}" data-act="tTab" data-k="${k}">${n}${u?` <span class="pill p-bad">${u}</span>`:''}</button>`}).join('')}</div>`;
+  const f={live:tLive,week:tWeek,prog:tProg,weak:tWeak,ntc:tNtc,par:tPar,pts:tPts,set:tSet,try:tTry,stu:tStu}[S.tTab]||tLive;
   return `<div class="topbar"><button class="back" data-act="lockT">🔒 鎖定並離開</button><div class="grow"><h1>老師後台</h1></div></div>${S.dbState!=='ok'?'<div class="note" style="margin-bottom:12px">這台裝置沒有連到雲端資料，只能用「試玩」。</div>':''}${tabs}${f()}`;
 }
 function tLive(){
@@ -1652,6 +1699,7 @@ const A={
     if(S.pinBuf.length<6)S.pinBuf+=k;render()},
   lockT:()=>{S.tOK=false;S.draft=null;go('home')},
   tTab:e=>{S.tTab=e.dataset.k;render()},
+  wkNav:e=>{S.wkOff=e.dataset.d==='0'?0:(S.wkOff||0)+(+e.dataset.d);render()},
   xmOpen:e=>{const sid=S.view.sid;const k=e.dataset.k;if(!sid||!k||S.xmPop)return;const d=stuDoc(sid);if(!((d.days||{})[k]>0))return;const x=xmData(sid);if(x.g[k]!=null)return;
     const pts=(1+Math.floor(Math.random()*8))/2;d.xm=Object.assign({},d.xm||{},{s:x.s,g:Object.assign({},x.g,{[k]:pts})});S.stu[sid]=d;saveStu(sid);
     S.xmPop={kind:'gift',pts,k,sid,emoji:e.dataset.e};SFX.tap();setTimeout(()=>{try{SFX.jingle()}catch(_){}},900);setTimeout(()=>{try{SFX.ok(3)}catch(_){}},1150);render()},
