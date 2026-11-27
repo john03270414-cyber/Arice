@@ -728,7 +728,9 @@ async function initDB(){
     db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{})}
 }
 /* 排行榜摘要：每答一題不更新（省一半寫入），一回做完、換頭像等才更新；中途關掉的話，下次打開時會自動補寫 */
-function saveStu(sid,noRank){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d);if(S.db&&!noRank)publishRank(sid,d).catch(()=>{})}
+function saveStu(sid,noRank){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d);if(!S.db)return;if(noRank){S.rankDirty=sid;return}S.rankDirty=null;publishRank(sid,d).catch(()=>{})}
+/* 做到一半切 App、關平板：先把排行榜摘要補上，別人算學習之星時才不會少算 */
+document.addEventListener('visibilitychange',()=>{const sid=S.rankDirty;if(document.hidden&&sid&&S.db){S.rankDirty=null;publishRank(sid,S.stu[sid]||stuDoc(sid)).catch(()=>{})}});
 /* 今天的作答紀錄：讀到雲端那份之前不存（不然會蓋掉今天稍早的作答），讀到後把這段時間答的接在後面再存 */
 const logOK=new Set(),logLoad={};
 function loadLog(sid){const id=sid+'_'+ymd();if(!S.db||logOK.has(id))return;
