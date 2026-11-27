@@ -714,10 +714,13 @@ const VIDEOS = {"land": "AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAA5pbW9vdgA
 
   /* ---------- sound & voice ---------- */
   let actx = null;
+  /* 切 App、鎖螢幕之後 iOS 會暫停聲音，要在點畫面時恢復 */
+  function AC() { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state !== 'running') { try { actx.resume(); } catch (e) {} } return actx; }
+  ['pointerup', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (actx && actx.state !== 'running') { try { actx.resume(); } catch (e) {} } }, true));
   function tone(freqs, type = 'sine', len = 0.16) {
     if (!store.sound) return;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      AC();
       freqs.forEach((f, i) => {
         const o = actx.createOscillator(), g = actx.createGain();
         o.type = type; o.frequency.value = f; o.connect(g); g.connect(actx.destination);
@@ -833,7 +836,7 @@ const VIDEOS = {"land": "AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAA5pbW9vdgA
   function sfx(kind) {
     if (!store.sound) return;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      AC();
       const t = actx.currentTime;
       const o = actx.createOscillator(), g = actx.createGain();
       o.connect(g); g.connect(actx.destination);

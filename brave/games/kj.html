@@ -3363,7 +3363,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('qb-ov')
 
 
 /* ---------- 啟動 ---------- */
-document.addEventListener('pointerdown', () => SND.unlock(), { passive: true });
+/* iPad／手機：pointerdown 不算「點」，要 pointerup、touchend 才能啟動聲音；每次點都檢查，切 App 回來也能恢復 */
+['pointerup', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.unlock(), { passive: true, capture: true }));
 document.addEventListener('keydown', onHwKey);
 render();
 (async function boot() {

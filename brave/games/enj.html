@@ -695,16 +695,22 @@ const SFX = (() => {
   API.ac = ac;
   return API;
 })();
-let curAudio = null;
+let curAudio = null, playTok = 0, wordOK = false;
+/* iOS：只有點過、播過的 Audio 之後才能用程式播放（例如延遲唸題目），所以只用一個 Audio，第一次點畫面時靜音播一下解鎖 */
+function wordEl() { if (!curAudio) { curAudio = new Audio(); curAudio.preload = 'auto'; } return curAudio; }
+['pointerup', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
+  SFX.ac(); // 切 App、鎖螢幕回來，iOS 要點一下才能恢復聲音
+  if (wordOK) return; wordOK = true;
+  try { const a = wordEl(); a.muted = true; a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA='; const p = a.play(); const done = () => { if (String(a.src).indexOf('data:') === 0) { try { a.pause(); } catch (e) {} } a.muted = false; }; if (p && p.then) p.then(done, () => { wordOK = false; done(); }); else done(); } catch (e) { wordOK = false; }
+}, true));
 function play(id, btn) {
   if (!id) return Promise.resolve();
   return new Promise(res => {
-    try { if (curAudio) curAudio.pause(); } catch (e) {}
-    const a = new Audio('audio/' + id + '.mp3'); curAudio = a; SFX.duck(true);
+    const a = wordEl(), tok = ++playTok; try { a.pause(); } catch (e) {} a.muted = false; a.src = 'audio/' + id + '.mp3'; SFX.duck(true);
     if (btn) btn.classList.add('playing');
     let done = false;
     const end = () => { if (done) return; done = true; if (btn) btn.classList.remove('playing'); SFX.duck(false); res(); };
-    const fallback = () => { try { const it = byId(id); const u = new SpeechSynthesisUtterance(it ? it.say : id); u.lang = 'en-US'; u.rate = .85; u.onend = end; u.onerror = end; speechSynthesis.speak(u); setTimeout(end, 4000); } catch (e) { end(); } };
+    const fallback = () => { if (tok !== playTok) return; try { const it = byId(id); const u = new SpeechSynthesisUtterance(it ? it.say : id); u.lang = 'en-US'; u.rate = .85; u.onend = end; u.onerror = end; speechSynthesis.speak(u); setTimeout(end, 4000); } catch (e) { end(); } };
     a.onended = end; a.onerror = fallback; a.play().catch(fallback);
     setTimeout(end, 6000);
   });
@@ -713,13 +719,13 @@ function play(id, btn) {
 // slow, natural whole-word audio; lights the chunk buttons one by one while it plays
 function playSlow(w, els) {
   return new Promise(res => {
-    try { if (curAudio) curAudio.pause(); } catch (e) {}
-    const a = new Audio('audio/' + w.id + '.mp3'); curAudio = a; SFX.duck(true);
+    const a = wordEl(), tok = ++playTok; try { a.pause(); } catch (e) {} a.muted = false; a.src = 'audio/' + w.id + '.mp3'; SFX.duck(true);
     const parts = (CH[w.id] || []).filter(x => x.a), lens = parts.map(x => x.t.replace(/[\[\]]/g, '').length), tot = lens.reduce((x, y) => x + y, 0) || 1;
     let done = false, raf = 0;
     const light = i => els.forEach((e, k) => e.classList.toggle('lit', k === i));
     const end = () => { if (done) return; done = true; cancelAnimationFrame(raf); light(-1); SFX.duck(false); res(); };
     const step = () => {
+      if (tok !== playTok) return light(-1); // 被下一個聲音接手了
       if (a.duration) {
         const f = Math.min(.999, Math.max(0, (a.currentTime - .1) / Math.max(.2, a.duration - .25)));
         let acc = 0, i = 0; while (i < lens.length - 1 && f > (acc + lens[i]) / tot) { acc += lens[i]; i++; }
@@ -728,7 +734,7 @@ function playSlow(w, els) {
       raf = requestAnimationFrame(step);
     };
     a.onended = end; a.onerror = () => { end(); };
-    a.play().then(() => { raf = requestAnimationFrame(step); }).catch(() => play(w.id).then(end));
+    a.play().then(() => { raf = requestAnimationFrame(step); }).catch(() => { if (tok === playTok) play(w.id).then(end); });
     setTimeout(end, 7000);
   });
 }
