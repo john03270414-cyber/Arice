@@ -10,6 +10,7 @@
 <script src="lib/config.js"></script>
 <script src="lib/preview.js?v=1795340000"></script>
 <script src="lib/shim.js?v=1795340000" data-app="accounts" data-prefix=""></script>
+<script src="lib/qrcode.js?v=1"></script>
 <style>
 :root{--bg:#14101a;--card:#1f1826;--line:#33283a;--ink:#f3ebe3;--dim:#a99c95;--accent:#f0b341;--good:#5fd08a;--bad:#ff7b6e}
 *{box-sizing:border-box}
@@ -42,11 +43,17 @@ td input{width:110px;font:inherit;font-size:16px;padding:8px 10px;border-radius:
 .cards{display:none}
 @media print{
   @page{size:A4;margin:12mm}
-  body{background:#fff;color:#000}main>*:not(.cards){display:none!important}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
-  .card{border:1.5px dashed #888;border-radius:4mm;padding:5mm 6mm;break-inside:avoid;font-family:"BiauKai","DFKai-SB","標楷體",serif}
+  html,body{background:#fff;color:#000}main{padding:0}main>*:not(.cards){display:none!important}
+  /* 一頁固定 8 張（2×4），每頁自己換頁，存 PDF 時卡片不會被切成兩半 */
+  .cards{display:block}
+  .sheet{width:calc(100% - 2px);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,62mm);gap:5mm 6mm;break-after:page;page-break-after:always}
+  .sheet:last-child{break-after:auto;page-break-after:auto}
+  .card{display:flex;gap:4mm;align-items:center;overflow:hidden;border:1.5px dashed #888;border-radius:4mm;padding:4mm 5mm;break-inside:avoid;font-family:"BiauKai","DFKai-SB","標楷體",serif}
+  .card .tx{flex:1;min-width:0}
   .card h3{margin:0 0 2mm;font-size:16pt}.card p{margin:1mm 0;font-size:12pt}.card .big{font:700 15pt ui-monospace,Menlo,monospace}
-  .card small{color:#444;font-size:9.5pt}
+  .card .qr{width:30mm;flex:none;text-align:center;font-size:8.5pt}.card .qr svg{display:block;width:30mm;height:30mm}
+  .card .url{font-size:8.5pt;word-break:break-all;color:#333}
+  .card small{color:#444;font-size:8pt;white-space:nowrap}
 }
 </style></head><body><main>
 <a href="./">← 回首頁</a>
@@ -129,7 +136,9 @@ function render0(){
        :`<button data-mk="${esc(st.id)}" ${A.busy?'disabled':''}>重設密碼</button><button class="warn" data-off="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button>`}</div></td>
      <td>${pOn(st.id)?`${pSetOf(st.id)?'<span class="st ok">家長已設密碼</span>':`<span class="st wait">通行碼 <span class="pw">${esc(A.psec[st.id].pw||'000000')}</span></span>`}<div class="acts" style="margin-top:6px"><button data-pmk="${esc(st.id)}" ${A.busy?'disabled':''}>重設密碼</button><button class="warn" data-poff="${esc(st.id)}" ${A.busy?'disabled':''}>停用</button></div>`:`<span class="st no">${A.psec[st.id]?'已停用':'還沒有'}</span><div class="acts" style="margin-top:6px"><button class="pri" data-pmk="${esc(st.id)}" ${A.busy?'disabled':''}>建立</button></div>`}</td></tr>`}).join('')}
   </tbody></table></div>`;
-  $('#cards').innerHTML=A.roster.filter(s=>active(s.id)).map(st=>{const s=secOf(st.id);return `<div class="card"><h3>${esc(st.name)}</h3><p>網址：<b>${esc(SITE)}</b></p><p>帳號：<span class="big">${esc(s.code)}</span></p><p>${pwSetOf(st.id)?'密碼：自己設定的密碼':`通行碼：<span class="big">${esc(s.pw)}</span>`}</p><p style="font-size:10pt">第一次登入後，要設定一組只有自己知道的密碼。</p><small>中正補習班・Arice　學習島／勇者衝鋒</small></div>`}).join('')}
+  const qr=(()=>{try{const q=qrcode(0,'M');q.addData(SITE);q.make();return q.createSvgTag({cellSize:1,margin:2,scalable:true})}catch(e){return ''}})();
+  const cards=A.roster.filter(s=>active(s.id)).map(st=>{const s=secOf(st.id);return `<div class="card"><div class="tx"><h3>${esc(st.name)}</h3><p>帳號：<span class="big">${esc(s.code)}</span></p><p>${pwSetOf(st.id)?'密碼：自己設定的密碼':`密碼：<span class="big">${esc(s.pw)}</span>`}</p><p style="font-size:9.5pt">第一次登入後，要設定一組只有自己知道的密碼。</p><div class="url">${esc(SITE)}</div><small>中正補習班・Arice 學習島／勇者衝鋒</small></div><div class="qr">${qr}掃我登入</div></div>`});
+  let pages='';for(let i=0;i<cards.length;i+=8)pages+=`<div class="sheet">${cards.slice(i,i+8).join('')}</div>`;$('#cards').innerHTML=pages;}
 const msg=t=>{$('#msg').textContent=t};
 function creator(){const ex=firebase.apps.find(a=>a.name==='creator');const app=ex||firebase.initializeApp(ARICE.cfg,'creator');return app.auth()}
 async function make(sid,newCode,skipCheck){const st=A.roster.find(x=>x.id===sid);if(!st)return;

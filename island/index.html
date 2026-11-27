@@ -697,12 +697,15 @@ function unitSummary(sid,subj,pub,un){const m=stuDoc(sid).m||{};let c={new:0,lea
 const ST={new:['尚未開始','p-none'],learn:['還在練','p-warn'],weak:['錯很多','p-bad'],done:['已學會','p-good']};
 const pill=st=>`<span class="pill ${ST[st][1]}">${ST[st][0]}</span>`;
 function barHTML(c,tot){if(!tot)return '<div class="bar"></div>';const w=k=>(c[k]/tot*100).toFixed(1)+'%';return `<div class="bar"><i style="width:${w('done')};background:var(--good)"></i><i style="width:${w('learn')};background:var(--warn)"></i><i style="width:${w('weak')};background:var(--bad)"></i></div>`}
-function dueList(sid){const m=stuDoc(sid).m||{};const now=Date.now();const out=[];for(const q in m){const r=m[q];if(r.w&&(r.ok||0)<2&&(r.due||0)<=now){const f=findQ(q);if(f&&f.pub!=='示範'&&isOpen(f.subj,f.pub,f.unit.id)&&pubOf(sid,f.subj)===f.pub)out.push({q,f,r})}}return out}
+function dueList(sid,subj,pub){const m=stuDoc(sid).m||{};const now=Date.now();const out=[];for(const q in m){const r=m[q];if(r.w&&(r.ok||0)<2&&(r.due||0)<=now){const f=findQ(q);if(f&&(!subj||f.subj===subj)&&(!pub||f.pub===pub)&&f.pub!=='示範'&&isOpen(f.subj,f.pub,f.unit.id)&&pubOf(sid,f.subj)===f.pub)out.push({q,f,r})}}return out}
+const rankData=d=>({av:d.av||null,days:d.days||{},dok:d.dok||{},ws:d.ws||{},xm:d.xm||{}});
+function publishRank(id,d){return S.db.doc('rank/'+id).set(rankData(d))}
 
 /* ---------- db ---------- */
 const savers={};
 function save(path,data){if(!S.db)return;let sv=savers[path];if(!sv){sv=savers[path]={pending:null,busy:false};}sv.pending=data;if(!sv.busy)flush(path)}
-async function flush(path){const sv=savers[path];sv.busy=true;while(sv.pending){const d=sv.pending;sv.pending=null;try{await S.db.doc(path).set(d)}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,800+Math.random()*800));if(!sv.pending)sv.pending=d}else{console.warn('save fail',path,e);toast(e&&e.code==='quota_exceeded'?'雲端空間滿了，請老師清理舊紀錄':'沒有存成功，請截圖給老師（'+((e&&e.code)||e)+'）');break}}}sv.busy=false}
+// shortcut: merge preserves separate question keys across devices; same-key simultaneous answers still need a transaction if they occur.
+async function flush(path){const sv=savers[path];sv.busy=true;while(sv.pending){const d=sv.pending;sv.pending=null;try{await S.db.doc(path).set(d,path.startsWith('stu/')?{merge:true}:undefined)}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,800+Math.random()*800));if(!sv.pending)sv.pending=d}else{console.warn('save fail',path,e);toast(e&&e.code==='quota_exceeded'?'雲端空間滿了，請老師清理舊紀錄':'沒有存成功，請截圖給老師（'+((e&&e.code)||e)+'）');break}}}sv.busy=false}
 async function initDB(){
   let db=null;try{db=await window.claude?.use?.('db')}catch(e){db=null}
   if(!db){S.dbState='none';S.cfgState='none';render();return}
@@ -711,9 +714,9 @@ async function initDB(){
   db.doc('cfg/main').onSnapshot(snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);S.cfg=snap.exists?JSON.parse(JSON.stringify(snap.data())):null;S.cfgState=snap.exists?'ok':(snap.metadata.fromCache?S.cfgState:'empty');if(S.view.n!=='play')render()},e=>{clearTimeout(timer);S.cfgState='err';render()});
   const putStu=(id,d)=>{S.stu[id]=JSON.parse(JSON.stringify(d))};const mine=window.ARICE&&ARICE.me&&ARICE.me.role==='student'&&ARICE.me.sid;
   /* 學生只即時看自己的紀錄：全班一起監聽的話，每答一題全班每台平板都要重讀一次，很快超過讀取額度。排行榜要的同學資料，回首頁時讀一次 */
-  if(mine){db.doc('stu/'+mine).onSnapshot(snap=>{if(snap.exists)putStu(mine,snap.data());S.stuReady=true;if(S.view.n!=='play')render()},e=>toast('讀不到你的紀錄，請重新整理（'+((e&&e.code)||e)+'）'));
-    S.loadOthers=()=>{if(Date.now()-(S.othersAt||0)<60e3)return;S.othersAt=Date.now();db.collection('stu').get().then(q=>{q.docs.forEach(d=>{if(d.id!==mine)putStu(d.id,d.data())});S.othersOK=true;if(S.view.n!=='play')render()}).catch(()=>{S.othersAt=0})};S.loadOthers()}
-  else db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>putStu(d.id,d.data()));S.stuReady=true;if(S.view.n!=='play')render()},()=>{});
+  if(mine){db.doc('stu/'+mine).onSnapshot(snap=>{if(snap.exists){putStu(mine,snap.data());if(!snap.metadata.fromCache&&!S.rankSeededMine){S.rankSeededMine=1;publishRank(mine,snap.data()).catch(()=>{})}}S.stuReady=true;if(S.view.n!=='play')render()},e=>toast('讀不到你的紀錄，請重新整理（'+((e&&e.code)||e)+'）'));
+    S.loadOthers=()=>{if(Date.now()-(S.othersAt||0)<60e3)return;S.othersAt=Date.now();db.collection('rank').get().then(q=>{q.docs.forEach(d=>{if(d.id!==mine)putStu(d.id,d.data())});S.othersOK=true;if(S.view.n!=='play')render()}).catch(()=>{S.othersAt=0})};S.loadOthers()}
+  else db.collection('stu').onSnapshot(snap=>{snap.docs.forEach(d=>{putStu(d.id,d.data());if(!snap.metadata.fromCache&&window.ARICE&&ARICE.me&&ARICE.me.role==='teacher'&&!S.rankSeeded?.has(d.id)){S.rankSeeded=S.rankSeeded||new Set();S.rankSeeded.add(d.id);db.doc('rank/'+d.id).get().then(r=>{if(!r.exists)publishRank(d.id,d.data())}).catch(()=>{})}});S.stuReady=true;if(S.view.n!=='play')render()},()=>{});
   db.doc('cfg/notice').onSnapshot(snap=>{const d=snap.exists?snap.data():null;S.notices=(d&&Array.isArray(d.list))?JSON.parse(JSON.stringify(d.list)):[];if(S.view.n!=='play')render()},()=>{});
   /* 家長留言、老師評語：只有老師帳號讀得到 */
   if(window.ARICE&&ARICE.me&&ARICE.me.role==='teacher'){S.pmsg=[];S.pcm={};S.tread={};S.pread={};
@@ -724,7 +727,7 @@ async function initDB(){
     db.doc('tread/main').onSnapshot(s=>{S.tread=s.exists?s.data():{};rr()},()=>{});
     db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{})}
 }
-function saveStu(sid){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d)}
+function saveStu(sid){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d);if(S.db)publishRank(sid,d).catch(()=>{})}
 /* 今天的作答紀錄：讀到雲端那份之前不存（不然會蓋掉今天稍早的作答），讀到後把這段時間答的接在後面再存 */
 const logOK=new Set(),logLoad={};
 function loadLog(sid){const id=sid+'_'+ymd();if(!S.db||logOK.has(id))return;
@@ -1379,7 +1382,7 @@ function answer(){
   if(r.ok&&XMAS)setTimeout(xmBurst,30);
   if(s.game&&s.game.board&&r.ok){const mv=1+(Math.random()*6|0);s.pos+=mv;const c=CELLS[s.pos%20];s.fb.move=mv;setTimeout(()=>SFX.dice(),380);
     if(c==='⭐'||c==='🎁'){s.stickers++;s.fb.cell='拿到一張貼紙';setTimeout(()=>SFX.sticker(),950)}
-    else if(c==='🔁'){const due=s.trial?[]:dueList(s.sid).filter(d=>!s.items.slice(s.i+1).some(x=>x.qid===d.q));if(due.length){const d=due[0];s.items.splice(s.i+1,0,wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,stuDoc(s.sid).m));s.fb.cell='下一題是你之前錯過的題目'}else s.fb.cell='錯題都清光了，好棒'}}
+    else if(c==='🔁'){const due=s.trial?[]:dueList(s.sid,s.subj,s.pub).filter(d=>!s.items.slice(s.i+1).some(x=>x.qid===d.q));if(due.length){const d=due[0];s.items.splice(s.i+1,0,wrap(d.f.subj,d.f.pub,d.f.unit,d.f.it,stuDoc(s.sid).m));s.fb.cell='下一題是你之前錯過的題目'}else s.fb.cell='錯題都清光了，好棒'}}
   if(!r.ok)s.lw={q:qLabel(it),ans:r.ans,right:r.right};
   record(s,w,r);render();pushLive();
   if(it.type==='tiles'&&/[A-Za-z]/.test(it.tiles.join('')))setTimeout(()=>say(sentText(it)),r.ok?250:400);
@@ -1405,7 +1408,7 @@ function finish(){
   const s=S.sess;s.done=true;const ok=s.res.filter(r=>r.ok).length,n=s.res.length;const acc=n?ok/n:0;
   s.stars=acc>=.9?3:acc>=.7?2:acc>=.5?1:0;
   if(!s.demo&&!s.trial){const d=stuDoc(s.sid);const k=ukey(s.subj,s.pub,s.uid);
-    if(s.mode==='practice'&&!s.cat&&acc>=.85){d.pass=d.pass||{};if(!d.pass[k]){d.pass[k]=Date.now();s.newPass=true}}
+    if(s.mode==='practice'&&!s.cat&&s.res.length===s.items.length&&acc>=.85){d.pass=d.pass||{};if(!d.pass[k]){d.pass[k]=Date.now();s.newPass=true}}
     if(s.game){d.best=d.best||{};const bk=k+'|'+s.game.k;if((d.best[bk]||0)<s.stars)d.best[bk]=s.stars}
     S.stu[s.sid]=d;saveStu(s.sid)}
   pushLive();go('result');
@@ -1415,7 +1418,7 @@ function vResult(){
   const s=S.sess;if(!s)return vHome();const ok=s.res.filter(r=>r.ok).length,n=s.res.length;const z=SM[s.subj||s.items[0].subj].z;
   const wrong=s.res.map((r,i)=>({r,w:s.items[i]})).filter(x=>!x.r.ok);
   let msg='';
-  if(s.mode==='practice')msg=s.newPass?'🎉 過關了！這一課的遊戲打開了。':(ok/n>=.85?'這一課已經過關，可以去玩遊戲。':'答對 85% 才能打開遊戲（10 題要對 9 題），再練一次吧！');
+  if(s.mode==='practice')msg=s.newPass?'🎉 過關了！這一課的遊戲打開了。':(s.res.length<s.items.length?'練習還沒做完，完成全部題目再看能不能過關。':ok/n>=.85?'這一課已經過關，可以去玩遊戲。':'答對 85% 才能打開遊戲（10 題要對 9 題），再練一次吧！');
   if(s.mode==='review')msg='錯題會照答對次數排下一次複習，答對兩次就學會了。';
   if(s.mode==='final')msg=ok/n>=.85?'🎉 總複習 '+Math.round(ok/n*100)+' 分，準備好考試了！':'總複習 '+Math.round(ok/n*100)+' 分，看完下面的錯題再挑戰一次！';
   if(s.game&&s.lives<=0)msg='愛心用完了，看一下錯的題目再挑戰一次！';
@@ -1651,7 +1654,7 @@ const A={
   noop:()=>{},
   avMake:()=>{if(!window.ARAV)return;const sid=S.view.sid;const cur=(S.stu[sid]||{}).av;S.avPick=false;render();ARAV.editor(ARAV.ok(cur)?cur:null,v=>{const d=stuDoc(sid);d.av=v;S.stu[sid]=d;saveStu(sid);SFX.sticker();render();toast('頭像換好了！')})},
   avSet:e=>{const sid=S.view.sid;const d=stuDoc(sid);d.av=e.dataset.v;S.stu[sid]=d;saveStu(sid);S.avPick=false;SFX.sticker();render();toast('頭像換好了！')},
-  resetSPin:e=>{const sid=e.dataset.id;if(S.rsArm!==sid){S.rsArm=sid;return toast('再按一次確認重設這位學生的密碼')}S.rsArm=null;const d=stuDoc(sid);delete d.pin;S.stu[sid]=d;saveStu(sid);toast('已重設，學生下次進來會重新設定密碼');render()},
+  resetSPin:e=>{const sid=e.dataset.id;if(S.rsArm!==sid){S.rsArm=sid;return toast('再按一次確認重設這位學生的密碼')}S.rsArm=null;const d=stuDoc(sid);d.pin=null;S.stu[sid]=d;saveStu(sid);toast('已重設，學生下次進來會重新設定密碼');render()},
   school:e=>{SFX.tap();S.school=e.dataset.s;render()},
   backStu:()=>go('stu',{sid:S.view.sid}),
   lockedSubj:e=>toast(e.dataset.m==='題目準備中'?'這科的題目還在準備，做好就會打開':e.dataset.m==='老師還沒開放'?'老師還沒開放這一科':'老師還沒設定你學校的版本'),

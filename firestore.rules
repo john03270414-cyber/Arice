@@ -48,10 +48,10 @@ service cloud.firestore {
     }
     match /secret/{sid} { allow read, write: if isTeacher(); }
 
-    // 其他資料：老師全部可讀寫；學生可以讀，只能寫自己的紀錄；家長只能讀自己小孩的
+    // 學生只能讀設定、公開排行榜摘要和自己的詳細紀錄；家長只能讀自己小孩的資料
     match /{coll}/{id} {
       allow read: if isTeacher()
-        || (!special(coll) && !parentOnly(coll) && isStudent())
+        || (isStudent() && (coll in ['isl_cfg', 'isl_rank'] || (coll in ['isl_stu', 'isl_log'] && ownId(id))))
         || parentRead(coll, id);
       allow create: if isTeacher()
         || (!special(coll) && !parentOnly(coll) && isStudent() && (ownId(id) || shared(coll) || newMine(coll)))

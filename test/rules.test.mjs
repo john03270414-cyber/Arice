@@ -15,6 +15,7 @@ before(async () => {
     await f.doc('members/uP').set({ sid: 's02', role: 'parent' }); // s02 的家長
     await f.doc('isl_stu/s01').set({ m: {} });
     await f.doc('isl_stu/s02').set({ m: {} });
+    await f.doc('isl_rank/s02').set({ days: { '20261126': 4 } });
     await f.doc('isl_pmsg/s02_1').set({ sid: 's02', from: 'p', text: 'hi' });
     await f.doc('login/a11501').set({ email: 'a11501.v1@stu.arice.app', sid: 's01' });
   });
@@ -29,6 +30,13 @@ test('家長只讀得到自己小孩', async () => {
 test('學生只能寫自己的紀錄', async () => {
   await assertSucceeds(db('uA').doc('isl_stu/s01').set({ m: {}, _uid: 'uA' }));
   await assertFails(db('uA').doc('isl_stu/s02').set({ m: {}, _uid: 'uA' }));
+});
+
+test('學生只能讀公開排行榜和自己的詳細紀錄', async () => {
+  await assertSucceeds(db('uA').doc('isl_rank/s02').get());
+  await assertSucceeds(db('uA').doc('isl_stu/s01').get());
+  await assertFails(db('uA').doc('isl_stu/s02').get());
+  await assertFails(db('uA').doc('isl_log/s02_20261120').get());
 });
 
 test('學生不能在同學名下建立假紀錄', async () => {
