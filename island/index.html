@@ -629,7 +629,7 @@ const COVER={
 const SFX=(()=>{
   const PACKS=[['marimba','🎵 木琴'],['bell','🔔 魔法鈴'],['arcade','👾 電玩'],['off','🔇 靜音']];
   let ctx=null,pack='marimba';try{const v=localStorage.getItem('island-sound');if(v&&PACKS.some(p=>p[0]===v))pack=v}catch(e){}
-  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}}if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
+  function ac(){try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}ctx=new C()}if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
   const N=n=>440*Math.pow(2,(n-74)/12); /* midi -> Hz（整體降 5 個半音，聽起來比較柔和） */
   function env(c,g,n,a,d,v){g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+a);g.gain.exponentialRampToValueAtTime(.0001,n+a+d)}
   function out(c){if(!c._bus){const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.Q.value=.5;const vol=c.createGain();vol.gain.value=.75;const comp=c.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=3;comp.knee.value=20;lp.connect(vol);vol.connect(comp);comp.connect(c.destination);c._bus=lp}return c._bus}
@@ -1011,7 +1011,7 @@ const XBGM=(()=>{
   let T=LIST[cur],SPB=60/T.bpm,loops=0;
   let ctx=null,out=null,on=false,timer=null,next=0,i=0,beatAcc=0,restartT=null;
   try{on=localStorage.getItem('island-bgm')==='on'}catch(e){}
-  function ac(){try{if(!ctx){const K=window.AudioContext||window.webkitAudioContext;if(!K)return null;ctx=new K();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  function ac(){try{if(!ctx){const K=window.AudioContext||window.webkitAudioContext;if(!K)return null;try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}ctx=new K();
       out=ctx.createGain();out.gain.value=.0001;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=XMAS?4500:2400;const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;out.connect(lp);lp.connect(comp);comp.connect(ctx.destination)}
     if(ctx.state!=='running')ctx.resume();return ctx}catch(e){return null}}
   const hz=m=>440*Math.pow(2,(m-69)/12);
@@ -1051,8 +1051,10 @@ const XBGM=(()=>{
   /* 做題、看結果時暫停，回到地圖再播 */
   function sync(view){const busy=view==='play'||view==='result';document.documentElement.classList.toggle('inplay',view==='play');if(busy)stop();else if(on)start()}
   {const b0=()=>{const b=document.getElementById('xmBgm');if(b){b.addEventListener('click',e=>{e.stopPropagation();toggle()})}const n=document.getElementById('xmNext');if(n)n.addEventListener('click',e=>{e.stopPropagation();skip()});ui()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',b0);else b0();
-    /* 瀏覽器規定要先點一下才能出聲：之前開著的話，第一次點畫面就接著播 */
-    const first=()=>{document.removeEventListener('pointerdown',first,true);if(on&&!['play','result'].includes((S.view||{}).n))start()};document.addEventListener('pointerdown',first,true);
+    /* 瀏覽器規定要點一下才能出聲。iPad／手機：pointerdown 不算「點」（要 pointerup、touchend），
+       而且切 App、鎖螢幕、來電之後 iOS 會把聲音暫停，要再點一下才能恢復，所以每次點都檢查，不是只有第一次 */
+    const kick=()=>{if(!on||['play','result'].includes((S.view||{}).n))return;if(!timer)start();else if(ctx&&ctx.state!=='running')try{ctx.resume()}catch(e){}};
+    ['pointerup','touchend','keydown'].forEach(ev=>document.addEventListener(ev,kick,true));
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(on&&!['play','result'].includes((S.view||{}).n))start()})}
   return {sync,toggle,skip,get on(){return on},get song(){return T.name},songs:LIST.map(t=>t.name),_SONGS:SONGS};
 })();
@@ -1621,7 +1623,14 @@ function tTry(){
 /* ---------- speech ---------- */
 let curAudio=null;
 function ttsFallback(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
-function say(t){if(!t)return;try{if(curAudio){curAudio.pause();curAudio=null}const a=new Audio('audio/en-'+String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3');curAudio=a;a.onerror=()=>{if(curAudio===a)ttsFallback(t)};const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){ttsFallback(t)}}
+/* iOS：只有「使用者點過、播過」的 Audio 之後才能用程式播放（例如答完題延遲 0.3 秒唸句子），
+   所以只用一個 Audio，第一次點畫面時先靜音播一下解鎖；真的被擋住就改用語音合成 */
+let sayOK=false;
+function sayEl(){if(!curAudio){curAudio=new Audio();curAudio.preload='auto'}return curAudio}
+function sayUnlock(){if(sayOK)return;sayOK=true;try{const a=sayEl();a.muted=true;a.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';const p=a.play();const done=()=>{try{a.pause()}catch(e){}a.muted=false};if(p&&p.then)p.then(done,()=>{sayOK=false;done()});else done()}catch(e){sayOK=false}}
+['pointerup','touchend','keydown'].forEach(ev=>document.addEventListener(ev,sayUnlock,true));
+function say(t){if(!t)return;try{const a=sayEl();try{a.pause()}catch(e){}a.muted=false;let fell=false;const fb=()=>{if(fell)return;fell=true;ttsFallback(t)};
+  a.onerror=fb;a.src='audio/en-'+String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.mp3';const pr=a.play();if(pr&&pr.catch)pr.catch(fb)}catch(e){ttsFallback(t)}}
 function sentText(it){return it.tiles.join(' ').replace(/ ([?.!,])/g,'$1')}
 
 /* ---------- actions ---------- */
