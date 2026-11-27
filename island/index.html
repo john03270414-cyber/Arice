@@ -727,7 +727,8 @@ async function initDB(){
     db.doc('tread/main').onSnapshot(s=>{S.tread=s.exists?s.data():{};rr()},()=>{});
     db.collection('live').onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data()});S.live=o;if(S.view.n==='teacher'&&S.tTab==='live')render()},()=>{})}
 }
-function saveStu(sid){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d);if(S.db)publishRank(sid,d).catch(()=>{})}
+/* 排行榜摘要：每答一題不更新（省一半寫入），一回做完、換頭像等才更新；中途關掉的話，下次打開時會自動補寫 */
+function saveStu(sid,noRank){if(S.db&&!S.stuReady){toast('還在讀取紀錄，這次沒有存到，請等一下再試');return}const d=S.stu[sid]||stuDoc(sid);d.t=Date.now();S.stu[sid]=d;save('stu/'+sid,d);if(S.db&&!noRank)publishRank(sid,d).catch(()=>{})}
 /* 今天的作答紀錄：讀到雲端那份之前不存（不然會蓋掉今天稍早的作答），讀到後把這段時間答的接在後面再存 */
 const logOK=new Set(),logLoad={};
 function loadLog(sid){const id=sid+'_'+ymd();if(!S.db||logOK.has(id))return;
@@ -1394,7 +1395,7 @@ function record(s,w,r){
   if(r.ok){m.ok=(m.ok||0)+1;m.due=m.ok>=2?0:(m.w?now+3*DAY:0)}else{m.w++;m.ok=0;m.due=nextDay(now);m.lw=now;m.la=String(r.ans).slice(0,120)}
   d.m[w.qid]=m;d.days=d.days||{};const dk=ymd(),prev=d.days[dk]||0;d.days[dk]=prev+1;
   /* 每天答對幾題（學習之星的正確率用）：當天已經有舊紀錄、還沒補算的，先不記，等 dokFill 從作答紀錄補 */
-  d.dok=d.dok||{};if(d.dok[dk]!=null||!prev)d.dok[dk]=(d.dok[dk]||0)+(r.ok?1:0);S.stu[s.sid]=d;saveStu(s.sid);
+  d.dok=d.dok||{};if(d.dok[dk]!=null||!prev)d.dok[dk]=(d.dok[dk]||0)+(r.ok?1:0);S.stu[s.sid]=d;saveStu(s.sid,1);
   const id=s.sid+'_'+ymd();const lg=S.logs[id]||(S.logs[id]={sid:s.sid,d:ymd(),a:[]});
   lg.a.push({t:now,q:w.qid,ok:r.ok?1:0,ans:String(r.ans).slice(0,120),md:s.game?s.game.k:s.mode});if(lg.a.length>600)lg.a=lg.a.slice(-600);if(logOK.has(id))save('log/'+id,lg);else loadLog(s.sid);
 }

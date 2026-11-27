@@ -39,6 +39,15 @@ test('學生只能讀公開排行榜和自己的詳細紀錄', async () => {
   await assertFails(db('uA').doc('isl_log/s02_20261120').get());
 });
 
+test('學生照常讀得到勇者衝鋒和學習島設定', async () => {
+  await assertSucceeds(db('uA').doc('brv_cfg/main').get());
+  await assertSucceeds(db('uA').collection('kj_lb').get());
+  await assertSucceeds(db('uA').doc('kj_battles/r1').get());
+  await assertSucceeds(db('uA').doc('isl_cfg/notice').get());
+  await assertSucceeds(db('uA').collection('isl_rank').get());
+  await assertFails(db('uA').collection('isl_stu').get()); // 不能一次列出全班的詳細紀錄
+});
+
 test('學生不能在同學名下建立假紀錄', async () => {
   await assertFails(db('uA').doc('isl_log/s02_20261120').set({ a: [], _uid: 'uA' }));
   await assertSucceeds(db('uA').collection('kj_results').add({ n: 1, _uid: 'uA' })); // 遊戲成績照常可以新增
